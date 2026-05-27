@@ -9,8 +9,8 @@
 - [x] Set up Drizzle ORM schema + migrations (tables pushed to Supabase)
 - [x] Configure Supabase project (db, storage, RLS policies)
 - [x] Set up Clerk authentication (login, signup)
-- [ ] Configure Razorpay + Stripe webhooks and billing
-- [ ] Deploy to Vercel (production + preview)
+- [ ] Configure Razorpay + Stripe webhooks and billing (deferred)
+- [x] Deploy to Vercel (production + preview)
 - [x] Set up Sentry error tracking
 - [x] Set up PostHog analytics + feature flags
 - [x] Set up Resend + React Email for transactional emails
@@ -27,7 +27,7 @@
 - [x] Create component: Toast notifications (success, error, info)
 - [x] Create component: Loading states (progress bar shimmer, skeleton, scan-line animation)
 - [x] Create component: Module cards (icon, name, description, hover elevation)
-- [ ] Create component: Hook selection cards (numbered, selectable)
+- [x] Create component: Hook selection cards (numbered, selectable)
 - [x] Create component: Scan loader (AI scanning animation with status lines)
 - [x] Create component: Modal/Drawer for settings and exports
 - [x] Implement grain texture overlay
@@ -38,25 +38,25 @@
 
 ### WAT Framework — Tool Scripts
 - [x] Create `tools/claude_generate.py` — Groq-based AI generator with structured JSON output
-- [ ] Create `tools/claude_stream.py` — streaming AI response handler
+- [x] Create `tools/claude_stream.py` — streaming AI response handler
 - [x] Create `tools/web_search.py` — search via Tavily API
-- [ ] Create `tools/scrape_url.py` — extract content from a URL (for competitor analysis)
+- [x] Create `tools/scrape_url.py` — extract content from a URL (for competitor analysis)
 - [x] Create `tools/export_pdf.py` — convert text/content to PDF
-- [ ] Create `tools/export_docx.py` — convert text to DOCX
-- [ ] Create `tools/canva_export.py` — push design brief to Canva API
-- [ ] Create `tools/brand_kit_validator.py` — validate brand kit completeness
-- [ ] Create `tools/file_upload.py` — handle file uploads to Supabase Storage / R2
+- [x] Create `tools/export_docx.py` — convert text to DOCX
+- [x] Create `tools/canva_export.py` — push design brief to Canva API
+- [x] Create `tools/brand_kit_validator.py` — validate brand kit completeness
+- [x] Create `tools/file_upload.py` — handle file uploads to Supabase Storage / R2
 
 ### WAT Framework — Workflows
 - [x] Create `workflows/script_writing.md` — SOP for Module 1
-- [ ] Create `workflows/video_editing_brief.md` — SOP for Module 2
-- [ ] Create `workflows/carousel_maker.md` — SOP for Module 3
+- [x] Create `workflows/video_editing_brief.md` — SOP for Module 2
+- [x] Create `workflows/carousel_maker.md` — SOP for Module 3
 - [x] Create `workflows/content_ideas.md` — SOP for Module 4
-- [ ] Create `workflows/competitor_intel.md` — SOP for Module 5
-- [ ] Create `workflows/page_setup.md` — SOP for Module 6
+- [x] Create `workflows/competitor_intel.md` — SOP for Module 5
+- [x] Create `workflows/page_setup.md` — SOP for Module 6
 - [x] Create `workflows/thumbnail_maker.md` — SOP for Module 7
-- [ ] Create `workflows/growth_strategy.md` — SOP for Module 8
-- [ ] Create `workflows/onboarding.md` — SOP for new user setup flow
+- [x] Create `workflows/growth_strategy.md` — SOP for Module 8
+- [x] Create `workflows/onboarding.md` — SOP for new user setup flow
 
 ---
 

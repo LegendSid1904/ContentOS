@@ -16,6 +16,9 @@ export type { SelectProps, SelectOption } from "./select";
 export { ModuleCard, ModuleGrid } from "./module-card";
 export type { ModuleCardProps } from "./module-card";
 
+export { HookCard, HookGrid } from "./hook-card";
+export type { Hook } from "./hook-card";
+
 export { AIOutputBlock } from "./ai-output";
 export type { AIOutputBlockProps } from "./ai-output";
 
