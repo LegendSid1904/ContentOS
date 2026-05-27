@@ -12,9 +12,8 @@ const nextConfig: NextConfig = {
 export default withSentryConfig(nextConfig, {
   org: process.env.SENTRY_ORG || "contentos",
   project: process.env.SENTRY_PROJECT || "contentos",
-  silent: !process.env.CI,
+  silent: true,
   widenClientFileUpload: true,
   tunnelRoute: "/monitoring",
   telemetry: false,
-  hideSourceMaps: true,
 });
