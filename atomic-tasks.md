@@ -66,15 +66,15 @@
 - [x] Set up Clerk provider in root layout
 - [x] Create sign-in page (email, Google)
 - [x] Create sign-up page (email, Google)
-- [ ] Create user profile / account settings page
+- [x] Create user profile / account settings page
 - [x] Set up Clerk webhooks → sync user to Supabase
 - [x] Implement session management (middleware route protection + redirects)
-- [ ] Create onboarding flow: Step 1 → Set Niche
+- [x] Create onboarding flow: Step 1 → Set Niche
 - [x] Create Brand Kit page (colors, fonts, tone, platforms)
-- [ ] Create onboarding flow: Step 3 → Choose Primary Platform
-- [ ] Create onboarding flow: Step 4 → First Script (quick win)
+- [x] Create onboarding flow: Step 3 → Choose Primary Platform
+- [x] Create onboarding flow: Step 4 → First Script (quick win)
 - [x] Create Brand Kit model in Drizzle schema
-- [ ] Create Brand Kit CRUD operations
+- [x] Create Brand Kit CRUD operations (save, get, delete)
 - [x] Build Brand Kit UI (edit, preview, save)
 
 ### Dashboard

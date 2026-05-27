@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { PLATFORMS, TONES } from "@/lib/constants";
-import { saveBrandKit, getBrandKit } from "@/lib/actions";
+import { saveBrandKit, getBrandKit, deleteBrandKit } from "@/lib/actions";
 
 const PRESET_COLORS = ["#7C3AED", "#06B6D4", "#D946EF", "#6366F1", "#22C55E", "#F59E0B"];
 
@@ -11,6 +11,7 @@ export default function BrandKitPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [hasKit, setHasKit] = useState(false);
   const [niche, setNiche] = useState("");
   const [selectedTone, setSelectedTone] = useState("");
   const [selectedPlatform, setSelectedPlatform] = useState("");
@@ -19,6 +20,7 @@ export default function BrandKitPage() {
   useEffect(() => {
     getBrandKit().then((kit) => {
       if (kit) {
+        setHasKit(true);
         setNiche(kit.niche ?? "");
         setSelectedTone(kit.tone ?? "");
         setSelectedPlatform(kit.platforms?.[0] ?? "");
@@ -137,7 +139,7 @@ export default function BrandKitPage() {
           </div>
         </div>
 
-        <div className="pt-2 border-t border-white/[0.04]">
+        <div className="pt-2 border-t border-white/[0.04] flex items-center gap-3">
           <button
             onClick={handleSave}
             disabled={saving}
@@ -145,6 +147,23 @@ export default function BrandKitPage() {
           >
             {saving ? "Saving..." : "Save Brand Kit"}
           </button>
+          {hasKit && (
+            <button
+              onClick={async () => {
+                if (confirm("Reset brand kit to defaults?")) {
+                  await deleteBrandKit();
+                  setNiche("");
+                  setSelectedTone("");
+                  setSelectedPlatform("");
+                  setSelectedColors(["#7C3AED"]);
+                  setHasKit(false);
+                }
+              }}
+              className="btn btn-ghost btn-md text-tx-3 hover:text-red-400"
+            >
+              Reset
+            </button>
+          )}
         </div>
       </div>
     </div>

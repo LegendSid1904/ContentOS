@@ -47,6 +47,18 @@ export async function saveBrandKit(formData: FormData) {
   revalidatePath("/dashboard/brand-kit");
 }
 
+export async function deleteBrandKit() {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  const user = await db.select().from(users).where(eq(users.clerkId, userId)).then((r) => r[0]);
+  if (!user) throw new Error("User not found");
+
+  await db.delete(brandKits).where(eq(brandKits.userId, user.id));
+
+  revalidatePath("/dashboard/brand-kit");
+}
+
 export async function getBrandKit() {
   const { userId } = await auth();
   if (!userId) return null;
