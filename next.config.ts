@@ -16,5 +16,5 @@ export default withSentryConfig(nextConfig, {
   widenClientFileUpload: true,
   tunnelRoute: "/monitoring",
   telemetry: false,
-  dryRun: true,
+  hideSourceMaps: true,
 });
