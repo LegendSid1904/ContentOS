@@ -1,0 +1,38 @@
+{
+  "projectId": "12518651703739402355",
+  "designSystemAssetId": "assets/2503410371505204224",
+  "framework": "nextjs",
+  "styling": "css-modules",
+  "screens": {
+    "loading-gate": {
+      "title": "Loading Gate",
+      "route": "/",
+      "description": "CRT terminal loading screen with ASCII logo, boot sequence, and glitch transition"
+    },
+    "landing-page": {
+      "title": "Landing Page",
+      "route": "/",
+      "description": "2Advanced-style landing page with NAVIGATE block, angle-bracket hero, terminal CTAs"
+    },
+    "onboarding": {
+      "title": "Onboarding Flow",
+      "route": "/onboarding",
+      "description": "Multi-step onboarding with role selection, content types, platform connections"
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "route": "/dashboard",
+      "description": "Terminal-welcome dashboard with module grid and status indicators"
+    },
+    "brand-kit": {
+      "title": "Brand Kit",
+      "route": "/dashboard/brand-kit",
+      "description": "Brand identity management with CRUD operations"
+    },
+    "settings": {
+      "title": "Settings",
+      "route": "/dashboard/settings",
+      "description": "Account settings with onboarding reset"
+    }
+  }
+}
