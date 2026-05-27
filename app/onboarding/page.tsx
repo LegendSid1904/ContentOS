@@ -106,6 +106,22 @@ function OnboardingContent() {
       <div className="orb orb-1" />
       <div className="orb orb-2" />
 
+      <div className="crt-scanlines !opacity-[0.04]" />
+      <div className="crt-vignette !bg-[radial-gradient(ellipse_at_center,transparent_30%,rgba(5,5,10,0.5)_100%)]" />
+      <div className="crt-sweep" />
+      <div className="crt-grain" />
+
+      <div className="crt-micro-tl !text-[6px]">
+        <span className="text-te-400/60">sys</span>
+        <span className="text-tx-4">|</span>
+        <span className="text-tx-4">onboarding</span>
+      </div>
+      <div className="crt-micro-tr !text-[6px]">
+        <span className="text-tx-4">step</span>
+        <span className="text-tx-4">|</span>
+        <span className="text-te-400/60">{currentStep}/4</span>
+      </div>
+
       <div className="w-full max-w-lg space-y-8 relative z-10">
         <div className="text-center">
           <div className="inline-flex items-center gap-2.5 mb-2">
@@ -154,7 +170,18 @@ function OnboardingContent() {
         </div>
 
         {currentStep === 1 && (
-          <div className="terminal-frame p-6 space-y-5">
+          <div className="crt-monitor crt-brackets p-0">
+            <div className="crt-scanlines !opacity-[0.04]" />
+            <div className="crt-grain" />
+            <div className="crt-vignette !bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(5,5,10,0.5)_100%)]" />
+            <div className="crt-monitor-header">
+              <span className="font-mono text-[7px] tracking-[0.24em] uppercase text-tx-4">STEP</span>
+              <span className="font-mono text-[6px] text-tx-4">|</span>
+              <span className="font-mono text-[7px] tracking-[0.24em] uppercase text-te-400/70">CONFIGURE</span>
+              <div className="flex-1" />
+              <span className="font-mono text-[7px] tracking-[0.1em] text-tx-4">{"\u2022\u2022\u2022\u2022\u2022\u2022"}</span>
+            </div>
+            <div className="crt-monitor-content p-6 space-y-5">
             <div>
               <h2 className="font-display text-[18px] font-semibold text-tx-1 tracking-tight">What&apos;s your niche?</h2>
               <p className="font-mono text-[11px] text-tx-3 mt-2">
@@ -215,15 +242,32 @@ function OnboardingContent() {
             <button
               onClick={handleStep1Next}
               disabled={!niche.trim() || saving}
-              className="btn btn-primary btn-md w-full"
+              className="btn-terminal btn-terminal-primary w-full justify-center"
             >
-              {saving ? "Saving..." : "Continue"}
+              {saving ? "SAVING..." : "CONTINUE >>"}
             </button>
           </div>
+          <div className="crt-monitor-footer">
+            <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">NICHE</span>
+            <span className="font-mono text-[6px] text-center text-tx-4">[step 1/3]</span>
+            <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">{niche ? "SET" : "PENDING"}</span>
+          </div>
+        </div>
         )}
 
         {currentStep === 3 && (
-          <div className="terminal-frame p-6 space-y-5">
+          <div className="crt-monitor crt-brackets p-0">
+            <div className="crt-scanlines !opacity-[0.04]" />
+            <div className="crt-grain" />
+            <div className="crt-vignette !bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(5,5,10,0.5)_100%)]" />
+            <div className="crt-monitor-header">
+              <span className="font-mono text-[7px] tracking-[0.24em] uppercase text-tx-4">STEP</span>
+              <span className="font-mono text-[6px] text-tx-4">|</span>
+              <span className="font-mono text-[7px] tracking-[0.24em] uppercase text-te-400/70">PLATFORM</span>
+              <div className="flex-1" />
+              <span className="font-mono text-[7px] tracking-[0.1em] text-tx-4">{"\u2022\u2022\u2022\u2022\u2022\u2022"}</span>
+            </div>
+            <div className="crt-monitor-content p-6 space-y-5">
             <div>
               <h2 className="font-display text-[18px] font-semibold text-tx-1 tracking-tight">Where do you create?</h2>
               <p className="font-mono text-[11px] text-tx-3 mt-2">
@@ -257,15 +301,32 @@ function OnboardingContent() {
             <button
               onClick={handleStep3Next}
               disabled={!selectedPlatform || saving}
-              className="btn btn-primary btn-md w-full"
+              className="btn-terminal btn-terminal-primary w-full justify-center"
             >
-              {saving ? "Saving..." : "Continue"}
+              {saving ? "SAVING..." : "CONTINUE >>"}
             </button>
           </div>
+          <div className="crt-monitor-footer">
+            <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">PLATFORM</span>
+            <span className="font-mono text-[6px] text-center text-tx-4">[step 2/3]</span>
+            <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">{selectedPlatform ? "SET" : "PENDING"}</span>
+          </div>
+        </div>
         )}
 
         {currentStep === 4 && (
-          <div className="terminal-frame p-6 space-y-5 text-center">
+          <div className="crt-monitor crt-brackets p-0">
+            <div className="crt-scanlines !opacity-[0.04]" />
+            <div className="crt-grain" />
+            <div className="crt-vignette !bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(5,5,10,0.5)_100%)]" />
+            <div className="crt-monitor-header">
+              <span className="font-mono text-[7px] tracking-[0.24em] uppercase text-tx-4">STEP</span>
+              <span className="font-mono text-[6px] text-tx-4">|</span>
+              <span className="font-mono text-[7px] tracking-[0.24em] uppercase text-te-400/70">COMPLETE</span>
+              <div className="flex-1" />
+              <span className="font-mono text-[7px] tracking-[0.1em] text-tx-4">{"\u2022\u2022\u2022\u2022\u2022\u2022"}</span>
+            </div>
+            <div className="crt-monitor-content p-6 space-y-5 text-center">
             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-vi-500 to-te-400 flex items-center justify-center mx-auto shadow-[0_0_30px_rgba(139,92,246,0.25)]">
               <span className="text-2xl">✦</span>
             </div>
@@ -295,11 +356,21 @@ function OnboardingContent() {
             <button
               onClick={handleFinish}
               disabled={saving}
-              className="btn btn-primary btn-md w-full bg-gradient-to-r from-vi-600 to-te-500 hover:from-vi-500 hover:to-te-400 border-0"
+              className="btn-terminal btn-terminal-primary w-full justify-center"
+              style={{
+                background: "linear-gradient(135deg, rgba(139,92,246,0.12), rgba(34,211,238,0.08))",
+                borderColor: "rgba(139,92,246,0.25)",
+              }}
             >
-              {saving ? "Loading..." : "Write My First Script →"}
+              {saving ? "ACTIVATING..." : "WRITE FIRST SCRIPT >>"}
             </button>
           </div>
+          <div className="crt-monitor-footer">
+            <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">READY</span>
+            <span className="font-mono text-[6px] text-center text-tx-4">[setup complete]</span>
+            <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-ok">DONE</span>
+          </div>
+        </div>
         )}
       </div>
     </div>

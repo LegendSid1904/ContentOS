@@ -35,6 +35,21 @@
 - [x] Add reveal animation utility (opacity 0→1, translateY 18px→0, staggered delays)
 - [x] Define and document motion tokens (ease, easing, durations t1/t2/t3/t4)
 - [x] Build scrollbar styling (thin, dark)
+- [x] CRT Field Station UI overhaul: scanlines, vignette, sweep, grain, brackets, micro status bars
+- [x] CRT monitor component system (`.crt-monitor`, `.crt-brackets`, `.crt-scanlines`, `.crt-vignette`, `.crt-sweep`, `.crt-grain`)
+- [x] Terminal form elements (`.term-field`, `.term-label`, `.spectrum-grid`, `.boot-option`, `.diag-badge`)
+
+### Stitch Design System Alignment
+- [x] Full CRT terminal monitor frames on Brand Kit, Settings, and Onboarding pages
+- [x] Scanline overlay (`.crt-scanlines`), vignette (`.crt-vignette`), CRT sweep line (`.crt-sweep`)
+- [x] Grain texture overlay (`.crt-grain`) and bracket corners (`.crt-brackets`)
+- [x] Micro status bars top/bottom (`.crt-micro-tl/tr/bl/br`) matching loading gate
+- [x] Boot-step selectors for tone & platform (`.boot-option` with `>>`/`▶` arrows)
+- [x] Spectrum grid for color picker (`.spectrum-grid`, `.spectrum-swatch`)
+- [x] Diagnostic badges (`.diag-ok`, `.diag-info`, `.diag-idle`)
+- [x] Terminal loading sequence (`.boot-loader` with staggered fade-in)
+- [x] Consistent typography: Hanken Grotesk + JetBrains Mono, 7px-8px micro labels
+- [x] Consistent colors: `#050508` void, `#8B5CF6` purple, `#22D3EE` cyan accents
 
 ### WAT Framework — Tool Scripts
 - [x] Create `tools/claude_generate.py` — Groq-based AI generator with structured JSON output
