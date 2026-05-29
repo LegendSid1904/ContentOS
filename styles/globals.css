@@ -1145,8 +1145,11 @@ body {
 }
 
 .mod-icon {
-  font-size: 24px;
+  font-family: var(--font-mono);
+  font-size: 22px;
+  line-height: 1;
   margin-bottom: var(--spacing-s2);
+  color: var(--color-tx-2);
 }
 
 .mod-name {

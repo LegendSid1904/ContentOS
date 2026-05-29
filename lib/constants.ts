@@ -9,14 +9,14 @@ export const TONES = ["Educational", "Entertaining", "Motivational", "Controvers
 export type Tone = (typeof TONES)[number];
 
 export const MODULES = [
-  { id: "script-writer", name: "Script Writer", icon: "✍️", desc: "Hook → full script → export in 60 seconds" },
-  { id: "content-ideas", name: "Content Ideas", icon: "💡", desc: "30 niche ideas with viral angles and full calendar" },
-  { id: "carousel-maker", name: "Carousel Maker", icon: "🎨", desc: "AI-written slides → Canva export in 2 minutes" },
-  { id: "competitor-intel", name: "Competitor Intel", icon: "🔍", desc: "Deep scan of top performers in your niche" },
-  { id: "video-brief", name: "Video Brief", icon: "🎬", desc: "Transcript → editing brief + full B-roll list" },
-  { id: "thumbnail-maker", name: "Thumbnail Maker", icon: "🖼️", desc: "5 CTR-optimized thumbnail concepts per video" },
-  { id: "page-setup", name: "Page Setup", icon: "⚙️", desc: "Bio, keywords, highlights — fully AI-optimized" },
-  { id: "growth-strategy", name: "Growth Strategy", icon: "📈", desc: "90-day plan + monetization roadmap" },
+  { id: "script-writer",    name: "Script Writer",      icon: "⌨",  desc: "Hook → full script → export in 60 seconds" },
+  { id: "content-ideas",    name: "Content Ideas",      icon: "◈",  desc: "30 niche ideas with viral angles and full calendar" },
+  { id: "carousel-maker",   name: "Carousel Maker",     icon: "▣",  desc: "AI-written slides → Canva export in 2 minutes" },
+  { id: "competitor-intel", name: "Competitor Intel",   icon: "◎",  desc: "Deep scan of top performers in your niche" },
+  { id: "video-brief",      name: "Video Brief",        icon: "▷",  desc: "Transcript → editing brief + full B-roll list" },
+  { id: "thumbnail-maker",  name: "Thumbnail Maker",    icon: "▤",  desc: "5 CTR-optimized thumbnail concepts per video" },
+  { id: "page-setup",       name: "Page Setup",         icon: "⌘",  desc: "Bio, keywords, highlights — fully AI-optimized" },
+  { id: "growth-strategy",  name: "Growth Strategy",    icon: "↗",  desc: "90-day plan + monetization roadmap" },
 ] as const;
 
 export const PLANS = ["Free", "Creator", "Agency"] as const;
