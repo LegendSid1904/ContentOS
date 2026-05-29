@@ -24,6 +24,34 @@ interface FullScript {
   cta: string;
 }
 
+function BootLoader({ type }: { type: string }) {
+  const steps = type === "hooks"
+    ? ["ANALYZING TOPIC", "GENERATING HOOK VARIANTS", "OPTIMIZING FOR PLATFORM"]
+    : ["COMPOSING SCRIPT STRUCTURE", "WRITING SECTIONS", "FINALIZING OUTPUT"];
+
+  return (
+    <div className="boot-loader">
+      {steps.map((s, i) => (
+        <div key={i} className="boot-loader-line" style={{ animationDelay: `${0.1 + i * 0.2}s` }}>
+          <span className="boot-loader-arrow">{">>"}</span>
+          <span className="boot-loader-text">{s}</span>
+          <span className="boot-loader-ok">
+            {i < 2 ? (
+              <span className="flex gap-0.5 items-center">
+                <span className="w-1 h-1 rounded-full bg-te-400 animate-pulse" style={{ animationDelay: "0s" }} />
+                <span className="w-1 h-1 rounded-full bg-te-400 animate-pulse" style={{ animationDelay: "0.15s" }} />
+                <span className="w-1 h-1 rounded-full bg-te-400 animate-pulse" style={{ animationDelay: "0.3s" }} />
+              </span>
+            ) : (
+              <span className="text-te-400/80 tracking-wider">LOADING</span>
+            )}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function ScriptWriterPage() {
   const [step, setStep] = useState<Step>("input");
   const [loading, setLoading] = useState(false);
@@ -36,6 +64,7 @@ export default function ScriptWriterPage() {
   const [selectedHookId, setSelectedHookId] = useState<string | null>(null);
   const [script, setScript] = useState<FullScript | null>(null);
   const [error, setError] = useState("");
+  const [loadingType, setLoadingType] = useState<"hooks" | "script">("hooks");
   const outputRef = useRef<HTMLDivElement>(null);
 
   const valid = topic.trim() && audience.trim() && platform && tone;
@@ -43,6 +72,7 @@ export default function ScriptWriterPage() {
   async function handleGenerateHooks() {
     if (!valid) return;
     setLoading(true);
+    setLoadingType("hooks");
     setError("");
     try {
       const result = await generateHooks(topic, audience, platform, tone);
@@ -60,6 +90,7 @@ export default function ScriptWriterPage() {
     if (!hook) return;
 
     setLoading(true);
+    setLoadingType("script");
     setError("");
     try {
       const result = await generateScript(topic, audience, platform, tone, hook.hook_text, context);
@@ -86,6 +117,7 @@ export default function ScriptWriterPage() {
     const hook = hooks.find((h) => h.id === selectedHookId);
     if (!hook) return;
     setLoading(true);
+    setLoadingType("script");
     setError("");
     try {
       const result = await generateScript(topic, audience, platform, tone, hook.hook_text, context);
@@ -107,7 +139,7 @@ export default function ScriptWriterPage() {
 
   function copyToClipboard() {
     if (!script) return;
-    const text = script.sections.map((s) => `[${s.timestamp}] ${s.content}\n🎬 ${s.broll}`).join("\n\n") + `\n\nCTA: ${script.cta}`;
+    const text = script.sections.map((s) => `[${s.timestamp}] ${s.content}\n[B-ROLL] ${s.broll}`).join("\n\n") + `\n\nCTA: ${script.cta}`;
     navigator.clipboard.writeText(text);
   }
 
@@ -154,22 +186,7 @@ export default function ScriptWriterPage() {
         </div>
 
         <div className="crt-monitor-content p-6 space-y-6">
-          {loading && (
-            <div className="space-y-3 py-4">
-              {[0, 1, 2].map((i) => (
-                <div key={i} className="flex items-center gap-3 font-mono text-[11px] tracking-wider" style={{ animation: `revealUp 0.35s ease ${i * 0.15}s forwards`, opacity: 0 }}>
-                  <span className="w-2 h-2 rounded-full bg-te-400 animate-beat-pulse" />
-                  <span className="text-te-400/80">{">>"}</span>
-                  <span className="text-tx-2">
-                    {step === "hooks" ? "GENERATING HOOKS" : step === "script" ? "GENERATING SCRIPT" : "PROCESSING"}
-                  </span>
-                  <span className="text-tx-4 animate-pulse ml-auto">
-                    {i === 0 ? "ANALYZING" : i === 1 ? "COMPOSING" : "FINALIZING"}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
+          {loading && <BootLoader type={loadingType} />}
 
           {error && (
             <div className="font-mono text-[11px] text-err bg-err/10 border border-err/20 rounded-r3 p-3">
@@ -261,7 +278,7 @@ export default function ScriptWriterPage() {
                   disabled={!valid}
                   className="btn-terminal btn-terminal-primary disabled:opacity-30 disabled:cursor-not-allowed"
                 >
-                  GENERATE HOOKS
+                  {">>"} GENERATE HOOKS
                 </button>
                 {!valid && (
                   <span className="font-mono text-[8px] text-tx-4 tracking-wider">AWAITING INPUT</span>
@@ -279,46 +296,38 @@ export default function ScriptWriterPage() {
                 </p>
               </div>
 
-              <div className="grid gap-2">
+              <div className="space-y-1">
                 {hooks.map((hook, i) => (
                   <button
                     key={hook.id}
                     onClick={() => handleSelectHook(hook.id)}
-                    className="group relative text-left transition-all duration-300 border rounded-r3 p-3.5 font-mono text-[11px] leading-relaxed"
-                    style={{
-                      borderColor: selectedHookId === hook.id ? "rgba(139,92,246,0.3)" : "rgba(255,255,255,0.04)",
-                      background: selectedHookId === hook.id ? "rgba(139,92,246,0.08)" : "rgba(0,0,0,0.2)",
-                    }}
-                    onMouseEnter={(e) => { if (selectedHookId !== hook.id) { e.currentTarget.style.borderColor = "rgba(139,92,246,0.15)"; e.currentTarget.style.background = "rgba(0,0,0,0.35)"; }}}
-                    onMouseLeave={(e) => { if (selectedHookId !== hook.id) { e.currentTarget.style.borderColor = "rgba(255,255,255,0.04)"; e.currentTarget.style.background = "rgba(0,0,0,0.2)"; }}}
+                    className={`boot-option ${selectedHookId === hook.id ? "active" : ""}`}
+                    style={{ animationDelay: `${0.1 + i * 0.08}s` }}
                   >
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <span className="flex items-center justify-center w-5 h-5 rounded-full text-[9px] font-bold"
-                        style={{
-                          background: selectedHookId === hook.id ? "rgba(139,92,246,0.3)" : "rgba(255,255,255,0.05)",
-                          color: selectedHookId === hook.id ? "rgba(139,92,246,0.9)" : "rgba(152,152,200,0.5)",
-                        }}
-                      >
-                        {i + 1}
-                      </span>
+                    <span className="boot-option-arrow">
+                      {selectedHookId === hook.id ? "\u25B6" : `0${i + 1}`}
+                    </span>
+                    <span className="boot-option-label flex flex-col gap-0.5">
                       <span className="text-[9px] tracking-[0.15em] uppercase text-tx-4">
                         [{hook.framework}]
                       </span>
-                      {selectedHookId === hook.id && (
-                        <span className="ml-auto text-[9px] text-te-400/80 tracking-wider">SELECTED</span>
-                      )}
-                    </div>
-                    <span className="text-tx-2">{hook.hook_text}</span>
+                      <span className="font-mono text-[11px] text-tx-1 leading-relaxed">
+                        {hook.hook_text}
+                      </span>
+                    </span>
+                    <span className={`diag-badge ${selectedHookId === hook.id ? "diag-ok" : "diag-idle"}`}>
+                      {selectedHookId === hook.id ? "[SELECTED]" : "[IDLE]"}
+                    </span>
                   </button>
                 ))}
               </div>
 
               <div className="flex items-center gap-3 pt-2 border-t border-white/[0.04]">
                 <button onClick={handleGenerateHooks} className="btn-terminal">
-                  REGENERATE HOOKS
+                  {">>"} REGENERATE
                 </button>
                 <button onClick={handleReset} className="btn-terminal" style={{ color: "rgba(239,68,68,0.5)", borderColor: "rgba(239,68,68,0.1)" }}>
-                  &larr; BACK
+                  {"^C"} BACK
                 </button>
               </div>
             </>
@@ -330,24 +339,35 @@ export default function ScriptWriterPage() {
                 <label className="term-label">GENERATED_SCRIPT</label>
                 <div className="flex items-center gap-2">
                   <button onClick={copyToClipboard} className="btn-terminal text-[9px]">
-                    COPY
+                    {"[COPY]"}
                   </button>
                   <button onClick={handleSave} className="btn-terminal text-[9px]">
-                    SAVE
+                    {"[SAVE]"}
                   </button>
                   <button onClick={handleRegenerate} className="btn-terminal text-[9px]">
-                    REGENERATE
+                    {"[REGEN]"}
                   </button>
                 </div>
               </div>
 
-              <div className="border border-white/[0.06] rounded-r4 overflow-hidden">
-                <div className="bg-black/30 px-4 py-2.5 border-b border-white/[0.04] flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-vi-400/60" />
-                  <span className="font-mono text-[10px] font-semibold text-tx-1 tracking-tight">{script.title}</span>
+              <div className="crt-monitor relative crt-brackets" style={{ background: "rgba(0,0,0,0.25)" }}>
+                <div className="crt-micro-tl">
+                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-te-400/60">out</span>
+                  <span className="text-tx-4">|</span>
+                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase">script</span>
+                </div>
+                <div className="crt-micro-tr">
+                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">{script.sections.length} sections</span>
                 </div>
 
-                <div className="p-4 space-y-4">
+                <div className="crt-monitor-header">
+                  <span className="w-2 h-2 rounded-full bg-vi-400/60" />
+                  <span className="font-mono text-[10px] font-semibold text-tx-1 tracking-tight ml-2">{script.title}</span>
+                  <div className="flex-1" />
+                  <span className="font-mono text-[7px] tracking-[0.1em] text-tx-4">{"\u2022\u2022"}</span>
+                </div>
+
+                <div className="crt-monitor-content p-4 space-y-4">
                   {script.sections.map((section, i) => (
                     <div key={i} className="space-y-1.5">
                       <div className="flex items-center gap-2">
@@ -369,6 +389,10 @@ export default function ScriptWriterPage() {
                     </div>
                   ))}
                 </div>
+
+                <div className="crt-micro-bl">
+                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-ok">OUTPUT READY</span>
+                </div>
               </div>
 
               <div className="border border-vi-500/10 bg-vi-500/5 rounded-r3 p-3 flex items-start gap-3">
@@ -378,7 +402,7 @@ export default function ScriptWriterPage() {
 
               <div className="flex items-center gap-3 pt-2 border-t border-white/[0.04]">
                 <button onClick={handleReset} className="btn-terminal text-[9px]">
-                  NEW SCRIPT
+                  {">>"} NEW SCRIPT
                 </button>
               </div>
             </div>
@@ -389,7 +413,7 @@ export default function ScriptWriterPage() {
           <span className="font-mono text-[7px] tracking-[0.18em] uppercase"
             style={{ color: step === "script" ? "rgba(34,197,94,0.6)" : "rgba(86,86,128,0.6)" }}
           >
-            {step === "input" ? "AWAITING INPUT" : step === "hooks" ? "HOOKS READY" : step === "script" ? "SCRIPT READY" : "IDLE"}
+            {step === "input" ? "AWAITING INPUT" : step === "hooks" ? "HOOKS READY" : "SCRIPT READY"}
           </span>
         </div>
         <div className="crt-micro-br">

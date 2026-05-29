@@ -1091,6 +1091,8 @@ body {
   padding: var(--spacing-s5);
   transition: all 0.3s ease;
   position: relative;
+  display: block;
+  text-decoration: none;
 }
 
 .module-card-2a::before {

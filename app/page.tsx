@@ -167,12 +167,12 @@ export default async function Home() {
 
           <div className="module-grid">
             {MODULES.map((mod, i) => (
-              <div key={mod.id} className="module-card-2a cursor-default">
+              <Link key={mod.id} href={userId ? "/dashboard" : "/sign-up"} className="module-card-2a">
                 <span className="mod-badge">[module {String(i + 1).padStart(2, "0")}]</span>
                 <div className="mod-icon">{mod.icon}</div>
                 <div className="mod-name">{mod.name}</div>
                 <div className="mod-desc">{mod.desc}</div>
-              </div>
+              </Link>
             ))}
           </div>
         </section>
