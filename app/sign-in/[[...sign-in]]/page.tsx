@@ -3,6 +3,39 @@ import Link from "next/link";
 
 export default function SignInPage() {
   return (
+    <>
+      <style>{`
+        .cl-card { background: transparent !important; box-shadow: none !important; }
+        .cl-headerTitle { display: none !important; }
+        .cl-headerSubtitle { display: none !important; }
+        .cl-formHeader { display: none !important; }
+        .cl-formHeaderTitle { display: none !important; }
+        .cl-formHeaderSubtitle { display: none !important; }
+        .cl-footerAction { display: none !important; }
+        .cl-footer { display: none !important; }
+        .cl-developmentBadge { display: none !important; }
+        .cl-internal-17tflcl { display: none !important; }
+        .cl-internal-1hp5nqm { display: none !important; }
+        .cl-internal-1ou6n2n { display: none !important; }
+        .cl-internal-1rbjifd { display: none !important; }
+        .cl-internal-df7v37 { display: none !important; }
+        .cl-internal-13qjisj { display: none !important; }
+        .cl-internal-1v2kiki { display: none !important; }
+        .cl-socialButtonsBlockButton { background: rgba(0,0,0,0.3) !important; border: 1px solid rgba(255,255,255,0.06) !important; color: rgba(240,238,255,0.7) !important; font-family: 'JetBrains Mono', monospace !important; font-size: 11px !important; letter-spacing: 0.05em !important; height: 40px !important; border-radius: 2px !important; }
+        .cl-socialButtonsBlockButton:hover { background: rgba(255,255,255,0.04) !important; border-color: rgba(255,255,255,0.1) !important; color: rgb(240,238,255) !important; }
+        .cl-dividerLine { background: rgba(255,255,255,0.06) !important; }
+        .cl-dividerText { color: rgba(46,46,80,1) !important; font-size: 9px !important; font-family: 'JetBrains Mono', monospace !important; letter-spacing: 0.2em !important; text-transform: uppercase !important; background: transparent !important; }
+        .cl-formFieldLabel { color: rgba(86,86,128,1) !important; font-size: 9px !important; font-family: 'JetBrains Mono', monospace !important; letter-spacing: 0.2em !important; text-transform: uppercase !important; }
+        .cl-formFieldInput { background: rgba(0,0,0,0.35) !important; border: 1px solid rgba(255,255,255,0.04) !important; color: rgb(240,238,255) !important; font-family: 'JetBrains Mono', monospace !important; font-size: 13px !important; caret-color: #22d3ee !important; border-radius: 2px !important; height: 42px !important; }
+        .cl-formFieldInput:focus { border-color: rgba(139,92,246,0.3) !important; box-shadow: 0 0 12px rgba(139,92,246,0.04) !important; }
+        .cl-formButtonPrimary { background: transparent !important; border: 1px solid rgba(139,92,246,0.2) !important; color: rgb(167,139,250) !important; font-family: 'JetBrains Mono', monospace !important; font-size: 10px !important; letter-spacing: 0.12em !important; text-transform: uppercase !important; height: 40px !important; border-radius: 2px !important; }
+        .cl-formButtonPrimary:hover { background: rgba(139,92,246,0.1) !important; border-color: rgba(139,92,246,0.3) !important; color: rgb(196,181,253) !important; box-shadow: 0 0 30px rgba(139,92,246,0.1) !important; }
+        .cl-identityPreview { display: none !important; }
+        .cl-alert { background: rgba(0,0,0,0.3) !important; border: 1px solid rgba(239,68,68,0.2) !important; color: rgb(239,68,68) !important; font-size: 10px !important; font-family: 'JetBrains Mono', monospace !important; border-radius: 2px !important; padding: 12px !important; }
+        .cl-alertText { color: rgb(239,68,68) !important; font-size: 10px !important; font-family: 'JetBrains Mono', monospace !important; }
+        .cl-socialButtonsProviderIcon { width: 18px !important; height: 18px !important; }
+        .cl-socialButtonsProviderText { color: rgba(240,238,255,0.7) !important; font-family: 'JetBrains Mono', monospace !important; font-size: 11px !important; }
+      `}</style>
     <div className="min-h-screen bg-bg-void flex flex-col items-center justify-center p-6 relative overflow-hidden">
       <div className="cyber-grid">
         <div className="cyber-grid-inner opacity-40" />
@@ -141,5 +174,6 @@ export default function SignInPage() {
         <span className="text-tx-4">tls 1.3</span>
       </div>
     </div>
+    </>
   );
 }
