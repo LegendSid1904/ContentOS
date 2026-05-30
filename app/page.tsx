@@ -34,8 +34,11 @@ export default async function Home() {
             </Link>
           ) : (
             <div className="flex items-center gap-3">
-              <Link href="/sign-in" className="font-mono text-[9px] text-tx-3 tracking-[0.15em] uppercase hover:text-tx-2 transition-colors">
-                [sign in]
+              <Link
+                href="/sign-in"
+                className="font-mono text-[9px] text-tx-2 tracking-[0.15em] uppercase border border-white/[0.06] px-3 py-1.5 rounded-[2px] hover:border-vi-500/20 hover:text-vi-300 transition-all duration-150"
+              >
+                {">>"} log in
               </Link>
               <Link href="/sign-up" className="font-mono text-[9px] text-vi-400 tracking-[0.15em] uppercase hover:text-vi-300 transition-colors">
                 [get started]
