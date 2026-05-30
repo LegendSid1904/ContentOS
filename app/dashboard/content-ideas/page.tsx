@@ -3,6 +3,8 @@
 import { useState, useRef } from "react";
 import { MODULES } from "@/lib/constants";
 import { generateIdeas, generateAngles, generateCalendar, saveIdeas, type Idea } from "@/lib/actions-content-ideas";
+import { useAuthGate } from "@/lib/use-auth-gate";
+import { SignInModal } from "@/components/auth/sign-in-modal";
 
 type Step = "input" | "ideas" | "angles" | "calendar";
 
@@ -174,62 +176,71 @@ export default function ContentIdeasPage() {
   const [calendar, setCalendar] = useState<{ day: number; title: string; format: string; platform: string; pillar: string }[]>([]);
   const [error, setError] = useState("");
   const outputRef = useRef<HTMLDivElement>(null);
+  const { showModal, gate, closeModal } = useAuthGate();
 
   const valid = niche.trim() && audience.trim();
 
   async function handleGenerateIdeas() {
     if (!valid) return;
-    setLoading(true);
-    setLoadingType("ideas");
-    setError("");
-    try {
-      const result = await generateIdeas(niche, audience, trendMode ? "trending" : undefined);
-      setPillars(result.pillars);
-      setIdeas(result.ideas);
-      setStep("ideas");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Generation failed");
-    }
-    setLoading(false);
+    gate(async () => {
+      setLoading(true);
+      setLoadingType("ideas");
+      setError("");
+      try {
+        const result = await generateIdeas(niche, audience, trendMode ? "trending" : undefined);
+        setPillars(result.pillars);
+        setIdeas(result.ideas);
+        setStep("ideas");
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Generation failed");
+      }
+      setLoading(false);
+    });
   }
 
   async function handleSelectIdea(idea: Idea) {
     setSelectedIdea(idea);
-    setLoading(true);
-    setLoadingType("angles");
-    setError("");
-    try {
-      const result = await generateAngles(niche, audience, idea.title);
-      setAngles(result);
-      setStep("angles");
-      setTimeout(() => outputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Angle generation failed");
-    }
-    setLoading(false);
+    gate(async () => {
+      setLoading(true);
+      setLoadingType("angles");
+      setError("");
+      try {
+        const result = await generateAngles(niche, audience, idea.title);
+        setAngles(result);
+        setStep("angles");
+        setTimeout(() => outputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Angle generation failed");
+      }
+      setLoading(false);
+    });
   }
 
   async function handleGenerateCalendar() {
-    setLoading(true);
-    setLoadingType("calendar");
-    setError("");
-    try {
-      const result = await generateCalendar(ideas.map((i) => ({ title: i.title, format: i.format })));
-      setCalendar(result);
-      setStep("calendar");
-      setTimeout(() => outputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Calendar generation failed");
-    }
-    setLoading(false);
+    gate(async () => {
+      setLoading(true);
+      setLoadingType("calendar");
+      setError("");
+      try {
+        const result = await generateCalendar(ideas.map((i) => ({ title: i.title, format: i.format })));
+        setCalendar(result);
+        setStep("calendar");
+        setTimeout(() => outputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Calendar generation failed");
+      }
+      setLoading(false);
+    });
   }
 
   async function handleSave() {
-    try {
-      await saveIdeas(`Ideas: ${niche}`, { pillars, ideas });
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Save failed");
-    }
+    gate(async () => {
+      try {
+        await saveIdeas(`Ideas: ${niche}`, { pillars, ideas });
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Save failed");
+      }
+    });
   }
 
   function handleReset() {
@@ -506,6 +517,8 @@ export default function ContentIdeasPage() {
           </span>
         </div>
       </div>
+
+      <SignInModal open={showModal} onClose={closeModal} />
     </div>
   );
 }

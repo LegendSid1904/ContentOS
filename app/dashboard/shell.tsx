@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { UserButton } from "@clerk/nextjs";
+import { UserButton, useAuth } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { SidebarNav } from "@/components/sidebar-nav";
@@ -17,6 +17,7 @@ for (const m of MODULES) {
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
+  const { isSignedIn } = useAuth();
 
   const activeModule = Object.keys(moduleNames).find(
     (id) => pathname === `/dashboard/${id}` || pathname.startsWith(`/dashboard/${id}/`),
@@ -60,10 +61,21 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         <SidebarNav onNav={() => setSidebarOpen(false)} />
 
         <div className="p-3 border-t border-white/[0.04] flex items-center gap-3 flex-shrink-0">
-          <div className="[&_.cl-userButtonBox]:w-7 [&_.cl-userButtonBox]:h-7 [&_.cl-avatarBox]:w-7 [&_.cl-avatarBox]:h-7">
-            <UserButton />
-          </div>
-          <span className="font-mono text-[9px] text-tx-3 tracking-[0.12em] uppercase">[account]</span>
+          {isSignedIn ? (
+            <>
+              <div className="[&_.cl-userButtonBox]:w-7 [&_.cl-userButtonBox]:h-7 [&_.cl-avatarBox]:w-7 [&_.cl-avatarBox]:h-7">
+                <UserButton />
+              </div>
+              <span className="font-mono text-[9px] text-tx-3 tracking-[0.12em] uppercase">[account]</span>
+            </>
+          ) : (
+            <Link
+              href="/sign-in"
+              className="font-mono text-[9px] text-vi-400 tracking-[0.12em] uppercase border border-vi-500/20 px-3 py-1.5 rounded-[2px] hover:bg-vi-500/10 transition-all duration-150 w-full text-center"
+            >
+              {">>"} sign in
+            </Link>
+          )}
         </div>
       </aside>
 

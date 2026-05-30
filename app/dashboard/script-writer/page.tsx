@@ -3,6 +3,8 @@
 import { useState, useRef } from "react";
 import { PLATFORMS, TONES } from "@/lib/constants";
 import { generateHooks, generateScript, saveScript } from "@/lib/actions-script";
+import { useAuthGate } from "@/lib/use-auth-gate";
+import { SignInModal } from "@/components/auth/sign-in-modal";
 
 type Step = "input" | "hooks" | "script";
 
@@ -66,22 +68,25 @@ export default function ScriptWriterPage() {
   const [error, setError] = useState("");
   const [loadingType, setLoadingType] = useState<"hooks" | "script">("hooks");
   const outputRef = useRef<HTMLDivElement>(null);
+  const { showModal, gate, closeModal } = useAuthGate();
 
   const valid = topic.trim() && audience.trim() && platform && tone;
 
   async function handleGenerateHooks() {
     if (!valid) return;
-    setLoading(true);
-    setLoadingType("hooks");
-    setError("");
-    try {
-      const result = await generateHooks(topic, audience, platform, tone);
-      setHooks(result);
-      setStep("hooks");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Generation failed");
-    }
-    setLoading(false);
+    gate(async () => {
+      setLoading(true);
+      setLoadingType("hooks");
+      setError("");
+      try {
+        const result = await generateHooks(topic, audience, platform, tone);
+        setHooks(result);
+        setStep("hooks");
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Generation failed");
+      }
+      setLoading(false);
+    });
   }
 
   async function handleSelectHook(id: string) {
@@ -89,44 +94,50 @@ export default function ScriptWriterPage() {
     const hook = hooks.find((h) => h.id === id);
     if (!hook) return;
 
-    setLoading(true);
-    setLoadingType("script");
-    setError("");
-    try {
-      const result = await generateScript(topic, audience, platform, tone, hook.hook_text, context);
-      setScript(result);
-      setStep("script");
-      setTimeout(() => outputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Script generation failed");
-    }
-    setLoading(false);
-  }
-
-  async function handleSave() {
-    if (!script) return;
-    try {
-      await saveScript(script.title, script);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Save failed");
-    }
+    gate(async () => {
+      setLoading(true);
+      setLoadingType("script");
+      setError("");
+      try {
+        const result = await generateScript(topic, audience, platform, tone, hook.hook_text, context);
+        setScript(result);
+        setStep("script");
+        setTimeout(() => outputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Script generation failed");
+      }
+      setLoading(false);
+    });
   }
 
   async function handleRegenerate() {
     if (!selectedHookId) return;
     const hook = hooks.find((h) => h.id === selectedHookId);
     if (!hook) return;
-    setLoading(true);
-    setLoadingType("script");
-    setError("");
-    try {
-      const result = await generateScript(topic, audience, platform, tone, hook.hook_text, context);
-      setScript(result);
-      setTimeout(() => outputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Script generation failed");
-    }
-    setLoading(false);
+    gate(async () => {
+      setLoading(true);
+      setLoadingType("script");
+      setError("");
+      try {
+        const result = await generateScript(topic, audience, platform, tone, hook.hook_text, context);
+        setScript(result);
+        setTimeout(() => outputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Script generation failed");
+      }
+      setLoading(false);
+    });
+  }
+
+  async function handleSave() {
+    if (!script) return;
+    gate(async () => {
+      try {
+        await saveScript(script.title, script);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Save failed");
+      }
+    });
   }
 
   function handleReset() {
@@ -432,6 +443,8 @@ export default function ScriptWriterPage() {
           </span>
         </div>
       </div>
+
+      <SignInModal open={showModal} onClose={closeModal} />
     </div>
   );
 }
