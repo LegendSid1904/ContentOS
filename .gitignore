@@ -5,6 +5,8 @@ node_modules/
 .env
 .env.local
 .env.production
+.env.development
+.env.staging
 
 # Google OAuth
 credentials.json
@@ -21,10 +23,19 @@ Thumbs.db
 # Next.js
 .next/
 out/
+next-env.d.ts
 
 # Build
 dist/
 build/
+tsconfig.tsbuildinfo
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # Temp files
 .tmp/
@@ -39,9 +50,12 @@ venv/
 # Supabase
 supabase/.temp
 
-# Debug logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+# Secrets
+*.pem
+*.key
+*.p12
+*.pfx
+*.keystore
+service-account*.json
 
 .vercel
