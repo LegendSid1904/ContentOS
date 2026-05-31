@@ -184,14 +184,16 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {/* Username */}
+            {/* Handle */}
             <div>
-              <label className="term-label mb-2">USERNAME</label>
+              <label className="term-label mb-2">HANDLE</label>
               <input
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); }}
-                placeholder="e.g. @creatorname"
+                placeholder="@creator_handle"
+                autoComplete="off"
+                data-form-type="other"
                 className="term-field"
               />
               <p className="font-mono text-[8px] text-tx-4 mt-1 tracking-wider">
