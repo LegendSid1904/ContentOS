@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { MODULES } from "@/lib/constants";
+import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
+import { useAuth } from "@clerk/nextjs";
 import { generateIdeas, generateAngles, generateCalendar, saveIdeas, type Idea } from "@/lib/actions-content-ideas";
+import { getContentDefaults } from "@/lib/actions";
 import { useAuthGate } from "@/lib/use-auth-gate";
 import { SignInModal } from "@/components/auth/sign-in-modal";
 
@@ -176,20 +178,43 @@ export default function ContentIdeasPage() {
   const [calendar, setCalendar] = useState<{ day: number; title: string; format: string; platform: string; pillar: string }[]>([]);
   const [error, setError] = useState("");
   const outputRef = useRef<HTMLDivElement>(null);
-  const { showModal, gate, closeModal } = useAuthGate();
+  const { isSignedIn } = useAuth();
+  const { showModal, gate, closeModal, freeActionsLeft, savePreviewState, restorePreviewState } = useAuthGate("generate ideas");
+
+  useEffect(() => {
+    const saved = restorePreviewState<{ ideas: Idea[]; pillars: string[]; angles: string[]; calendar: typeof calendar; step: Step; selectedIdea: Idea | null }>();
+    if (saved) {
+      setIdeas(saved.ideas ?? []);
+      setPillars(saved.pillars ?? []);
+      setAngles(saved.angles ?? []);
+      setCalendar(saved.calendar ?? []);
+      setStep(saved.step ?? "input");
+      setSelectedIdea(saved.selectedIdea ?? null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!isSignedIn) return;
+    getContentDefaults().then((defaults) => {
+      if (!defaults) return;
+    });
+  }, [isSignedIn]);
 
   const valid = niche.trim() && audience.trim();
 
   async function handleGenerateIdeas() {
     if (!valid) return;
+    savePreviewState({ ideas, pillars, angles, calendar, step, selectedIdea });
     gate(async () => {
       setLoading(true);
       setLoadingType("ideas");
       setError("");
       try {
         const result = await generateIdeas(niche, audience, trendMode ? "trending" : undefined);
-        setPillars(result.pillars);
-        setIdeas(result.ideas);
+        if (!result.ok) { setError(result.error); setLoading(false); return; }
+        setPillars(result.data.pillars);
+        setIdeas(result.data.ideas);
         setStep("ideas");
       } catch (e) {
         setError(e instanceof Error ? e.message : "Generation failed");
@@ -200,13 +225,15 @@ export default function ContentIdeasPage() {
 
   async function handleSelectIdea(idea: Idea) {
     setSelectedIdea(idea);
+    savePreviewState({ ideas, pillars, angles, calendar, step, selectedIdea: idea });
     gate(async () => {
       setLoading(true);
       setLoadingType("angles");
       setError("");
       try {
         const result = await generateAngles(niche, audience, idea.title);
-        setAngles(result);
+        if (!result.ok) { setError(result.error); setLoading(false); return; }
+        setAngles(result.data);
         setStep("angles");
         setTimeout(() => outputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
       } catch (e) {
@@ -217,13 +244,15 @@ export default function ContentIdeasPage() {
   }
 
   async function handleGenerateCalendar() {
+    savePreviewState({ ideas, pillars, angles, calendar, step, selectedIdea });
     gate(async () => {
       setLoading(true);
       setLoadingType("calendar");
       setError("");
       try {
         const result = await generateCalendar(ideas.map((i) => ({ title: i.title, format: i.format })));
-        setCalendar(result);
+        if (!result.ok) { setError(result.error); setLoading(false); return; }
+        setCalendar(result.data);
         setStep("calendar");
         setTimeout(() => outputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
       } catch (e) {
@@ -234,9 +263,11 @@ export default function ContentIdeasPage() {
   }
 
   async function handleSave() {
+    savePreviewState({ ideas, pillars, angles, calendar, step, selectedIdea });
     gate(async () => {
       try {
-        await saveIdeas(`Ideas: ${niche}`, { pillars, ideas });
+        const result = await saveIdeas(`Ideas: ${niche}`, { pillars, ideas });
+        if (!result.ok) { setError(result.error); return; }
       } catch (e) {
         setError(e instanceof Error ? e.message : "Save failed");
       }
@@ -291,7 +322,7 @@ export default function ContentIdeasPage() {
         <div className="crt-micro-tr">
           <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">v1.0.0</span>
           <span className="text-tx-4">|</span>
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">id: active</span>
+          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">id: {isSignedIn ? "active" : "preview"}</span>
         </div>
 
         <div className="crt-monitor-header">
@@ -511,14 +542,27 @@ export default function ContentIdeasPage() {
           <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">
             {step === "input" ? "INPUT" : step === "ideas" ? "IDEAS" : step === "angles" ? "ANGLES" : "CALENDAR"}
           </span>
-          <span className="font-mono text-[6px] text-center text-tx-4">[system ready]</span>
+          <span className="font-mono text-[6px] text-center">
+            {!isSignedIn ? (
+              <span className="text-vi-400/60">
+                {freeActionsLeft > 0 ? `FREE: ${freeActionsLeft} gen` : "FREE: 0 "}
+                {!isSignedIn && freeActionsLeft <= 0 && (
+                  <Link href="/sign-in?redirect_url=%2Fdashboard%2Fcontent-ideas" className="text-vi-400/80 hover:text-vi-300 underline">
+                    [sign in]
+                  </Link>
+                )}
+              </span>
+            ) : (
+              <span className="text-tx-4">[system ready]</span>
+            )}
+          </span>
           <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">
             {loading ? "BUSY" : "STANDBY"}
           </span>
         </div>
       </div>
 
-      <SignInModal open={showModal} onClose={closeModal} />
+      <SignInModal open={showModal} onClose={closeModal} context="generate ideas" />
     </div>
   );
 }

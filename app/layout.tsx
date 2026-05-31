@@ -23,8 +23,11 @@ export const metadata: Metadata = {
   description: "The AI-powered content operating system",
   icons: {
     icon: [
+      { url: "/favicon.ico", type: "image/x-icon" },
       { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon-32x32.png", type: "image/png", sizes: "32x32" },
     ],
+    shortcut: "/favicon.ico",
     apple: [
       { url: "/apple-touch-icon.svg", type: "image/svg+xml" },
     ],
@@ -57,6 +60,7 @@ export default function RootLayout({
     >
       <html lang="en" className={`${hanken.variable} ${jetbrainsMono.variable}`}>
         <head>
+          <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
           <style>{`
             #instant-loader {
               position: fixed; inset: 0; z-index: 99999;

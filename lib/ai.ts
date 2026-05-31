@@ -37,6 +37,23 @@ export async function generateText(params: {
   };
 }
 
+function extractJSON(text: string): string {
+  const jsonMatch = text.match(/```(?:json)?\s*(\{[\s\S]*?\}|\[[\s\S]*?\])\s*```/);
+  if (jsonMatch) return jsonMatch[1];
+
+  const braceStart = text.indexOf("{");
+  const bracketStart = text.indexOf("[");
+  const start = braceStart >= 0 && (bracketStart < 0 || braceStart < bracketStart) ? braceStart : bracketStart;
+  if (start < 0) throw new Error("No JSON object or array found in response");
+
+  const lastBrace = text.lastIndexOf("}");
+  const lastBracket = text.lastIndexOf("]");
+  const end = lastBrace > lastBracket ? lastBrace : lastBracket;
+  if (end < 0) throw new Error("No closing bracket found in response");
+
+  return text.slice(start, end + 1);
+}
+
 export async function generateJSON<T>(params: {
   systemPrompt: string;
   prompt: string;
@@ -48,5 +65,13 @@ export async function generateJSON<T>(params: {
     temperature: params.temperature ?? 0.3,
   });
 
-  return JSON.parse(result.content) as T;
+  try {
+    const cleaned = extractJSON(result.content);
+    return JSON.parse(cleaned) as T;
+  } catch (e) {
+    const snippet = result.content.slice(0, 200).replace(/\n/g, "\\n");
+    throw new Error(
+      `AI response was not valid JSON. First 200 chars: ${snippet}`
+    );
+  }
 }

@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { UserButton, useAuth } from "@clerk/nextjs";
+import { UserButton, useAuth, useUser } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { SidebarNav } from "@/components/sidebar-nav";
 import { Icons } from "@/components/icons";
 import { MODULES } from "@/lib/constants";
+import { getProfile } from "@/lib/actions";
 
 const moduleNames: Record<string, string> = {};
 for (const m of MODULES) {
@@ -16,8 +17,22 @@ for (const m of MODULES) {
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [username, setUsername] = useState("");
   const pathname = usePathname();
   const { isSignedIn } = useAuth();
+  const { user } = useUser();
+
+  useEffect(() => {
+    const il = document.getElementById("instant-loader");
+    if (il) il.classList.add("hidden");
+  }, []);
+
+  useEffect(() => {
+    if (!isSignedIn) return;
+    getProfile().then((data) => {
+      if (data?.profile?.username) setUsername(data.profile.username);
+    });
+  }, [isSignedIn]);
 
   const activeModule = Object.keys(moduleNames).find(
     (id) => pathname === `/dashboard/${id}` || pathname.startsWith(`/dashboard/${id}/`),
@@ -63,10 +78,23 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         <div className="p-3 border-t border-white/[0.04] flex items-center gap-3 flex-shrink-0">
           {isSignedIn ? (
             <>
-              <div className="[&_.cl-userButtonBox]:w-7 [&_.cl-userButtonBox]:h-7 [&_.cl-avatarBox]:w-7 [&_.cl-avatarBox]:h-7">
+              <div className="[&_.cl-userButtonBox]:w-7 [&_.cl-userButtonBox]:h-7 [&_.cl-avatarBox]:w-7 [&_.cl-avatarBox]:h-7 flex-shrink-0">
                 <UserButton />
               </div>
-              <span className="font-mono text-[9px] text-tx-3 tracking-[0.12em] uppercase">[account]</span>
+              <div className="min-w-0 flex-1">
+                <div className="font-mono text-[10px] text-tx-1 truncate leading-tight">
+                  {username || user?.firstName || "Creator"}
+                </div>
+                <div className="font-mono text-[7px] text-tx-4 tracking-[0.12em] uppercase truncate">
+                  {user?.emailAddresses[0]?.emailAddress || "creator"}
+                </div>
+              </div>
+              <Link
+                href="/dashboard/settings"
+                className="font-mono text-[7px] text-vi-400/60 hover:text-vi-400 tracking-[0.1em] uppercase flex-shrink-0 transition-colors"
+              >
+                [settings]
+              </Link>
             </>
           ) : (
             <Link

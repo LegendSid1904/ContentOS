@@ -2,8 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
 import { PLATFORMS, TONES } from "@/lib/constants";
 import { saveBrandKit, getBrandKit, deleteBrandKit } from "@/lib/actions";
+import { useAuthGate } from "@/lib/use-auth-gate";
+import { SignInModal } from "@/components/auth/sign-in-modal";
 
 const PRESET_COLORS = ["#7C3AED", "#06B6D4", "#D946EF", "#6366F1", "#22C55E", "#F59E0B"];
 
@@ -40,8 +43,17 @@ function BootLoader() {
   );
 }
 
+const DEMO_BRAND_KIT = {
+  niche: "Creator Economy",
+  tone: "Educational",
+  platform: "YouTube",
+  colors: ["#7C3AED", "#06B6D4", "#22C55E"],
+};
+
 export default function BrandKitPage() {
   const router = useRouter();
+  const { isSignedIn } = useAuth();
+  const { showModal, gate, closeModal } = useAuthGate("save your brand kit");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [hasKit, setHasKit] = useState(false);
@@ -51,6 +63,14 @@ export default function BrandKitPage() {
   const [selectedColors, setSelectedColors] = useState<string[]>(["#7C3AED"]);
 
   useEffect(() => {
+    if (!isSignedIn) {
+      setNiche(DEMO_BRAND_KIT.niche);
+      setSelectedTone(DEMO_BRAND_KIT.tone);
+      setSelectedPlatform(DEMO_BRAND_KIT.platform);
+      setSelectedColors(DEMO_BRAND_KIT.colors);
+      setLoading(false);
+      return;
+    }
     getBrandKit().then((kit) => {
       if (kit) {
         setHasKit(true);
@@ -61,7 +81,7 @@ export default function BrandKitPage() {
       }
       setLoading(false);
     });
-  }, []);
+  }, [isSignedIn]);
 
   async function handleSave() {
     setSaving(true);
@@ -109,7 +129,7 @@ export default function BrandKitPage() {
         <div className="crt-micro-tr">
           <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">v1.0.4</span>
           <span className="text-tx-4">|</span>
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">id: {hasKit ? "active" : "null"}</span>
+          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">id: {isSignedIn ? "active" : "preview"}</span>
         </div>
 
         <div className="crt-monitor-header">
@@ -208,24 +228,32 @@ export default function BrandKitPage() {
               </div>
             </div>
 
+            {!isSignedIn && (
+              <div className="reveal d5 font-mono text-[9px] text-vi-400/70 border border-vi-500/15 bg-vi-500/5 rounded-r3 p-2.5 text-center tracking-wider">
+                * PREVIEW — sign in to save your brand kit
+              </div>
+            )}
+
             <div className="reveal d5 flex items-center gap-3 pt-2 border-t border-white/[0.04]">
               <button
-                onClick={handleSave}
+                onClick={() => gate(handleSave)}
                 disabled={saving}
                 className="btn-terminal btn-terminal-primary"
               >
                 {saving ? "EXECUTING..." : `EXECUTE :: SAVE`}
               </button>
-              {hasKit && (
+              {hasKit && isSignedIn && (
                 <button
                   onClick={async () => {
                     if (confirm("Reset brand kit to defaults?")) {
-                      await deleteBrandKit();
-                      setNiche("");
-                      setSelectedTone("");
-                      setSelectedPlatform("");
-                      setSelectedColors(["#7C3AED"]);
-                      setHasKit(false);
+                      gate(async () => {
+                        await deleteBrandKit();
+                        setNiche("");
+                        setSelectedTone("");
+                        setSelectedPlatform("");
+                        setSelectedColors(["#7C3AED"]);
+                        setHasKit(false);
+                      });
                     }
                   }}
                   className="btn-terminal"
@@ -261,6 +289,8 @@ export default function BrandKitPage() {
           </span>
         </div>
       </div>
+
+      <SignInModal open={showModal} onClose={closeModal} context="save your brand kit" />
     </div>
   );
 }

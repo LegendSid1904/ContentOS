@@ -63,3 +63,16 @@ export const subscriptions = pgTable("subscriptions", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+export const profiles = pgTable("profiles", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").references(() => users.id).notNull().unique(),
+  username: text("username"),
+  bio: text("bio"),
+  experienceLevel: text("experience_level").default("beginner").notNull(),
+  postingSchedule: text("posting_schedule").default("3x_week").notNull(),
+  socialLinks: jsonb("social_links").default({}).notNull(),
+  contentDefaults: jsonb("content_defaults").default({ defaultPlatform: "", defaultTone: "", defaultFormat: "" }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});

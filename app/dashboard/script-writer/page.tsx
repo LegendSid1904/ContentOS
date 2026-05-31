@@ -1,8 +1,11 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
+import { useAuth } from "@clerk/nextjs";
 import { PLATFORMS, TONES } from "@/lib/constants";
 import { generateHooks, generateScript, saveScript } from "@/lib/actions-script";
+import { getContentDefaults } from "@/lib/actions";
 import { useAuthGate } from "@/lib/use-auth-gate";
 import { SignInModal } from "@/components/auth/sign-in-modal";
 
@@ -68,24 +71,50 @@ export default function ScriptWriterPage() {
   const [error, setError] = useState("");
   const [loadingType, setLoadingType] = useState<"hooks" | "script">("hooks");
   const outputRef = useRef<HTMLDivElement>(null);
-  const { showModal, gate, closeModal } = useAuthGate();
+  const { isSignedIn } = useAuth();
+  const { showModal, gate, closeModal, freeActionsLeft, savePreviewState, restorePreviewState } = useAuthGate("generate hooks");
+
+  useEffect(() => {
+    const saved = restorePreviewState<{ hooks: Hook[]; script: FullScript | null; step: Step; selectedHookId: string | null }>();
+    if (saved) {
+      setHooks(saved.hooks ?? []);
+      setScript(saved.script ?? null);
+      setStep(saved.step ?? "input");
+      setSelectedHookId(saved.selectedHookId ?? null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!isSignedIn) return;
+    getContentDefaults().then((defaults) => {
+      if (!defaults) return;
+      if (defaults.defaultPlatform && !platform) setPlatform(defaults.defaultPlatform);
+      if (defaults.defaultTone && !tone) setTone(defaults.defaultTone);
+    });
+    // only on mount when signed in
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSignedIn]);
 
   const valid = topic.trim() && audience.trim() && platform && tone;
 
   async function handleGenerateHooks() {
     if (!valid) return;
+    savePreviewState({ hooks, script, step, selectedHookId });
     gate(async () => {
       setLoading(true);
       setLoadingType("hooks");
       setError("");
       try {
         const result = await generateHooks(topic, audience, platform, tone);
-        setHooks(result);
+        if (!result.ok) { setError(result.error); return; }
+        setHooks(result.data);
         setStep("hooks");
       } catch (e) {
         setError(e instanceof Error ? e.message : "Generation failed");
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
   }
 
@@ -94,19 +123,22 @@ export default function ScriptWriterPage() {
     const hook = hooks.find((h) => h.id === id);
     if (!hook) return;
 
+    savePreviewState({ hooks, script, step: "hooks", selectedHookId: id });
     gate(async () => {
       setLoading(true);
       setLoadingType("script");
       setError("");
       try {
         const result = await generateScript(topic, audience, platform, tone, hook.hook_text, context);
-        setScript(result);
+        if (!result.ok) { setError(result.error); return; }
+        setScript(result.data);
         setStep("script");
         setTimeout(() => outputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Script generation failed");
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
   }
 
@@ -114,26 +146,31 @@ export default function ScriptWriterPage() {
     if (!selectedHookId) return;
     const hook = hooks.find((h) => h.id === selectedHookId);
     if (!hook) return;
+    savePreviewState({ hooks, script, step, selectedHookId });
     gate(async () => {
       setLoading(true);
       setLoadingType("script");
       setError("");
       try {
         const result = await generateScript(topic, audience, platform, tone, hook.hook_text, context);
-        setScript(result);
+        if (!result.ok) { setError(result.error); return; }
+        setScript(result.data);
         setTimeout(() => outputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Script generation failed");
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
   }
 
   async function handleSave() {
     if (!script) return;
+    savePreviewState({ hooks, script, step, selectedHookId });
     gate(async () => {
       try {
-        await saveScript(script.title, script);
+        const result = await saveScript(script.title, script);
+        if (!result.ok) { setError(result.error); return; }
       } catch (e) {
         setError(e instanceof Error ? e.message : "Save failed");
       }
@@ -185,7 +222,7 @@ export default function ScriptWriterPage() {
         <div className="crt-micro-tr">
           <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">v1.0.0</span>
           <span className="text-tx-4">|</span>
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">id: active</span>
+          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">id: {isSignedIn ? "active" : "preview"}</span>
         </div>
 
         <div className="crt-monitor-header">
@@ -437,14 +474,27 @@ export default function ScriptWriterPage() {
           <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">
             {step === "input" ? "INPUT" : step === "hooks" ? "HOOKS" : "SCRIPT"}
           </span>
-          <span className="font-mono text-[6px] text-center text-tx-4">[system ready]</span>
+          <span className="font-mono text-[6px] text-center">
+            {!isSignedIn ? (
+              <span className="text-vi-400/60">
+                {freeActionsLeft > 0 ? `FREE: ${freeActionsLeft} gen` : "FREE: 0 "}
+              {!isSignedIn && freeActionsLeft <= 0 && (
+                <Link href="/sign-in?redirect_url=%2Fdashboard%2Fscript-writer" className="text-vi-400/80 hover:text-vi-300 underline">
+                  [sign in]
+                </Link>
+              )}
+              </span>
+            ) : (
+              <span className="text-tx-4">[system ready]</span>
+            )}
+          </span>
           <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">
             {loading ? "BUSY" : "STANDBY"}
           </span>
         </div>
       </div>
 
-      <SignInModal open={showModal} onClose={closeModal} />
+      <SignInModal open={showModal} onClose={closeModal} context="generate hooks" />
     </div>
   );
 }

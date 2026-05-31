@@ -1,16 +1,123 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
-import { db } from "@/lib/drizzle";
-import { users } from "@/db/schema";
-import { eq } from "drizzle-orm";
-import { updateProfileName } from "@/lib/actions";
+"use client";
 
-export default async function SettingsPage() {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
+import { useState, useEffect } from "react";
+import { useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
+import { PLATFORMS, TONES } from "@/lib/constants";
+import { updateProfile, getProfile } from "@/lib/actions";
 
-  const user = await currentUser();
-  const profile = await db.select().from(users).where(eq(users.clerkId, userId)).then((r) => r[0]);
+const EXPERIENCE_LEVELS = [
+  { value: "beginner", label: "BEGINNER", desc: "New to content creation" },
+  { value: "intermediate", label: "INTERMEDIATE", desc: "Consistent creator" },
+  { value: "pro", label: "PRO", desc: "Full-time creator" },
+] as const;
+
+const SCHEDULES = [
+  { value: "daily", label: "DAILY", desc: "Every day" },
+  { value: "3x_week", label: "3x / WEEK", desc: "3-4 times per week" },
+  { value: "weekly", label: "WEEKLY", desc: "1-2 times per week" },
+  { value: "custom", label: "CUSTOM", desc: "Flexible schedule" },
+] as const;
+
+const SOCIAL_FIELDS = [
+  { key: "youtube", label: "YouTube", icon: "YT" },
+  { key: "instagram", label: "Instagram", icon: "IG" },
+  { key: "twitter", label: "Twitter / X", icon: "X" },
+  { key: "tiktok", label: "TikTok", icon: "TK" },
+  { key: "linkedin", label: "LinkedIn", icon: "LI" },
+  { key: "website", label: "Website", icon: "WWW" },
+] as const;
+
+const FORMATS = ["Video", "Post", "Carousel", "Mixed"] as const;
+
+export default function SettingsPage() {
+  const { user, isLoaded } = useUser();
+  const router = useRouter();
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  const [username, setUsername] = useState("");
+  const [bio, setBio] = useState("");
+  const [experienceLevel, setExperienceLevel] = useState("intermediate");
+  const [postingSchedule, setPostingSchedule] = useState("3x_week");
+  const [socialLinks, setSocialLinks] = useState<Record<string, string>>({});
+  const [defaultPlatform, setDefaultPlatform] = useState("");
+  const [defaultTone, setDefaultTone] = useState("");
+  const [defaultFormat, setDefaultFormat] = useState("");
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    if (!user) { router.replace("/sign-in"); return; }
+
+    getProfile().then((data) => {
+      if (data?.profile) {
+        const p = data.profile;
+        setUsername(p.username || "");
+        setBio(p.bio || "");
+        setExperienceLevel(p.experienceLevel || "intermediate");
+        setPostingSchedule(p.postingSchedule || "3x_week");
+        setSocialLinks((p.socialLinks as Record<string, string>) || {});
+        const cd = p.contentDefaults as { defaultPlatform: string; defaultTone: string; defaultFormat: string } | null;
+        if (cd) {
+          setDefaultPlatform(cd.defaultPlatform || "");
+          setDefaultTone(cd.defaultTone || "");
+          setDefaultFormat(cd.defaultFormat || "");
+        }
+      }
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  }, [isLoaded, user, router]);
+
+  async function handleSave(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    setSaved(false);
+
+    const fd = new FormData();
+    fd.set("username", username);
+    fd.set("bio", bio);
+    fd.set("experienceLevel", experienceLevel);
+    fd.set("postingSchedule", postingSchedule);
+    for (const { key } of SOCIAL_FIELDS) {
+      const val = socialLinks[key] || "";
+      if (val) fd.set(`social_${key}`, val);
+    }
+    fd.set("defaultPlatform", defaultPlatform);
+    fd.set("defaultTone", defaultTone);
+    fd.set("defaultFormat", defaultFormat);
+
+    try {
+      await updateProfile(fd);
+      setSaving(false);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch {
+      setSaving(false);
+    }
+  }
+
+  if (loading || !isLoaded) {
+    return (
+      <div className="max-w-2xl space-y-6 relative z-10">
+        <div className="crt-monitor crt-brackets">
+          <div className="crt-monitor-content p-8">
+            <div className="boot-loader">
+              <div className="boot-loader-line">
+                <span className="boot-loader-arrow">{">>"}</span>
+                <span className="boot-loader-text">LOADING PROFILE</span>
+                <span className="flex gap-0.5 ml-auto items-center">
+                  <span className="w-1 h-1 rounded-full bg-te-400 animate-pulse" style={{ animationDelay: "0s" }} />
+                  <span className="w-1 h-1 rounded-full bg-te-400 animate-pulse" style={{ animationDelay: "0.15s" }} />
+                  <span className="w-1 h-1 rounded-full bg-te-400 animate-pulse" style={{ animationDelay: "0.3s" }} />
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl space-y-6 relative z-10">
@@ -19,10 +126,11 @@ export default async function SettingsPage() {
           <span className="sec-eyebrow-dot" />
           System :: Settings
         </p>
-        <h1 className="sec-title !text-[28px]">Account Settings</h1>
-        <p className="sec-desc !text-[13px]">Manage your profile and system preferences</p>
+        <h1 className="sec-title !text-[28px]">Creator Profile</h1>
+        <p className="sec-desc !text-[13px]">Manage your identity, preferences, and defaults</p>
       </div>
 
+      {/* === PROFILE SECTION === */}
       <div className="crt-monitor relative crt-brackets">
         <div className="crt-scanlines" />
         <div className="crt-grain" />
@@ -32,7 +140,7 @@ export default async function SettingsPage() {
         <div className="crt-micro-tl">
           <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-te-400/60">sys</span>
           <span className="text-tx-4">|</span>
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase">settings</span>
+          <span className="font-mono text-[7px] tracking-[0.18em] uppercase">profile</span>
         </div>
         <div className="crt-micro-tr">
           <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">v1.0.4</span>
@@ -43,16 +151,24 @@ export default async function SettingsPage() {
         <div className="crt-monitor-header">
           <span className="font-mono text-[7px] tracking-[0.24em] uppercase text-tx-4">SYS</span>
           <span className="font-mono text-[6px] text-tx-4">|</span>
-          <span className="font-mono text-[7px] tracking-[0.24em] uppercase text-te-400/70">USER PROFILE</span>
+          <span className="font-mono text-[7px] tracking-[0.24em] uppercase text-te-400/70">CREATOR PROFILE</span>
           <div className="flex-1" />
           <span className="font-mono text-[7px] tracking-[0.1em] text-tx-4">{"\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"}</span>
         </div>
 
-        <div className="crt-monitor-content p-6">
-          <form action={updateProfileName} className="space-y-6">
+        <form onSubmit={handleSave} autoComplete="off">
+          <div className="crt-monitor-content p-6 space-y-6">
+            {/* Avatar + Identity */}
             <div className="flex items-center gap-4 pb-5 border-b border-white/[0.04]">
-              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-vi-500 to-te-400 flex items-center justify-center text-white font-display text-[22px] font-bold shadow-[0_0_20px_rgba(139,92,246,0.2)]">
-                {user?.firstName?.[0] || user?.emailAddresses[0]?.emailAddress?.[0]?.toUpperCase() || "?"}
+              <div className="w-14 h-14 rounded-full overflow-hidden bg-gradient-to-br from-vi-500 to-te-400 flex items-center justify-center flex-shrink-0 shadow-[0_0_20px_rgba(139,92,246,0.2)]">
+                {user?.imageUrl ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img src={user.imageUrl} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-white font-display text-[22px] font-bold">
+                    {user?.firstName?.[0] || user?.emailAddresses[0]?.emailAddress?.[0]?.toUpperCase() || "?"}
+                  </span>
+                )}
               </div>
               <div>
                 <div className="font-medium text-[15px]">
@@ -62,47 +178,230 @@ export default async function SettingsPage() {
                   <span>{user?.emailAddresses[0]?.emailAddress}</span>
                   <span className="diag-badge diag-info">VERIFIED</span>
                 </div>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="diag-badge diag-ok">{profile?.plan || "FREE"}</span>
-                  <span className="font-mono text-[8px] text-tx-4 tracking-wider uppercase">plan</span>
+                <span className="font-mono text-[8px] text-tx-4 tracking-wider uppercase">
+                  avatar via google
+                </span>
+              </div>
+            </div>
+
+            {/* Username */}
+            <div>
+              <label className="term-label mb-2">USERNAME</label>
+              <input
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); }}
+                placeholder="e.g. @creatorname"
+                className="term-field"
+              />
+              <p className="font-mono text-[8px] text-tx-4 mt-1 tracking-wider">
+                your public handle across the platform
+              </p>
+            </div>
+
+            {/* Bio */}
+            <div>
+              <label className="term-label mb-2">BIO</label>
+              <textarea
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                placeholder="e.g. Helping creators build their personal brand with AI-powered tools"
+                rows={3}
+                className="term-field resize-none"
+              />
+              <p className="font-mono text-[8px] text-tx-4 mt-1 tracking-wider">
+                brief about section &mdash; displayed on your creator profile
+              </p>
+            </div>
+
+            {/* Experience Level */}
+            <div>
+              <label className="term-label mb-2">EXPERIENCE LEVEL</label>
+              <div className="space-y-1">
+                {EXPERIENCE_LEVELS.map((el) => (
+                  <button
+                    key={el.value}
+                    type="button"
+                    onClick={() => setExperienceLevel(el.value)}
+                    className={`boot-option ${experienceLevel === el.value ? "active" : ""}`}
+                  >
+                    <span className="boot-option-arrow">
+                      {experienceLevel === el.value ? "\u25B6" : ">>"}
+                    </span>
+                    <span className="boot-option-label flex flex-col gap-0.5">
+                      <span className="text-[9px] tracking-[0.15em] uppercase">{el.label}</span>
+                      <span className="font-mono text-[8px] text-tx-4">{el.desc}</span>
+                    </span>
+                    <span className={`diag-badge ${experienceLevel === el.value ? "diag-ok" : "diag-idle"}`}>
+                      {experienceLevel === el.value ? "[ACTIVE]" : "[IDLE]"}
+                    </span>
+                  </button>
+                ))}
+              </div>
+              <p className="font-mono text-[8px] text-tx-4 mt-1 tracking-wider">
+                affects AI output complexity and suggestions
+              </p>
+            </div>
+
+            {/* Posting Schedule */}
+            <div>
+              <label className="term-label mb-2">POSTING SCHEDULE</label>
+              <div className="space-y-1">
+                {SCHEDULES.map((s) => (
+                  <button
+                    key={s.value}
+                    type="button"
+                    onClick={() => setPostingSchedule(s.value)}
+                    className={`boot-option ${postingSchedule === s.value ? "active" : ""}`}
+                  >
+                    <span className="boot-option-arrow">
+                      {postingSchedule === s.value ? "\u25B6" : ">>"}
+                    </span>
+                    <span className="boot-option-label flex flex-col gap-0.5">
+                      <span className="text-[9px] tracking-[0.15em] uppercase">{s.label}</span>
+                      <span className="font-mono text-[8px] text-tx-4">{s.desc}</span>
+                    </span>
+                    <span className={`diag-badge ${postingSchedule === s.value ? "diag-ok" : "diag-idle"}`}>
+                      {postingSchedule === s.value ? "[ACTIVE]" : "[IDLE]"}
+                    </span>
+                  </button>
+                ))}
+              </div>
+              <p className="font-mono text-[8px] text-tx-4 mt-1 tracking-wider">
+                used by calendar generator to distribute content
+              </p>
+            </div>
+          </div>
+
+          {/* === SOCIAL LINKS SUBSECTION === */}
+          <div className="border-t border-white/[0.04]">
+            <div className="px-6 pt-5 pb-1">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-te-400/60" />
+                <span className="font-mono text-[9px] tracking-[0.15em] uppercase text-tx-2">Social Links</span>
+              </div>
+              <p className="font-mono text-[8px] text-tx-4 tracking-wider mb-4">
+                connect your creator channels for AI-powered cross-platform suggestions
+              </p>
+            </div>
+            <div className="px-6 pb-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {SOCIAL_FIELDS.map((sf) => (
+                <div key={sf.key}>
+                  <label className="font-mono text-[8px] text-tx-3 tracking-[0.2em] uppercase mb-1 block">
+                    {sf.label}
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-[8px] text-vi-400 w-7 flex-shrink-0">[{sf.icon}]</span>
+                    <input
+                      value={socialLinks[sf.key] || ""}
+                      onChange={(e) => setSocialLinks((prev) => ({ ...prev, [sf.key]: e.target.value }))}
+                      onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); }}
+                      placeholder={
+                        sf.key === "website" ? "https://yourwebsite.com" :
+                        sf.key === "youtube" ? "https://youtube.com/@..." :
+                        `https://${sf.key}.com/@...`
+                      }
+                      className="term-field text-[10px]"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* === CONTENT DEFAULTS SUBSECTION === */}
+          <div className="border-t border-white/[0.04]">
+            <div className="px-6 pt-5 pb-1">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-fu-400/60" />
+                <span className="font-mono text-[9px] tracking-[0.15em] uppercase text-tx-2">Content Defaults</span>
+              </div>
+              <p className="font-mono text-[8px] text-tx-4 tracking-wider mb-4">
+                auto-fills input forms when you open a module
+              </p>
+            </div>
+            <div className="px-6 pb-6 space-y-4">
+              {/* Default Platform */}
+              <div>
+                <label className="term-label mb-2">DEFAULT_PLATFORM</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {[...PLATFORMS, "None"].map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => setDefaultPlatform(p === "None" ? "" : p)}
+                      className={`px-2.5 h-7 font-mono text-[9px] tracking-wider uppercase border rounded-sm transition-all duration-150 ${
+                        defaultPlatform === p || (p === "None" && !defaultPlatform)
+                          ? "bg-te-400/10 border-te-400/30 text-te-400"
+                          : "bg-black/20 border-white/[0.06] text-tx-3 hover:border-white/[0.12]"
+                      }`}
+                    >
+                      {p === "None" ? "[NONE]" : p}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Default Tone */}
+              <div>
+                <label className="term-label mb-2">DEFAULT_TONE</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {[...TONES, "None"].map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setDefaultTone(t === "None" ? "" : t)}
+                      className={`px-2.5 h-7 font-mono text-[9px] tracking-wider uppercase border rounded-sm transition-all duration-150 ${
+                        defaultTone === t || (t === "None" && !defaultTone)
+                          ? "bg-vi-400/10 border-vi-400/30 text-vi-400"
+                          : "bg-black/20 border-white/[0.06] text-tx-3 hover:border-white/[0.12]"
+                      }`}
+                    >
+                      {t === "None" ? "[NONE]" : t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Default Format */}
+              <div>
+                <label className="term-label mb-2">DEFAULT_FORMAT</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {[...FORMATS, "None"].map((f) => (
+                    <button
+                      key={f}
+                      type="button"
+                      onClick={() => setDefaultFormat(f === "None" ? "" : f)}
+                      className={`px-2.5 h-7 font-mono text-[9px] tracking-wider uppercase border rounded-sm transition-all duration-150 ${
+                        defaultFormat === f || (f === "None" && !defaultFormat)
+                          ? "bg-fu-400/10 border-fu-400/30 text-fu-400"
+                          : "bg-black/20 border-white/[0.06] text-tx-3 hover:border-white/[0.12]"
+                      }`}
+                    >
+                      {f === "None" ? "[NONE]" : f}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
+          </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="term-label mb-2">FIRST_NAME</label>
-                <input
-                  name="firstName"
-                  defaultValue={user?.firstName || ""}
-                  className="term-field"
-                />
-              </div>
-              <div>
-                <label className="term-label mb-2">LAST_NAME</label>
-                <input
-                  name="lastName"
-                  defaultValue={user?.lastName || ""}
-                  className="term-field"
-                />
-              </div>
-              <div className="sm:col-span-2">
-                <label className="term-label mb-2">EMAIL</label>
-                <input
-                  defaultValue={user?.emailAddresses[0]?.emailAddress || ""}
-                  disabled
-                  className="term-field text-tx-2/60 cursor-not-allowed"
-                />
-              </div>
-            </div>
-
-            <div className="pt-1">
-              <button type="submit" className="btn-terminal btn-terminal-primary">
-                EXECUTE :: SAVE_CHANGES
-              </button>
-            </div>
-          </form>
-        </div>
+          {/* Save */}
+          <div className="border-t border-white/[0.04] px-6 py-4 flex items-center gap-3">
+            <button
+              type="submit"
+              disabled={saving}
+              className="btn-terminal btn-terminal-primary"
+            >
+              {saving ? "SAVING..." : "EXECUTE :: SAVE_PROFILE"}
+            </button>
+            {saved && (
+              <span className="font-mono text-[9px] text-ok tracking-wider animate-pulse">
+                [PROFILE SAVED]
+              </span>
+            )}
+          </div>
+        </form>
 
         <div className="crt-micro-bl">
           <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">profile</span>
@@ -117,11 +416,12 @@ export default async function SettingsPage() {
           </span>
           <span className="font-mono text-[6px] text-center text-tx-4">[system ready]</span>
           <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">
-            {profile?.plan || "FREE"}
+            EDITING
           </span>
         </div>
       </div>
 
+      {/* === BILLING SECTION (kept from original) === */}
       <div className="crt-monitor relative crt-brackets">
         <div className="crt-scanlines" />
         <div className="crt-grain" />
@@ -136,8 +436,8 @@ export default async function SettingsPage() {
         <div className="crt-micro-tr">
           <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">plan</span>
           <span className="text-tx-4">|</span>
-          <span className={`font-mono text-[7px] tracking-[0.18em] uppercase ${profile?.plan === "Free" ? "text-warn" : "text-ok"}`}>
-            {profile?.plan || "FREE"}
+          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-warn">
+            FREE
           </span>
         </div>
 
@@ -157,17 +457,15 @@ export default async function SettingsPage() {
             </div>
             <div className="flex items-center justify-between py-3 px-4 bg-black/30 border border-white/[0.04] rounded-[2px]">
               <div className="flex items-center gap-3">
-                <div className={`w-2 h-2 rounded-full ${profile?.plan === "Free" ? "bg-warn" : "bg-ok"} animate-beat-pulse`} />
+                <div className="w-2 h-2 rounded-full bg-warn animate-beat-pulse" />
                 <div>
-                  <div className="font-mono text-[13px] text-tx-1 font-medium">{profile?.plan || "Free"}</div>
+                  <div className="font-mono text-[13px] text-tx-1 font-medium">Free</div>
                   <div className="font-mono text-[9px] text-tx-3 mt-0.5">
-                    {profile?.plan === "Free" ? "5 scripts/month \u00B7 basic access" : "Unlimited scripts \u00B7 full access"}
+                    5 scripts/month &middot; basic access
                   </div>
                 </div>
               </div>
-              <span className={`diag-badge ${profile?.plan === "Free" ? "diag-info" : "diag-ok"}`}>
-                {profile?.plan === "Free" ? "LIMITED" : "UNLIMITED"}
-              </span>
+              <span className="diag-badge diag-info">LIMITED</span>
             </div>
           </div>
 
@@ -178,33 +476,27 @@ export default async function SettingsPage() {
             </div>
             <div className="flex items-center justify-between py-3 px-4 bg-black/30 border border-white/[0.04] rounded-[2px]">
               <div className="flex items-center gap-2 font-mono text-[11px] text-tx-2">
-                <span className="text-te-400/60">\u25B6</span>
+                <span className="text-te-400/60">{"\u25B6"}</span>
                 Scripts this month
               </div>
-              <span className="font-mono text-[11px] text-tx-1">
-                {profile?.plan === "Free" ? "0 / 5" : "Unlimited"}
-              </span>
+              <span className="font-mono text-[11px] text-tx-1">0 / 5</span>
             </div>
           </div>
 
-          {profile?.plan === "Free" && (
-            <div className="pt-2 border-t border-white/[0.04]">
-              <form action={updateProfileName}>
-                <button
-                  className="btn-terminal btn-terminal-primary w-full justify-center text-[10px]"
-                  style={{
-                    background: "linear-gradient(135deg, rgba(139,92,246,0.12), rgba(34,211,238,0.08))",
-                    borderColor: "rgba(139,92,246,0.2)",
-                  }}
-                >
-                  {"EXEC_UPGRADE >> CREATOR :: \u20B91,999/mo"}
-                </button>
-              </form>
-              <p className="font-mono text-[8px] text-tx-4 text-center mt-2 tracking-wider">
-                unlimited scripts \u00B7 priority support \u00B7 full module access
-              </p>
-            </div>
-          )}
+          <div className="pt-2 border-t border-white/[0.04]">
+            <button
+              className="btn-terminal btn-terminal-primary w-full justify-center text-[10px]"
+              style={{
+                background: "linear-gradient(135deg, rgba(139,92,246,0.12), rgba(34,211,238,0.08))",
+                borderColor: "rgba(139,92,246,0.2)",
+              }}
+            >
+              {"EXEC_UPGRADE >> CREATOR :: \u20B91,999/mo"}
+            </button>
+            <p className="font-mono text-[8px] text-tx-4 text-center mt-2 tracking-wider">
+              unlimited scripts &middot; priority support &middot; full module access
+            </p>
+          </div>
         </div>
 
         <div className="crt-micro-bl">
@@ -215,13 +507,9 @@ export default async function SettingsPage() {
         </div>
 
         <div className="crt-monitor-footer">
-          <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">
-            {profile?.plan || "FREE"} PLAN
-          </span>
+          <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">FREE PLAN</span>
           <span className="font-mono text-[6px] text-center text-tx-4">[billing ready]</span>
-          <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">
-            ACTIVE
-          </span>
+          <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">ACTIVE</span>
         </div>
       </div>
     </div>

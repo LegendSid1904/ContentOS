@@ -2,7 +2,7 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/drizzle";
-import { users, brandKits } from "@/db/schema";
+import { users, brandKits, profiles } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
@@ -105,4 +105,97 @@ export async function getOnboardingStatus() {
     onboardingComplete: user.onboardingComplete,
     onboardingStep: user.onboardingStep,
   };
+}
+
+export async function getProfile() {
+  const { userId } = await auth();
+  if (!userId) return null;
+
+  const user = await db.select().from(users).where(eq(users.clerkId, userId)).then((r) => r[0]);
+  if (!user) return null;
+
+  const profile = await db.select().from(profiles).where(eq(profiles.userId, user.id)).then((r) => r[0]);
+
+  if (!profile) {
+    const [created] = await db.insert(profiles).values({
+      userId: user.id,
+      username: user.name || "",
+      bio: "",
+      experienceLevel: "intermediate",
+      postingSchedule: "3x_week",
+      socialLinks: {},
+      contentDefaults: { defaultPlatform: "", defaultTone: "", defaultFormat: "" },
+    }).returning();
+    return { profile: created };
+  }
+
+  return { profile };
+}
+
+export async function updateProfile(formData: FormData) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  const user = await db.select().from(users).where(eq(users.clerkId, userId)).then((r) => r[0]);
+  if (!user) throw new Error("User not found");
+
+  const username = formData.get("username") as string;
+  const bio = formData.get("bio") as string;
+  const experienceLevel = formData.get("experienceLevel") as string;
+  const postingSchedule = formData.get("postingSchedule") as string;
+
+  const socialLinks: Record<string, string> = {};
+  for (const key of ["youtube", "instagram", "twitter", "tiktok", "linkedin", "website"]) {
+    const val = formData.get(`social_${key}`) as string;
+    if (val) socialLinks[key] = val;
+  }
+
+  const defaultPlatform = formData.get("defaultPlatform") as string;
+  const defaultTone = formData.get("defaultTone") as string;
+  const defaultFormat = formData.get("defaultFormat") as string;
+
+  const existing = await db.select().from(profiles).where(eq(profiles.userId, user.id)).then((r) => r[0]);
+
+  if (existing) {
+    await db
+      .update(profiles)
+      .set({
+        username: username || null,
+        bio: bio || null,
+        experienceLevel: experienceLevel || "intermediate",
+        postingSchedule: postingSchedule || "3x_week",
+        socialLinks: socialLinks as Record<string, string>,
+        contentDefaults: { defaultPlatform, defaultTone, defaultFormat },
+        updatedAt: new Date(),
+      })
+      .where(eq(profiles.id, existing.id));
+  } else {
+    await db.insert(profiles).values({
+      userId: user.id,
+      username: username || null,
+      bio: bio || null,
+      experienceLevel: experienceLevel || "intermediate",
+      postingSchedule: postingSchedule || "3x_week",
+      socialLinks: socialLinks as Record<string, string>,
+      contentDefaults: { defaultPlatform, defaultTone, defaultFormat },
+    });
+  }
+
+  revalidatePath("/dashboard/settings");
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/script-writer");
+  revalidatePath("/dashboard/content-ideas");
+}
+
+export async function getContentDefaults() {
+  const { userId } = await auth();
+  if (!userId) return null;
+
+  const user = await db.select().from(users).where(eq(users.clerkId, userId)).then((r) => r[0]);
+  if (!user) return null;
+
+  const profile = await db.select().from(profiles).where(eq(profiles.userId, user.id)).then((r) => r[0]);
+  if (!profile) return null;
+
+  return profile.contentDefaults as { defaultPlatform: string; defaultTone: string; defaultFormat: string } | null;
 }
