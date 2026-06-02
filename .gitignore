@@ -61,3 +61,8 @@ service-account*.json
 .vercel
 
 .vercel
+
+# Project notes (local only)
+optimization.md
+competitive-roadmap.md
+possible_improvements.md
