@@ -185,6 +185,12 @@ export async function updateProfile(formData: FormData) {
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/script-writer");
   revalidatePath("/dashboard/content-ideas");
+  revalidatePath("/dashboard/carousel-maker");
+  revalidatePath("/dashboard/competitor-intel");
+  revalidatePath("/dashboard/video-brief");
+  revalidatePath("/dashboard/thumbnail-maker");
+  revalidatePath("/dashboard/page-setup");
+  revalidatePath("/dashboard/growth-strategy");
 }
 
 export async function getContentDefaults() {

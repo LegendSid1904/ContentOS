@@ -1,0 +1,412 @@
+"use client";
+
+import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
+import { useAuth } from "@clerk/nextjs";
+import { analyzeTranscript, saveEditingBrief } from "@/lib/actions-video-brief";
+import { useAuthGate } from "@/lib/use-auth-gate";
+import { SignInModal } from "@/components/auth/sign-in-modal";
+
+type Step = "input" | "results";
+
+const EDITING_STYLES = ["Fast-cut", "Storytelling", "Educational", "Cinematic"];
+
+interface EditPoint {
+  timestamp: string;
+  type: "hook" | "key_point" | "transition" | "cta";
+  description: string;
+}
+
+interface BrollKeyword {
+  timestamp: string;
+  keywords: string[];
+}
+
+interface EditingBrief {
+  analysis: {
+    hook_moment: string;
+    edit_points: EditPoint[];
+    retention_markers: string[];
+    section_breaks: { timestamp: string; label: string }[];
+    pacing_suggestion: string;
+  };
+  broll_keywords: BrollKeyword[];
+  caption_style: string;
+  caption_examples: string[];
+}
+
+function BootLoader() {
+  const steps = ["ANALYZING TRANSCRIPT", "IDENTIFYING EDIT POINTS", "GENERATING B-ROLL LIST"];
+  return (
+    <div className="boot-loader">
+      {steps.map((s, i) => (
+        <div key={i} className="boot-loader-line" style={{ animationDelay: `${0.1 + i * 0.2}s` }}>
+          <span className="boot-loader-arrow">{">>"}</span>
+          <span className="boot-loader-text">{s}</span>
+          <span className="boot-loader-ok">
+            {i < 2 ? (
+              <span className="flex gap-0.5 items-center">
+                <span className="w-1 h-1 rounded-full bg-te-400 animate-pulse" style={{ animationDelay: "0s" }} />
+                <span className="w-1 h-1 rounded-full bg-te-400 animate-pulse" style={{ animationDelay: "0.15s" }} />
+                <span className="w-1 h-1 rounded-full bg-te-400 animate-pulse" style={{ animationDelay: "0.3s" }} />
+              </span>
+            ) : (
+              <span className="text-te-400/80 tracking-wider">LOADING</span>
+            )}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const typeColors: Record<string, string> = {
+  hook: "text-fu-400 border-fu-400/20 bg-fu-400/5",
+  key_point: "text-te-400 border-te-400/20 bg-te-400/5",
+  transition: "text-vi-400 border-vi-400/20 bg-vi-400/5",
+  cta: "text-ok border-ok/20 bg-ok/5",
+};
+
+export default function VideoBriefPage() {
+  const [step, setStep] = useState<Step>("input");
+  const [loading, setLoading] = useState(false);
+  const [transcript, setTranscript] = useState("");
+  const [videoLength, setVideoLength] = useState<"short" | "long">("short");
+  const [style, setStyle] = useState("");
+  const [brief, setBrief] = useState<EditingBrief | null>(null);
+  const [error, setError] = useState("");
+  const outputRef = useRef<HTMLDivElement>(null);
+  const { isSignedIn } = useAuth();
+  const { showModal, gate, closeModal, freeActionsLeft, savePreviewState, restorePreviewState } = useAuthGate("analyze transcript");
+
+  useEffect(() => {
+    const saved = restorePreviewState<{ brief: EditingBrief | null; step: Step }>();
+    if (saved) {
+      setBrief(saved.brief ?? null);
+      setStep(saved.step ?? "input");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const valid = transcript.trim().length > 20;
+
+  async function handleAnalyze() {
+    if (!valid) return;
+    savePreviewState({ brief, step });
+    gate(async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const result = await analyzeTranscript(transcript, videoLength, style);
+        if (!result.ok) { setError(result.error); setLoading(false); return; }
+        setBrief(result.data);
+        setStep("results");
+        setTimeout(() => outputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Analysis failed");
+      }
+      setLoading(false);
+    });
+  }
+
+  async function handleSave() {
+    if (!brief) return;
+    savePreviewState({ brief, step });
+    gate(async () => {
+      try {
+        const result = await saveEditingBrief("Editing Brief", brief);
+        if (!result.ok) { setError(result.error); return; }
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Save failed");
+      }
+    });
+  }
+
+  function handleReset() {
+    setStep("input");
+    setBrief(null);
+    setError("");
+  }
+
+  const isInputStep = step === "input" && !loading;
+  const isResultsStep = step === "results" && !loading;
+
+  return (
+    <div className="max-w-3xl space-y-6 relative z-10">
+      <div>
+        <p className="sec-eyebrow">
+          <span className="sec-eyebrow-dot" />
+          Module :: Brief
+        </p>
+        <h1 className="sec-title !text-[28px]">Video Brief</h1>
+        <p className="sec-desc !text-[13px]">
+          Transcript &rarr; editing brief + full B-roll list
+        </p>
+      </div>
+
+      <div className="crt-monitor relative crt-brackets">
+        <div className="crt-scanlines" />
+        <div className="crt-grain" />
+        <div className="crt-vignette" />
+        <div className="crt-sweep" />
+
+        <div className="crt-micro-tl">
+          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-te-400/60">sys</span>
+          <span className="text-tx-4">|</span>
+          <span className="font-mono text-[7px] tracking-[0.18em] uppercase">video_brief</span>
+        </div>
+        <div className="crt-micro-tr">
+          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">v1.0.0</span>
+          <span className="text-tx-4">|</span>
+          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">id: {isSignedIn ? "active" : "preview"}</span>
+        </div>
+
+        <div className="crt-monitor-header">
+          <span className="font-mono text-[7px] tracking-[0.24em] uppercase text-tx-4">MODULE</span>
+          <span className="font-mono text-[6px] text-tx-4">|</span>
+          <span className="font-mono text-[7px] tracking-[0.24em] uppercase text-te-400/70">VIDEO BRIEF</span>
+          <div className="flex-1" />
+          <span className="font-mono text-[7px] tracking-[0.1em] text-tx-4">{"\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"}</span>
+        </div>
+
+        <div className="crt-monitor-content p-6 space-y-6">
+          {loading && <BootLoader />}
+
+          {error && (
+            <div className="font-mono text-[11px] text-err bg-err/10 border border-err/20 rounded-r3 p-3">
+              <span className="text-err">[ERROR]</span> {error}
+              <button onClick={() => setError("")} className="ml-2 text-err/60 hover:text-err underline">dismiss</button>
+            </div>
+          )}
+
+          {isInputStep && (
+            <>
+              <div className="reveal d1">
+                <label className="term-label mb-2">TRANSCRIPT / SCRIPT</label>
+                <textarea
+                  value={transcript}
+                  onChange={(e) => setTranscript(e.target.value)}
+                  placeholder="Paste your full video transcript or script here..."
+                  className="term-field min-h-[200px] resize-y"
+                  rows={8}
+                  autoFocus
+                />
+              </div>
+
+              <div className="reveal d2">
+                <label className="term-label mb-2">VIDEO_LENGTH</label>
+                <div className="space-y-1">
+                  <button
+                    onClick={() => setVideoLength("short")}
+                    className={`boot-option ${videoLength === "short" ? "active" : ""}`}
+                  >
+                    <span className="boot-option-arrow">
+                      {videoLength === "short" ? "\u25B6" : ">>"}
+                    </span>
+                    <span className="boot-option-label">Short-form (under 90s)</span>
+                    <span className={`diag-badge ${videoLength === "short" ? "diag-ok" : "diag-idle"}`}>
+                      {videoLength === "short" ? "[ACTIVE]" : "[IDLE]"}
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => setVideoLength("long")}
+                    className={`boot-option ${videoLength === "long" ? "active" : ""}`}
+                  >
+                    <span className="boot-option-arrow">
+                      {videoLength === "long" ? "\u25B6" : ">>"}
+                    </span>
+                    <span className="boot-option-label">Long-form (8+ minutes)</span>
+                    <span className={`diag-badge ${videoLength === "long" ? "diag-ok" : "diag-idle"}`}>
+                      {videoLength === "long" ? "[ACTIVE]" : "[IDLE]"}
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="reveal d3">
+                <label className="term-label mb-2">EDITING_STYLE <span className="text-tx-4">(optional)</span></label>
+                <div className="space-y-1">
+                  {EDITING_STYLES.map((s, i) => (
+                    <button
+                      key={s}
+                      onClick={() => setStyle(s === style ? "" : s)}
+                      className={`boot-option ${s === style ? "active" : ""}`}
+                      style={{ animationDelay: `${0.1 + i * 0.08}s` }}
+                    >
+                      <span className="boot-option-arrow">
+                        {s === style ? "\u25B6" : ">>"}
+                      </span>
+                      <span className="boot-option-label">{s}</span>
+                      <span className={`diag-badge ${s === style ? "diag-ok" : "diag-idle"}`}>
+                        {s === style ? "[SELECTED]" : "[IDLE]"}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="reveal d4 flex items-center gap-3 pt-2 border-t border-white/[0.04]">
+                <button
+                  onClick={handleAnalyze}
+                  disabled={!valid}
+                  className="btn-terminal btn-terminal-primary disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  {">>"} ANALYZE TRANSCRIPT
+                </button>
+                {!valid && (
+                  <span className="font-mono text-[8px] text-tx-4 tracking-wider">NEED MORE TEXT</span>
+                )}
+              </div>
+            </>
+          )}
+
+          {isResultsStep && brief && (
+            <div ref={outputRef} className="space-y-6">
+              <div className="flex items-center justify-between reveal d1">
+                <label className="term-label mb-0">EDITING_BRIEF</label>
+                <div className="flex items-center gap-2">
+                  <button onClick={handleSave} className="btn-terminal text-[9px]">
+                    {"[SAVE]"}
+                  </button>
+                  <button onClick={handleAnalyze} className="btn-terminal text-[9px]">
+                    {"[REGEN]"}
+                  </button>
+                </div>
+              </div>
+
+              <div className="crt-monitor relative crt-brackets reveal d2" style={{ background: "rgba(0,0,0,0.25)" }}>
+                <div className="crt-micro-tl">
+                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-te-400/60">analysis</span>
+                  <span className="text-tx-4">|</span>
+                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase">edit_points</span>
+                </div>
+                <div className="crt-monitor-header">
+                  <span className="w-2 h-2 rounded-full bg-fu-400/60" />
+                  <span className="font-mono text-[10px] font-semibold text-tx-1 tracking-tight ml-2">Hook Moment</span>
+                  <div className="flex-1" />
+                  <span className="font-mono text-[7px] text-fu-400">{brief.analysis.hook_moment}</span>
+                </div>
+                <div className="crt-monitor-content p-4 space-y-3">
+                  <div>
+                    <span className="font-mono text-[8px] text-tx-4 uppercase tracking-wider">Edit Points</span>
+                    <div className="space-y-1 mt-1">
+                      {brief.analysis.edit_points.map((ep, i) => (
+                        <div key={i} className="flex items-start gap-2 py-1 border-b border-white/[0.02] last:border-0">
+                          <span className="font-mono text-[7px] text-tx-4 w-12 flex-shrink-0">{ep.timestamp}</span>
+                          <span className={`font-mono text-[7px] tracking-wider uppercase px-1 py-0.5 border rounded-sm ${typeColors[ep.type] || typeColors.key_point}`}>
+                            {ep.type}
+                          </span>
+                          <span className="font-mono text-[9px] text-tx-1">{ep.description}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="pt-2 border-t border-white/[0.04]">
+                    <span className="font-mono text-[8px] text-tx-4 uppercase tracking-wider">Pacing</span>
+                    <p className="font-mono text-[9px] text-tx-2 mt-1 italic">{brief.analysis.pacing_suggestion}</p>
+                  </div>
+                </div>
+                <div className="crt-micro-bl">
+                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-ok">ANALYSIS COMPLETE</span>
+                </div>
+              </div>
+
+              <div className="crt-monitor relative crt-brackets reveal d3" style={{ background: "rgba(0,0,0,0.25)" }}>
+                <div className="crt-micro-tl">
+                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-te-400/60">assets</span>
+                  <span className="text-tx-4">|</span>
+                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase">b-roll</span>
+                </div>
+                <div className="crt-monitor-header">
+                  <span className="w-2 h-2 rounded-full bg-te-400/60" />
+                  <span className="font-mono text-[10px] font-semibold text-tx-1 tracking-tight ml-2">B-Roll Keywords</span>
+                </div>
+                <div className="crt-monitor-content p-4 space-y-3">
+                  {brief.broll_keywords.map((br, i) => (
+                    <div key={i} className="flex items-start gap-2">
+                      <span className="font-mono text-[7px] text-te-400/60 w-12 flex-shrink-0">{br.timestamp}</span>
+                      <div className="flex flex-wrap gap-1">
+                        {br.keywords.map((kw, j) => (
+                          <span key={j} className="font-mono text-[8px] text-tx-2 bg-white/[0.03] px-1.5 py-0.5 rounded-r2">{kw}</span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="crt-micro-bl">
+                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-ok">ROLL READY</span>
+                </div>
+              </div>
+
+              <div className="crt-monitor relative crt-brackets reveal d4" style={{ background: "rgba(0,0,0,0.25)" }}>
+                <div className="crt-micro-tl">
+                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-te-400/60">captions</span>
+                  <span className="text-tx-4">|</span>
+                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase">style</span>
+                </div>
+                <div className="crt-monitor-header">
+                  <span className="w-2 h-2 rounded-full bg-vi-400/60" />
+                  <span className="font-mono text-[10px] font-semibold text-tx-1 tracking-tight ml-2">{brief.caption_style}</span>
+                </div>
+                <div className="crt-monitor-content p-4 space-y-2">
+                  {brief.caption_examples.map((ex, i) => (
+                    <div key={i} className="font-mono text-[9px] text-tx-2 bg-white/[0.02] p-2 rounded-r2 italic">
+                      &ldquo;{ex}&rdquo;
+                    </div>
+                  ))}
+                </div>
+                <div className="crt-micro-bl">
+                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-ok">CAPTIONS READY</span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 pt-2 border-t border-white/[0.04]">
+                <button onClick={handleReset} className="btn-terminal text-[9px]">
+                  {">>"} NEW BRIEF
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="crt-micro-bl">
+          <span className="font-mono text-[7px] tracking-[0.18em] uppercase"
+            style={{ color: step === "results" ? "rgba(34,197,94,0.6)" : "rgba(86,86,128,0.6)" }}
+          >
+            {step === "input" ? "AWAITING INPUT" : "BRIEF READY"}
+          </span>
+        </div>
+        <div className="crt-micro-br">
+          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">
+            {loading ? "GENERATING..." : "STANDBY"}
+          </span>
+        </div>
+
+        <div className="crt-monitor-footer">
+          <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">
+            {step === "input" ? "INPUT" : "RESULTS"}
+          </span>
+          <span className="font-mono text-[6px] text-center">
+            {!isSignedIn ? (
+              <span className="text-vi-400/60">
+                {freeActionsLeft > 0 ? `FREE: ${freeActionsLeft} gen` : "FREE: 0 "}
+              {!isSignedIn && freeActionsLeft <= 0 && (
+                <Link href="/sign-in?redirect_url=%2Fdashboard%2Fvideo-brief" className="text-vi-400/80 hover:text-vi-300 underline">
+                  [sign in]
+                </Link>
+              )}
+              </span>
+            ) : (
+              <span className="text-tx-4">[system ready]</span>
+            )}
+          </span>
+          <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">
+            {loading ? "BUSY" : "STANDBY"}
+          </span>
+        </div>
+      </div>
+
+      <SignInModal open={showModal} onClose={closeModal} context="analyze transcript" />
+    </div>
+  );
+}
