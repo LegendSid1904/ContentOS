@@ -65,11 +65,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         )}
       >
         <div className="px-4 h-[56px] flex items-center flex-shrink-0 border-b border-white/[0.04]">
-          <Link href="/dashboard" className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-[7px] bg-gradient-to-br from-vi-500 to-te-400 flex items-center justify-center font-display text-[13px] font-bold text-white shadow-[0_0_16px_rgba(139,92,246,0.3)]">
+          <Link href="/dashboard" className="flex items-center gap-2.5 group cursor-pointer">
+            <div className="w-7 h-7 rounded-[7px] bg-gradient-to-br from-vi-500 to-te-400 flex items-center justify-center font-display text-[13px] font-bold text-white shadow-[0_0_16px_rgba(139,92,246,0.3)] group-hover:shadow-[0_0_24px_rgba(139,92,246,0.5)] transition-shadow duration-200">
               C
             </div>
-            <span className="font-display text-[15px] font-bold text-tx-1 tracking-tight">ContentOS</span>
+            <span className="font-display text-[15px] font-bold text-tx-1 tracking-tight group-hover:text-te-400 transition-colors duration-200">ContentOS</span>
           </Link>
         </div>
 

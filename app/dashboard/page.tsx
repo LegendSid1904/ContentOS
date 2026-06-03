@@ -1,4 +1,5 @@
 import { currentUser } from "@clerk/nextjs/server";
+import Link from "next/link";
 import { ModuleGrid, ModuleCard } from "@/components/ui/module-card";
 import { MODULES } from "@/lib/constants";
 
@@ -38,12 +39,9 @@ export default async function DashboardPage() {
         <ModuleGrid>
           {MODULES.map((mod, i) => (
             <div key={mod.id} className={`reveal d${(i % 5) + 1}`}>
-              <ModuleCard
-                module={mod}
-                onClick={() => {
-                  window.location.href = `/dashboard/${mod.id}`;
-                }}
-              />
+              <Link href={`/dashboard/${mod.id}`}>
+                <ModuleCard module={mod} />
+              </Link>
             </div>
           ))}
         </ModuleGrid>
