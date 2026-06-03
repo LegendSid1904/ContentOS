@@ -54,7 +54,7 @@ export async function generatePageSetup(platform: string, niche: string, current
       systemPrompt: `You are a profile optimization expert. Generate a complete page setup for ${platform} in the ${niche} niche. Return as JSON with:
         bios: array of 3 bio variants, each with {variant (string), bio_text (string), keyword_usage (string), character_count (number)}. Keep under ${limit} chars.
         keywords: {keywords (string[15]), hashtags (string[20])}
-        highlights: array of 5-8 recommendations, each with {name, description, content_to_include}
+        highlights: array of 5-8 recommendations each with {name, description, content_to_include}
         audit: {keyword_optimization (1-10), bio_clarity (1-10), brand_consistency (1-10), cta_effectiveness (1-10), suggestions (string[])}`,
       prompt: `Platform: ${platform}. Niche: ${niche}. Current bio/description: "${currentBio || "None provided"}".`,
     });
@@ -66,11 +66,12 @@ export async function generatePageSetup(platform: string, niche: string, current
 
 export async function savePageSetup(title: string, data: PageSetupData) {
   try {
-    const { userId } = await auth();
-    if (!userId) throw new Error("Unauthorized");
+    const sess = await auth();
+    const userId = sess.userId;
+    if (!userId) return { ok: false as const, error: "You need to sign in first" };
 
     const user = await db.select().from(users).where(eq(users.clerkId, userId)).then((r) => r[0]);
-    if (!user) throw new Error("User not found");
+    if (!user) return { ok: false as const, error: "Account not found. Try signing in again." };
 
     const [project] = await db.insert(projects).values({
       userId: user.id,
@@ -88,6 +89,8 @@ export async function savePageSetup(title: string, data: PageSetupData) {
 
     return { ok: true as const, data: project };
   } catch (e) {
-    return { ok: false as const, error: e instanceof Error ? e.message : "Save failed" };
+    const msg = e instanceof Error ? e.message : "Save failed";
+    console.error("Save page setup error:", msg);
+    return { ok: false as const, error: msg.includes("ECONNREFUSED") || msg.includes("connection") ? "Database connection failed. Check SUPABASE_DATABASE_URL." : msg };
   }
 }

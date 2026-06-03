@@ -48,7 +48,7 @@ function BootLoader() {
 function ScoreGauge({ value, label }: { value: number; label: string }) {
   return (
     <div className="flex items-center gap-2">
-      <span className="font-mono text-[7px] text-tx-4 uppercase tracking-wider w-28 flex-shrink-0">{label}</span>
+      <span className="font-mono text-[10px] text-tx-3 uppercase tracking-wider w-28 flex-shrink-0">{label}</span>
       <div className="flex-1 h-1.5 bg-white/[0.03] rounded-sm overflow-hidden">
         <div
           className="h-full rounded-sm transition-all duration-500"
@@ -58,7 +58,7 @@ function ScoreGauge({ value, label }: { value: number; label: string }) {
           }}
         />
       </div>
-      <span className="font-mono text-[8px] text-tx-3 w-4 text-right">{value}/10</span>
+      <span className="font-mono text-[11px] text-tx-2 w-4 text-right">{value}/10</span>
     </div>
   );
 }
@@ -161,29 +161,29 @@ export default function GrowthStrategyPage() {
         <div className="crt-sweep" />
 
         <div className="crt-micro-tl">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-te-400/60">sys</span>
-          <span className="text-tx-4">|</span>
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase">growth_strategy</span>
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-te-400/60">sys</span>
+          <span className="text-tx-3">|</span>
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase">growth_strategy</span>
         </div>
         <div className="crt-micro-tr">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">v1.0.0</span>
-          <span className="text-tx-4">|</span>
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">id: {isSignedIn ? "active" : "preview"}</span>
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-tx-3">v1.0.0</span>
+          <span className="text-tx-3">|</span>
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-tx-3">id: {isSignedIn ? "active" : "preview"}</span>
         </div>
 
         <div className="crt-monitor-header">
-          <span className="font-mono text-[7px] tracking-[0.24em] uppercase text-tx-4">MODULE</span>
-          <span className="font-mono text-[6px] text-tx-4">|</span>
-          <span className="font-mono text-[7px] tracking-[0.24em] uppercase text-te-400/70">GROWTH STRATEGY</span>
+          <span className="font-mono text-[10px] tracking-[0.24em] uppercase text-tx-3">MODULE</span>
+          <span className="font-mono text-[9px] text-tx-3">|</span>
+          <span className="font-mono text-[10px] tracking-[0.24em] uppercase text-te-400/70">GROWTH STRATEGY</span>
           <div className="flex-1" />
-          <span className="font-mono text-[7px] tracking-[0.1em] text-tx-4">{"\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"}</span>
+          <span className="font-mono text-[10px] tracking-[0.1em] text-tx-3">{"\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"}</span>
         </div>
 
         <div className="crt-monitor-content p-6 space-y-6">
           {loading && <BootLoader />}
 
           {error && (
-            <div className="font-mono text-[11px] text-err bg-err/10 border border-err/20 rounded-r3 p-3">
+            <div className="font-mono text-[14px] text-err bg-err/10 border border-err/20 rounded-r3 p-3">
               <span className="text-err">[ERROR]</span> {error}
               <button onClick={() => setError("")} className="ml-2 text-err/60 hover:text-err underline">dismiss</button>
             </div>
@@ -192,7 +192,7 @@ export default function GrowthStrategyPage() {
           {isInputStep && (
             <>
               <div className="reveal d1">
-                <label className="term-label mb-2">NICHE</label>
+                <label className="term-label text-[11px] mb-2">NICHE</label>
                 <input
                   value={niche}
                   onChange={(e) => setNiche(e.target.value)}
@@ -203,7 +203,7 @@ export default function GrowthStrategyPage() {
               </div>
 
               <div className="reveal d2">
-                <label className="term-label mb-2">CURRENT_FOLLOWERS</label>
+                <label className="term-label text-[11px] mb-2">CURRENT_FOLLOWERS</label>
                 <input
                   value={followers}
                   onChange={(e) => setFollowers(e.target.value)}
@@ -214,7 +214,7 @@ export default function GrowthStrategyPage() {
               </div>
 
               <div className="reveal d3">
-                <label className="term-label mb-2">PRIMARY_PLATFORM</label>
+                <label className="term-label text-[11px] mb-2">PRIMARY_PLATFORM</label>
                 <div className="space-y-1">
                   {PLATFORMS.map((p, i) => (
                     <button
@@ -236,7 +236,7 @@ export default function GrowthStrategyPage() {
               </div>
 
               <div className="reveal d4">
-                <label className="term-label mb-2">GOALS <span className="text-tx-4">(select one or more)</span></label>
+                <label className="term-label text-[11px] mb-2">GOALS <span className="text-tx-3">(select one or more)</span></label>
                 <div className="space-y-1">
                   {GROWTH_GOALS.map((g, i) => (
                     <button
@@ -266,7 +266,7 @@ export default function GrowthStrategyPage() {
                   {">>"} GENERATE STRATEGY
                 </button>
                 {!valid && (
-                  <span className="font-mono text-[8px] text-tx-4 tracking-wider">AWAITING INPUT</span>
+                  <span className="font-mono text-[11px] text-tx-3 tracking-wider">AWAITING INPUT</span>
                 )}
               </div>
             </>
@@ -275,12 +275,12 @@ export default function GrowthStrategyPage() {
           {isResultsStep && data && (
             <div ref={outputRef} className="space-y-6">
               <div className="flex items-center justify-between reveal d1">
-                <label className="term-label mb-0">GROWTH_STRATEGY</label>
+                <label className="term-label text-[11px] mb-0">GROWTH_STRATEGY</label>
                 <div className="flex items-center gap-2">
-                  <button onClick={handleSave} className="btn-terminal text-[9px]">
+                  <button onClick={handleSave} className="btn-terminal text-[12px]">
                     {"[SAVE]"}
                   </button>
-                  <button onClick={handleGenerate} className="btn-terminal text-[9px]">
+                  <button onClick={handleGenerate} className="btn-terminal text-[12px]">
                     {"[REGEN]"}
                   </button>
                 </div>
@@ -288,13 +288,13 @@ export default function GrowthStrategyPage() {
 
               <div className="crt-monitor relative crt-brackets reveal d2" style={{ background: "rgba(0,0,0,0.25)" }}>
                 <div className="crt-micro-tl">
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-te-400/60">audit</span>
-                  <span className="text-tx-4">|</span>
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase">scorecard</span>
+                  <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-te-400/60">audit</span>
+                  <span className="text-tx-3">|</span>
+                  <span className="font-mono text-[10px] tracking-[0.18em] uppercase">scorecard</span>
                 </div>
                 <div className="crt-monitor-header">
                   <span className="w-2 h-2 rounded-full bg-vi-400/60" />
-                  <span className="font-mono text-[10px] font-semibold text-tx-1 tracking-tight ml-2">Growth Audit</span>
+                  <span className="font-mono text-[13px] font-semibold text-tx-1 tracking-tight ml-2">Growth Audit</span>
                 </div>
                 <div className="crt-monitor-content p-4 space-y-3">
                   <ScoreGauge value={data.audit.content_quality} label="Content Quality" />
@@ -303,131 +303,131 @@ export default function GrowthStrategyPage() {
                   <ScoreGauge value={data.audit.engagement_rate} label="Engagement" />
 
                   <div className="pt-2 border-t border-white/[0.04]">
-                    <span className="font-mono text-[7px] text-ok uppercase tracking-wider">Strengths</span>
+                    <span className="font-mono text-[10px] text-ok uppercase tracking-wider">Strengths</span>
                     {data.audit.strengths.map((s, i) => (
                       <div key={i} className="flex items-start gap-2 mt-1">
-                        <span className="font-mono text-[7px] text-ok mt-0.5">+</span>
-                        <span className="font-mono text-[8px] text-tx-2">{s}</span>
+                        <span className="font-mono text-[10px] text-ok mt-0.5">+</span>
+                        <span className="font-mono text-[11px] text-tx-1">{s}</span>
                       </div>
                     ))}
                   </div>
                   <div className="pt-2 border-t border-white/[0.04]">
-                    <span className="font-mono text-[7px] text-err uppercase tracking-wider">Weaknesses</span>
+                    <span className="font-mono text-[10px] text-err uppercase tracking-wider">Weaknesses</span>
                     {data.audit.weaknesses.map((w, i) => (
                       <div key={i} className="flex items-start gap-2 mt-1">
-                        <span className="font-mono text-[7px] text-err mt-0.5">&mdash;</span>
-                        <span className="font-mono text-[8px] text-tx-2">{w}</span>
+                        <span className="font-mono text-[10px] text-err mt-0.5">&mdash;</span>
+                        <span className="font-mono text-[11px] text-tx-1">{w}</span>
                       </div>
                     ))}
                   </div>
                   <div className="pt-2 border-t border-white/[0.04]">
-                    <span className="font-mono text-[7px] text-te-400 uppercase tracking-wider">Growth Levers</span>
+                    <span className="font-mono text-[10px] text-te-400 uppercase tracking-wider">Growth Levers</span>
                     {data.audit.growth_levers.map((gl, i) => (
                       <div key={i} className="flex items-start gap-2 mt-1">
-                        <span className="font-mono text-[7px] text-te-400 mt-0.5">{">>"}</span>
-                        <span className="font-mono text-[8px] text-tx-2">{gl}</span>
+                        <span className="font-mono text-[10px] text-te-400 mt-0.5">{">>"}</span>
+                        <span className="font-mono text-[11px] text-tx-1">{gl}</span>
                       </div>
                     ))}
                   </div>
                 </div>
                 <div className="crt-micro-bl">
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-ok">AUDIT COMPLETE</span>
+                  <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-ok">AUDIT COMPLETE</span>
                 </div>
               </div>
 
               <div className="crt-monitor relative crt-brackets reveal d3" style={{ background: "rgba(0,0,0,0.25)" }}>
                 <div className="crt-micro-tl">
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-te-400/60">plan</span>
-                  <span className="text-tx-4">|</span>
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase">90_day</span>
+                  <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-te-400/60">plan</span>
+                  <span className="text-tx-3">|</span>
+                  <span className="font-mono text-[10px] tracking-[0.18em] uppercase">90_day</span>
                 </div>
                 <div className="crt-monitor-header">
                   <span className="w-2 h-2 rounded-full bg-te-400/60" />
-                  <span className="font-mono text-[10px] font-semibold text-tx-1 tracking-tight ml-2">90-Day Plan ({data.plan.length} weeks)</span>
+                  <span className="font-mono text-[13px] font-semibold text-tx-1 tracking-tight ml-2">90-Day Plan ({data.plan.length} weeks)</span>
                 </div>
                 <div className="crt-monitor-content p-4 space-y-3 max-h-[500px] overflow-y-auto">
                   {data.plan.map((week) => (
                     <div key={week.week_number} className="pb-3 border-b border-white/[0.04] last:border-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="font-mono text-[7px] text-fu-400 tracking-wider">W{String(week.week_number).padStart(2, "0")}</span>
-                        <span className="font-mono text-[9px] text-tx-1 font-semibold">{week.theme}</span>
+                        <span className="font-mono text-[10px] text-fu-400 tracking-wider">W{String(week.week_number).padStart(2, "0")}</span>
+                        <span className="font-mono text-[12px] text-tx-1 font-semibold">{week.theme}</span>
                       </div>
                       <div className="flex flex-wrap gap-1 mt-1">
                         {week.content_focus.map((cf, j) => (
-                          <span key={j} className="font-mono text-[7px] text-tx-3 bg-white/[0.03] px-1.5 py-0.5 rounded-r2">{cf}</span>
+                          <span key={j} className="font-mono text-[10px] text-tx-2 bg-white/[0.03] px-1.5 py-0.5 rounded-r2">{cf}</span>
                         ))}
                       </div>
-                      <p className="font-mono text-[8px] text-te-400 mt-1">&gt; {week.growth_tactic}</p>
-                      <p className="font-mono text-[7px] text-tx-4 italic mt-0.5">Milestone: {week.milestone}</p>
+                      <p className="font-mono text-[11px] text-te-400 mt-1">&gt; {week.growth_tactic}</p>
+                      <p className="font-mono text-[10px] text-tx-3 italic mt-0.5">Milestone: {week.milestone}</p>
                     </div>
                   ))}
                 </div>
                 <div className="crt-micro-bl">
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-ok">PLAN READY</span>
+                  <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-ok">PLAN READY</span>
                 </div>
               </div>
 
               <div className="crt-monitor relative crt-brackets reveal d4" style={{ background: "rgba(0,0,0,0.25)" }}>
                 <div className="crt-micro-tl">
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-te-400/60">monetize</span>
-                  <span className="text-tx-4">|</span>
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase">roadmap</span>
+                  <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-te-400/60">monetize</span>
+                  <span className="text-tx-3">|</span>
+                  <span className="font-mono text-[10px] tracking-[0.18em] uppercase">roadmap</span>
                 </div>
                 <div className="crt-monitor-header">
                   <span className="w-2 h-2 rounded-full bg-fu-400/60" />
-                  <span className="font-mono text-[10px] font-semibold text-tx-1 tracking-tight ml-2">Monetization Roadmap</span>
+                  <span className="font-mono text-[13px] font-semibold text-tx-1 tracking-tight ml-2">Monetization Roadmap</span>
                 </div>
                 <div className="crt-monitor-content p-4 space-y-4">
                   {data.monetization.map((phase, i) => (
                     <div key={i} className="pb-3 border-b border-white/[0.04] last:border-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="font-mono text-[7px] text-vi-400 tracking-wider uppercase">{phase.phase}</span>
-                        <span className="font-mono text-[7px] text-tx-4">({phase.timeframe})</span>
+                        <span className="font-mono text-[10px] text-vi-400 tracking-wider uppercase">{phase.phase}</span>
+                        <span className="font-mono text-[10px] text-tx-3">({phase.timeframe})</span>
                       </div>
                       <div className="space-y-0.5 mt-1">
                         {phase.tactics.map((t, j) => (
                           <div key={j} className="flex items-start gap-2">
-                            <span className="font-mono text-[7px] text-te-400 mt-0.5">&bull;</span>
-                            <span className="font-mono text-[8px] text-tx-2">{t}</span>
+                            <span className="font-mono text-[10px] text-te-400 mt-0.5">&bull;</span>
+                            <span className="font-mono text-[11px] text-tx-1">{t}</span>
                           </div>
                         ))}
                       </div>
-                      <p className="font-mono text-[7px] text-ok mt-1">Target: {phase.revenue_target}</p>
+                      <p className="font-mono text-[10px] text-ok mt-1">Target: {phase.revenue_target}</p>
                     </div>
                   ))}
                 </div>
                 <div className="crt-micro-bl">
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-ok">ROADMAP READY</span>
+                  <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-ok">ROADMAP READY</span>
                 </div>
               </div>
 
               {data.algorithm_tips.length > 0 && (
                 <div className="crt-monitor relative crt-brackets reveal d5" style={{ background: "rgba(0,0,0,0.25)" }}>
                   <div className="crt-micro-tl">
-                    <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-te-400/60">tips</span>
-                    <span className="text-tx-4">|</span>
-                    <span className="font-mono text-[7px] tracking-[0.18em] uppercase">algorithm</span>
+                    <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-te-400/60">tips</span>
+                    <span className="text-tx-3">|</span>
+                    <span className="font-mono text-[10px] tracking-[0.18em] uppercase">algorithm</span>
                   </div>
                   <div className="crt-monitor-header">
                     <span className="w-2 h-2 rounded-full bg-ok/60" />
-                    <span className="font-mono text-[10px] font-semibold text-tx-1 tracking-tight ml-2">Algorithm Tips</span>
+                    <span className="font-mono text-[13px] font-semibold text-tx-1 tracking-tight ml-2">Algorithm Tips</span>
                   </div>
                   <div className="crt-monitor-content p-4 space-y-2">
                     {data.algorithm_tips.map((tip, i) => (
                       <div key={i} className="flex items-start gap-2">
-                        <span className="font-mono text-[7px] text-te-400 mt-0.5">{">>"}</span>
-                        <span className="font-mono text-[8px] text-tx-2">{tip}</span>
+                        <span className="font-mono text-[10px] text-te-400 mt-0.5">{">>"}</span>
+                        <span className="font-mono text-[11px] text-tx-1">{tip}</span>
                       </div>
                     ))}
                   </div>
                   <div className="crt-micro-bl">
-                    <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-ok">TIPS READY</span>
+                    <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-ok">TIPS READY</span>
                   </div>
                 </div>
               )}
 
               <div className="flex items-center gap-3 pt-2 border-t border-white/[0.04]">
-                <button onClick={handleReset} className="btn-terminal text-[9px]">
+                <button onClick={handleReset} className="btn-terminal text-[12px]">
                   {">>"} NEW STRATEGY
                 </button>
               </div>
@@ -436,23 +436,23 @@ export default function GrowthStrategyPage() {
         </div>
 
         <div className="crt-micro-bl">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase"
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase"
             style={{ color: step === "results" ? "rgba(34,197,94,0.6)" : "rgba(86,86,128,0.6)" }}
           >
             {step === "input" ? "AWAITING INPUT" : "STRATEGY READY"}
           </span>
         </div>
         <div className="crt-micro-br">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-tx-3">
             {loading ? "GENERATING..." : "STANDBY"}
           </span>
         </div>
 
         <div className="crt-monitor-footer">
-          <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">
+          <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-tx-3">
             {step === "input" ? "INPUT" : "STRATEGY"}
           </span>
-          <span className="font-mono text-[6px] text-center">
+          <span className="font-mono text-[9px] text-center">
             {!isSignedIn ? (
               <span className="text-vi-400/60">
                 {freeActionsLeft > 0 ? `FREE: ${freeActionsLeft} gen` : "FREE: 0 "}
@@ -463,10 +463,10 @@ export default function GrowthStrategyPage() {
               )}
               </span>
             ) : (
-              <span className="text-tx-4">[system ready]</span>
+              <span className="text-tx-3">[system ready]</span>
             )}
           </span>
-          <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">
+          <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-tx-3">
             {loading ? "BUSY" : "STANDBY"}
           </span>
         </div>

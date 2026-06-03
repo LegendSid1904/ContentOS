@@ -27,6 +27,7 @@ interface ContentGap {
 interface Analysis {
   profile: CompetitorProfile;
   gaps: ContentGap[];
+  competitorName?: string;
 }
 
 function BootLoader() {
@@ -57,7 +58,7 @@ function BootLoader() {
 function ScoreGauge({ value, label }: { value: number; label: string }) {
   return (
     <div className="flex items-center gap-2">
-      <span className="font-mono text-[7px] text-tx-4 uppercase tracking-wider w-20 flex-shrink-0">{label}</span>
+      <span className="font-mono text-[10px] text-tx-3 uppercase tracking-wider w-20 flex-shrink-0">{label}</span>
       <div className="flex-1 h-1.5 bg-white/[0.03] rounded-sm overflow-hidden">
         <div
           className="h-full rounded-sm transition-all duration-500"
@@ -71,7 +72,7 @@ function ScoreGauge({ value, label }: { value: number; label: string }) {
           }}
         />
       </div>
-      <span className="font-mono text-[8px] text-tx-3 w-4 text-right">{value}/10</span>
+      <span className="font-mono text-[11px] text-tx-2 w-4 text-right">{value}/10</span>
     </div>
   );
 }
@@ -160,29 +161,29 @@ export default function CompetitorIntelPage() {
         <div className="crt-sweep" />
 
         <div className="crt-micro-tl">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-te-400/60">sys</span>
-          <span className="text-tx-4">|</span>
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase">competitor_intel</span>
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-te-400/60">sys</span>
+          <span className="text-tx-3">|</span>
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase">competitor_intel</span>
         </div>
         <div className="crt-micro-tr">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">v1.0.0</span>
-          <span className="text-tx-4">|</span>
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">id: {isSignedIn ? "active" : "preview"}</span>
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-tx-3">v1.0.0</span>
+          <span className="text-tx-3">|</span>
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-tx-3">id: {isSignedIn ? "active" : "preview"}</span>
         </div>
 
         <div className="crt-monitor-header">
-          <span className="font-mono text-[7px] tracking-[0.24em] uppercase text-tx-4">MODULE</span>
-          <span className="font-mono text-[6px] text-tx-4">|</span>
-          <span className="font-mono text-[7px] tracking-[0.24em] uppercase text-te-400/70">COMPETITOR INTEL</span>
+          <span className="font-mono text-[10px] tracking-[0.24em] uppercase text-tx-3">MODULE</span>
+          <span className="font-mono text-[9px] text-tx-3">|</span>
+          <span className="font-mono text-[10px] tracking-[0.24em] uppercase text-te-400/70">COMPETITOR INTEL</span>
           <div className="flex-1" />
-          <span className="font-mono text-[7px] tracking-[0.1em] text-tx-4">{"\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"}</span>
+          <span className="font-mono text-[10px] tracking-[0.1em] text-tx-3">{"\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"}</span>
         </div>
 
         <div className="crt-monitor-content p-6 space-y-6">
           {loading && <BootLoader />}
 
           {error && (
-            <div className="font-mono text-[11px] text-err bg-err/10 border border-err/20 rounded-r3 p-3">
+            <div className="font-mono text-[14px] text-err bg-err/10 border border-err/20 rounded-r3 p-3">
               <span className="text-err">[ERROR]</span> {error}
               <button onClick={() => setError("")} className="ml-2 text-err/60 hover:text-err underline">dismiss</button>
             </div>
@@ -191,7 +192,7 @@ export default function CompetitorIntelPage() {
           {isInputStep && (
             <>
               <div className="reveal d1">
-                <label className="term-label mb-2">COMPETITOR_URL</label>
+                <label className="term-label text-[12px] mb-2">COMPETITOR_URL</label>
                 <input
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
@@ -202,7 +203,7 @@ export default function CompetitorIntelPage() {
               </div>
 
               <div className="reveal d2">
-                <label className="term-label mb-2">NICHE</label>
+                <label className="term-label text-[12px] mb-2">NICHE</label>
                 <input
                   value={niche}
                   onChange={(e) => setNiche(e.target.value)}
@@ -212,7 +213,7 @@ export default function CompetitorIntelPage() {
               </div>
 
               <div className="reveal d3">
-                <label className="term-label mb-2">ANALYSIS_DEPTH</label>
+                <label className="term-label text-[12px] mb-2">ANALYSIS_DEPTH</label>
                 <div className="space-y-1">
                   <button
                     onClick={() => setDepth("basic")}
@@ -223,7 +224,7 @@ export default function CompetitorIntelPage() {
                     </span>
                     <span className="boot-option-label">
                       Basic
-                      <span className="block font-mono text-[8px] text-tx-4 mt-0.5">Top content analysis + pattern identification</span>
+                      <span className="block font-mono text-[11px] text-tx-3 mt-0.5">Top content analysis + pattern identification</span>
                     </span>
                     <span className={`diag-badge ${depth === "basic" ? "diag-ok" : "diag-idle"}`}>
                       {depth === "basic" ? "[ACTIVE]" : "[IDLE]"}
@@ -238,7 +239,7 @@ export default function CompetitorIntelPage() {
                     </span>
                     <span className="boot-option-label">
                       Deep
-                      <span className="block font-mono text-[8px] text-tx-4 mt-0.5">Full channel audit + comprehensive recommendations</span>
+                      <span className="block font-mono text-[11px] text-tx-3 mt-0.5">Full channel audit + comprehensive recommendations</span>
                     </span>
                     <span className={`diag-badge ${depth === "deep" ? "diag-ok" : "diag-idle"}`}>
                       {depth === "deep" ? "[ACTIVE]" : "[IDLE]"}
@@ -256,7 +257,7 @@ export default function CompetitorIntelPage() {
                   {">>"} ANALYZE COMPETITOR
                 </button>
                 {!valid && (
-                  <span className="font-mono text-[8px] text-tx-4 tracking-wider">AWAITING INPUT</span>
+                  <span className="font-mono text-[11px] text-tx-3 tracking-wider">AWAITING INPUT</span>
                 )}
               </div>
             </>
@@ -265,102 +266,118 @@ export default function CompetitorIntelPage() {
           {isResultsStep && analysis && (
             <div ref={outputRef} className="space-y-6">
               <div className="flex items-center justify-between reveal d1">
-                <label className="term-label mb-0">COMPETITOR_ANALYSIS</label>
+                <label className="term-label text-[12px] mb-0">COMPETITOR_ANALYSIS</label>
                 <div className="flex items-center gap-2">
-                  <button onClick={handleSave} className="btn-terminal text-[9px]">
+                  <button onClick={handleSave} className="btn-terminal text-[12px]">
                     {"[SAVE]"}
                   </button>
-                  <button onClick={handleAnalyze} className="btn-terminal text-[9px]">
+                  <button onClick={handleAnalyze} className="btn-terminal text-[12px]">
                     {"[REGEN]"}
                   </button>
                 </div>
               </div>
 
+              {analysis.competitorName && (
+                <div className="crt-monitor relative crt-brackets reveal d2" style={{ background: "rgba(0,0,0,0.25)" }}>
+                  <div className="crt-micro-tl">
+                    <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-te-400/60">target</span>
+                    <span className="text-tx-3">|</span>
+                    <span className="font-mono text-[10px] tracking-[0.18em] uppercase">competitor</span>
+                  </div>
+                  <div className="crt-monitor-header">
+                    <span className="w-2 h-2 rounded-full bg-te-400/60" />
+                    <span className="font-mono text-[16px] font-bold text-tx-1 tracking-tight ml-2">
+                      COMPETITOR: @{analysis.competitorName}
+                    </span>
+                  </div>
+                </div>
+              )}
+
               <div className="crt-monitor relative crt-brackets reveal d2" style={{ background: "rgba(0,0,0,0.25)" }}>
                 <div className="crt-micro-tl">
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-te-400/60">audit</span>
-                  <span className="text-tx-4">|</span>
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase">profile</span>
+                  <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-te-400/60">audit</span>
+                  <span className="text-tx-3">|</span>
+                  <span className="font-mono text-[10px] tracking-[0.18em] uppercase">profile</span>
                 </div>
                 <div className="crt-micro-tr">
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">{depth} mode</span>
+                  <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-tx-3">{depth} mode</span>
                 </div>
                 <div className="crt-monitor-header">
                   <span className="w-2 h-2 rounded-full bg-vi-400/60" />
-                  <span className="font-mono text-[10px] font-semibold text-tx-1 tracking-tight ml-2">Profile Score: {analysis.profile.overall_score}/10</span>
+                  <span className="font-mono text-[13px] font-semibold text-tx-1 tracking-tight ml-2">Profile Score: {analysis.profile.overall_score}/10</span>
                 </div>
                 <div className="crt-monitor-content p-4 space-y-3">
                   <ScoreGauge value={analysis.profile.overall_score} label="Overall" />
 
                   <div className="pt-2 border-t border-white/[0.04]">
-                    <span className="font-mono text-[8px] text-tx-4 uppercase tracking-wider">Content Pillars</span>
+                    <span className="font-mono text-[11px] text-tx-3 uppercase tracking-wider">Content Pillars</span>
                     <div className="flex flex-wrap gap-1 mt-1">
                       {analysis.profile.content_pillars.map((p, i) => (
-                        <span key={i} className="font-mono text-[8px] text-te-400 bg-te-400/10 px-2 py-0.5 rounded-r2">{p}</span>
+                        <span key={i} className="font-mono text-[11px] text-te-400 bg-te-400/10 px-2 py-0.5 rounded-r2">{p}</span>
                       ))}
                     </div>
                   </div>
 
                   <div className="pt-2 border-t border-white/[0.04]">
-                    <span className="font-mono text-[8px] text-tx-4 uppercase tracking-wider">Posting Frequency</span>
-                    <p className="font-mono text-[10px] text-tx-1 mt-1">{analysis.profile.posting_frequency}</p>
+                    <span className="font-mono text-[11px] text-tx-3 uppercase tracking-wider">Posting Frequency</span>
+                    <p className="font-mono text-[13px] text-tx-1 mt-1">{analysis.profile.posting_frequency}</p>
                   </div>
 
                   <div className="pt-2 border-t border-white/[0.04]">
-                    <span className="font-mono text-[8px] text-tx-4 uppercase tracking-wider">Hook Styles</span>
+                    <span className="font-mono text-[11px] text-tx-3 uppercase tracking-wider">Hook Styles</span>
                     <div className="flex flex-wrap gap-1 mt-1">
                       {analysis.profile.hook_styles.map((h, i) => (
-                        <span key={i} className="font-mono text-[8px] text-fu-400 bg-fu-400/10 px-2 py-0.5 rounded-r2">{h}</span>
+                        <span key={i} className="font-mono text-[11px] text-fu-400 bg-fu-400/10 px-2 py-0.5 rounded-r2">{h}</span>
                       ))}
                     </div>
                   </div>
 
                   <div className="pt-2 border-t border-white/[0.04]">
-                    <span className="font-mono text-[8px] text-tx-4 uppercase tracking-wider">Engagement Patterns</span>
+                    <span className="font-mono text-[11px] text-tx-3 uppercase tracking-wider">Engagement Patterns</span>
                     <div className="space-y-1 mt-1">
                       {analysis.profile.engagement_patterns.map((ep, i) => (
                         <div key={i} className="flex items-start gap-2">
-                          <span className="font-mono text-[7px] text-te-400 mt-0.5">{">>"}</span>
-                          <span className="font-mono text-[9px] text-tx-2">{ep}</span>
+                          <span className="font-mono text-[10px] text-te-400 mt-0.5">{">>"}</span>
+                          <span className="font-mono text-[12px] text-tx-1">{ep}</span>
                         </div>
                       ))}
                     </div>
                   </div>
                 </div>
                 <div className="crt-micro-bl">
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-ok">ANALYSIS COMPLETE</span>
+                  <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-ok">ANALYSIS COMPLETE</span>
                 </div>
               </div>
 
               <div className="crt-monitor relative crt-brackets reveal d3" style={{ background: "rgba(0,0,0,0.25)" }}>
                 <div className="crt-micro-tl">
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-te-400/60">gaps</span>
-                  <span className="text-tx-4">|</span>
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase">opportunities</span>
+                  <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-te-400/60">gaps</span>
+                  <span className="text-tx-3">|</span>
+                  <span className="font-mono text-[10px] tracking-[0.18em] uppercase">opportunities</span>
                 </div>
                 <div className="crt-monitor-header">
                   <span className="w-2 h-2 rounded-full bg-te-400/60" />
-                  <span className="font-mono text-[10px] font-semibold text-tx-1 tracking-tight ml-2">Content Gaps ({analysis.gaps.length})</span>
+                  <span className="font-mono text-[13px] font-semibold text-tx-1 tracking-tight ml-2">Content Gaps ({analysis.gaps.length})</span>
                 </div>
                 <div className="crt-monitor-content p-4 space-y-2">
                   {analysis.gaps.map((gap, i) => (
                     <div key={i} className="flex items-start gap-2 py-1.5 border-b border-white/[0.02] last:border-0">
-                      <span className="font-mono text-[7px] text-vi-400 tracking-wider flex-shrink-0 w-4">{String(i + 1).padStart(2, "0")}</span>
+                      <span className="font-mono text-[10px] text-vi-400 tracking-wider flex-shrink-0 w-4">{String(i + 1).padStart(2, "0")}</span>
                       <div className="flex-1 min-w-0">
-                        <span className="font-mono text-[10px] text-tx-1">{gap.topic}</span>
-                        <p className="font-mono text-[8px] text-tx-4 mt-0.5">{gap.rationale}</p>
+                        <span className="font-mono text-[13px] text-tx-1">{gap.topic}</span>
+                        <p className="font-mono text-[11px] text-tx-3 mt-0.5">{gap.rationale}</p>
                       </div>
-                      <span className="font-mono text-[7px] text-ok bg-ok/10 px-1.5 py-0.5 rounded-r2 flex-shrink-0">score: {gap.opportunity_score}</span>
+                      <span className="font-mono text-[10px] text-ok bg-ok/10 px-1.5 py-0.5 rounded-r2 flex-shrink-0">score: {gap.opportunity_score}</span>
                     </div>
                   ))}
                 </div>
                 <div className="crt-micro-bl">
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-ok">GAPS IDENTIFIED</span>
+                  <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-ok">GAPS IDENTIFIED</span>
                 </div>
               </div>
 
               <div className="flex items-center gap-3 pt-2 border-t border-white/[0.04]">
-                <button onClick={handleReset} className="btn-terminal text-[9px]">
+                <button onClick={handleReset} className="btn-terminal text-[12px]">
                   {">>"} NEW ANALYSIS
                 </button>
               </div>
@@ -369,23 +386,23 @@ export default function CompetitorIntelPage() {
         </div>
 
         <div className="crt-micro-bl">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase"
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase"
             style={{ color: step === "results" ? "rgba(34,197,94,0.6)" : "rgba(86,86,128,0.6)" }}
           >
             {step === "input" ? "AWAITING INPUT" : "ANALYSIS READY"}
           </span>
         </div>
         <div className="crt-micro-br">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-tx-3">
             {loading ? "GENERATING..." : "STANDBY"}
           </span>
         </div>
 
         <div className="crt-monitor-footer">
-          <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">
+          <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-tx-3">
             {step === "input" ? "INPUT" : "RESULTS"}
           </span>
-          <span className="font-mono text-[6px] text-center">
+          <span className="font-mono text-[9px] text-center">
             {!isSignedIn ? (
               <span className="text-vi-400/60">
                 {freeActionsLeft > 0 ? `FREE: ${freeActionsLeft} gen` : "FREE: 0 "}
@@ -396,10 +413,10 @@ export default function CompetitorIntelPage() {
               )}
               </span>
             ) : (
-              <span className="text-tx-4">[system ready]</span>
+              <span className="text-tx-3">[system ready]</span>
             )}
           </span>
-          <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">
+          <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-tx-3">
             {loading ? "BUSY" : "STANDBY"}
           </span>
         </div>

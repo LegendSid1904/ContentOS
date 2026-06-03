@@ -53,7 +53,7 @@ function BootLoader() {
 function ScoreMeter({ value, label }: { value: number; label: string }) {
   return (
     <div className="flex items-center gap-2">
-      <span className="font-mono text-[7px] text-tx-4 uppercase tracking-wider w-24 flex-shrink-0">{label}</span>
+      <span className="font-mono text-[10px] text-tx-3 uppercase tracking-wider w-24 flex-shrink-0">{label}</span>
       <div className="flex-1 h-1.5 bg-white/[0.03] rounded-sm overflow-hidden">
         <div
           className="h-full rounded-sm transition-all duration-500"
@@ -63,7 +63,7 @@ function ScoreMeter({ value, label }: { value: number; label: string }) {
           }}
         />
       </div>
-      <span className="font-mono text-[8px] text-tx-3 w-4 text-right">{value}/10</span>
+      <span className="font-mono text-[11px] text-tx-2 w-4 text-right">{value}/10</span>
     </div>
   );
 }
@@ -161,29 +161,29 @@ export default function PageSetupPage() {
         <div className="crt-sweep" />
 
         <div className="crt-micro-tl">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-te-400/60">sys</span>
-          <span className="text-tx-4">|</span>
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase">page_setup</span>
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-te-400/60">sys</span>
+          <span className="text-tx-3">|</span>
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase">page_setup</span>
         </div>
         <div className="crt-micro-tr">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">v1.0.0</span>
-          <span className="text-tx-4">|</span>
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">id: {isSignedIn ? "active" : "preview"}</span>
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-tx-3">v1.0.0</span>
+          <span className="text-tx-3">|</span>
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-tx-3">id: {isSignedIn ? "active" : "preview"}</span>
         </div>
 
         <div className="crt-monitor-header">
-          <span className="font-mono text-[7px] tracking-[0.24em] uppercase text-tx-4">MODULE</span>
-          <span className="font-mono text-[6px] text-tx-4">|</span>
-          <span className="font-mono text-[7px] tracking-[0.24em] uppercase text-te-400/70">PAGE SETUP</span>
+          <span className="font-mono text-[10px] tracking-[0.24em] uppercase text-tx-3">MODULE</span>
+          <span className="font-mono text-[9px] text-tx-3">|</span>
+          <span className="font-mono text-[10px] tracking-[0.24em] uppercase text-te-400/70">PAGE SETUP</span>
           <div className="flex-1" />
-          <span className="font-mono text-[7px] tracking-[0.1em] text-tx-4">{"\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"}</span>
+          <span className="font-mono text-[10px] tracking-[0.1em] text-tx-3">{"\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"}</span>
         </div>
 
         <div className="crt-monitor-content p-6 space-y-6">
           {loading && <BootLoader />}
 
           {error && (
-            <div className="font-mono text-[11px] text-err bg-err/10 border border-err/20 rounded-r3 p-3">
+            <div className="font-mono text-[14px] text-err bg-err/10 border border-err/20 rounded-r3 p-3">
               <span className="text-err">[ERROR]</span> {error}
               <button onClick={() => setError("")} className="ml-2 text-err/60 hover:text-err underline">dismiss</button>
             </div>
@@ -192,7 +192,7 @@ export default function PageSetupPage() {
           {isInputStep && (
             <>
               <div className="reveal d1">
-                <label className="term-label mb-2">PLATFORM</label>
+                <label className="term-label text-[11px] mb-2">PLATFORM</label>
                 <div className="space-y-1">
                   {[...PLATFORMS, "Twitter"].map((p, i) => (
                     <button
@@ -214,7 +214,7 @@ export default function PageSetupPage() {
               </div>
 
               <div className="reveal d2">
-                <label className="term-label mb-2">NICHE</label>
+                <label className="term-label text-[11px] mb-2">NICHE</label>
                 <input
                   value={niche}
                   onChange={(e) => setNiche(e.target.value)}
@@ -224,7 +224,7 @@ export default function PageSetupPage() {
               </div>
 
               <div className="reveal d3">
-                <label className="term-label mb-2">CURRENT_BIO <span className="text-tx-4">(optional)</span></label>
+                <label className="term-label text-[11px] mb-2">CURRENT_BIO <span className="text-tx-3">(optional)</span></label>
                 <textarea
                   value={currentBio}
                   onChange={(e) => setCurrentBio(e.target.value)}
@@ -243,7 +243,7 @@ export default function PageSetupPage() {
                   {">>"} OPTIMIZE PAGE
                 </button>
                 {!valid && (
-                  <span className="font-mono text-[8px] text-tx-4 tracking-wider">AWAITING INPUT</span>
+                  <span className="font-mono text-[11px] text-tx-3 tracking-wider">AWAITING INPUT</span>
                 )}
               </div>
             </>
@@ -252,12 +252,12 @@ export default function PageSetupPage() {
           {isResultsStep && data && (
             <div ref={outputRef} className="space-y-6">
               <div className="flex items-center justify-between reveal d1">
-                <label className="term-label mb-0">PAGE_OPTIMIZATION</label>
+                <label className="term-label text-[11px] mb-0">PAGE_OPTIMIZATION</label>
                 <div className="flex items-center gap-2">
-                  <button onClick={handleSave} className="btn-terminal text-[9px]">
+                  <button onClick={handleSave} className="btn-terminal text-[12px]">
                     {"[SAVE]"}
                   </button>
-                  <button onClick={handleGenerate} className="btn-terminal text-[9px]">
+                  <button onClick={handleGenerate} className="btn-terminal text-[12px]">
                     {"[REGEN]"}
                   </button>
                 </div>
@@ -265,13 +265,13 @@ export default function PageSetupPage() {
 
               <div className="crt-monitor relative crt-brackets reveal d2" style={{ background: "rgba(0,0,0,0.25)" }}>
                 <div className="crt-micro-tl">
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-te-400/60">audit</span>
-                  <span className="text-tx-4">|</span>
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase">profile_score</span>
+                  <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-te-400/60">audit</span>
+                  <span className="text-tx-3">|</span>
+                  <span className="font-mono text-[10px] tracking-[0.18em] uppercase">profile_score</span>
                 </div>
                 <div className="crt-monitor-header">
                   <span className="w-2 h-2 rounded-full bg-vi-400/60" />
-                  <span className="font-mono text-[10px] font-semibold text-tx-1 tracking-tight ml-2">Profile Audit</span>
+                  <span className="font-mono text-[13px] font-semibold text-tx-1 tracking-tight ml-2">Profile Audit</span>
                 </div>
                 <div className="crt-monitor-content p-4 space-y-2">
                   <ScoreMeter value={data.audit.keyword_optimization} label="Keywords" />
@@ -281,79 +281,79 @@ export default function PageSetupPage() {
                   <div className="pt-2 border-t border-white/[0.04] space-y-1">
                     {data.audit.suggestions.map((s, i) => (
                       <div key={i} className="flex items-start gap-2">
-                        <span className="font-mono text-[7px] text-te-400 mt-0.5">{">>"}</span>
-                        <span className="font-mono text-[8px] text-tx-2">{s}</span>
+                        <span className="font-mono text-[10px] text-te-400 mt-0.5">{">>"}</span>
+                        <span className="font-mono text-[11px] text-tx-1">{s}</span>
                       </div>
                     ))}
                   </div>
                 </div>
                 <div className="crt-micro-bl">
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-ok">AUDIT COMPLETE</span>
+                  <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-ok">AUDIT COMPLETE</span>
                 </div>
               </div>
 
               <div className="crt-monitor relative crt-brackets reveal d3" style={{ background: "rgba(0,0,0,0.25)" }}>
                 <div className="crt-micro-tl">
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-te-400/60">bios</span>
-                  <span className="text-tx-4">|</span>
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase">variants</span>
+                  <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-te-400/60">bios</span>
+                  <span className="text-tx-3">|</span>
+                  <span className="font-mono text-[10px] tracking-[0.18em] uppercase">variants</span>
                 </div>
                 <div className="crt-monitor-header">
                   <span className="w-2 h-2 rounded-full bg-te-400/60" />
-                  <span className="font-mono text-[10px] font-semibold text-tx-1 tracking-tight ml-2">Bio Variants</span>
+                  <span className="font-mono text-[13px] font-semibold text-tx-1 tracking-tight ml-2">Bio Variants</span>
                 </div>
                 <div className="crt-monitor-content p-4 space-y-3">
                   {data.bios.map((bio, i) => (
                     <div key={i} className="pb-2 border-b border-white/[0.04] last:border-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="font-mono text-[7px] text-fu-400 uppercase tracking-wider">[{bio.variant}]</span>
-                        <span className="font-mono text-[7px] text-tx-4">{bio.character_count} chars</span>
+                        <span className="font-mono text-[10px] text-fu-400 uppercase tracking-wider">[{bio.variant}]</span>
+                        <span className="font-mono text-[10px] text-tx-3">{bio.character_count} chars</span>
                       </div>
-                      <p className="font-mono text-[10px] text-tx-1 leading-relaxed">{bio.bio_text}</p>
-                      <p className="font-mono text-[7px] text-tx-4 mt-0.5 italic">Keywords: {bio.keyword_usage}</p>
+                      <p className="font-mono text-[13px] text-tx-1 leading-relaxed">{bio.bio_text}</p>
+                      <p className="font-mono text-[10px] text-tx-3 mt-0.5 italic">Keywords: {bio.keyword_usage}</p>
                     </div>
                   ))}
                 </div>
                 <div className="crt-micro-bl">
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-ok">BIOS READY</span>
+                  <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-ok">BIOS READY</span>
                 </div>
               </div>
 
               <div className="crt-monitor relative crt-brackets reveal d4" style={{ background: "rgba(0,0,0,0.25)" }}>
                 <div className="crt-micro-tl">
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-te-400/60">seo</span>
-                  <span className="text-tx-4">|</span>
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase">keywords</span>
+                  <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-te-400/60">seo</span>
+                  <span className="text-tx-3">|</span>
+                  <span className="font-mono text-[10px] tracking-[0.18em] uppercase">keywords</span>
                 </div>
                 <div className="crt-monitor-header">
                   <span className="w-2 h-2 rounded-full bg-fu-400/60" />
-                  <span className="font-mono text-[10px] font-semibold text-tx-1 tracking-tight ml-2">Keywords & Hashtags</span>
+                  <span className="font-mono text-[13px] font-semibold text-tx-1 tracking-tight ml-2">Keywords & Hashtags</span>
                 </div>
                 <div className="crt-monitor-content p-4 space-y-3">
                   <div>
-                    <span className="font-mono text-[7px] text-tx-4 uppercase tracking-wider">Keywords</span>
+                    <span className="font-mono text-[10px] text-tx-3 uppercase tracking-wider">Keywords</span>
                     <div className="flex flex-wrap gap-1 mt-1">
                       {data.keywords.keywords.map((kw, i) => (
-                        <span key={i} className="font-mono text-[8px] text-te-400 bg-te-400/10 px-1.5 py-0.5 rounded-r2">{kw}</span>
+                        <span key={i} className="font-mono text-[11px] text-te-400 bg-te-400/10 px-1.5 py-0.5 rounded-r2">{kw}</span>
                       ))}
                     </div>
                   </div>
                   <div className="pt-2 border-t border-white/[0.04]">
-                    <span className="font-mono text-[7px] text-tx-4 uppercase tracking-wider">Hashtags</span>
+                    <span className="font-mono text-[10px] text-tx-3 uppercase tracking-wider">Hashtags</span>
                     <div className="flex flex-wrap gap-1 mt-1">
                       {data.keywords.hashtags.map((ht, i) => (
-                        <span key={i} className="font-mono text-[7px] text-fu-400 bg-fu-400/10 px-1.5 py-0.5 rounded-r2">#{ht}</span>
+                        <span key={i} className="font-mono text-[10px] text-fu-400 bg-fu-400/10 px-1.5 py-0.5 rounded-r2">#{ht}</span>
                       ))}
                     </div>
                   </div>
                 </div>
                 <div className="crt-micro-bl">
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-ok">KEYWORDS READY</span>
+                  <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-ok">KEYWORDS READY</span>
                 </div>
               </div>
 
               <div className="flex items-center gap-3 pt-2 border-t border-white/[0.04]">
-                <button onClick={handleReset} className="btn-terminal text-[9px]">
+                <button onClick={handleReset} className="btn-terminal text-[12px]">
                   {">>"} NEW SETUP
                 </button>
               </div>
@@ -362,23 +362,23 @@ export default function PageSetupPage() {
         </div>
 
         <div className="crt-micro-bl">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase"
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase"
             style={{ color: step === "results" ? "rgba(34,197,94,0.6)" : "rgba(86,86,128,0.6)" }}
           >
             {step === "input" ? "AWAITING INPUT" : "OPTIMIZATION READY"}
           </span>
         </div>
         <div className="crt-micro-br">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-tx-3">
             {loading ? "GENERATING..." : "STANDBY"}
           </span>
         </div>
 
         <div className="crt-monitor-footer">
-          <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">
+          <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-tx-3">
             {step === "input" ? "INPUT" : "RESULTS"}
           </span>
-          <span className="font-mono text-[6px] text-center">
+          <span className="font-mono text-[9px] text-center">
             {!isSignedIn ? (
               <span className="text-vi-400/60">
                 {freeActionsLeft > 0 ? `FREE: ${freeActionsLeft} gen` : "FREE: 0 "}
@@ -389,10 +389,10 @@ export default function PageSetupPage() {
               )}
               </span>
             ) : (
-              <span className="text-tx-4">[system ready]</span>
+              <span className="text-tx-3">[system ready]</span>
             )}
           </span>
-          <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">
+          <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-tx-3">
             {loading ? "BUSY" : "STANDBY"}
           </span>
         </div>

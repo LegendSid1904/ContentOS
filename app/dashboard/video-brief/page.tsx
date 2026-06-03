@@ -151,29 +151,29 @@ export default function VideoBriefPage() {
         <div className="crt-sweep" />
 
         <div className="crt-micro-tl">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-te-400/60">sys</span>
-          <span className="text-tx-4">|</span>
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase">video_brief</span>
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-te-400/60">sys</span>
+          <span className="text-tx-3">|</span>
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase">video_brief</span>
         </div>
         <div className="crt-micro-tr">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">v1.0.0</span>
-          <span className="text-tx-4">|</span>
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">id: {isSignedIn ? "active" : "preview"}</span>
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-tx-3">v1.0.0</span>
+          <span className="text-tx-3">|</span>
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-tx-3">id: {isSignedIn ? "active" : "preview"}</span>
         </div>
 
         <div className="crt-monitor-header">
-          <span className="font-mono text-[7px] tracking-[0.24em] uppercase text-tx-4">MODULE</span>
-          <span className="font-mono text-[6px] text-tx-4">|</span>
-          <span className="font-mono text-[7px] tracking-[0.24em] uppercase text-te-400/70">VIDEO BRIEF</span>
+          <span className="font-mono text-[10px] tracking-[0.24em] uppercase text-tx-3">MODULE</span>
+          <span className="font-mono text-[9px] text-tx-3">|</span>
+          <span className="font-mono text-[10px] tracking-[0.24em] uppercase text-te-400/70">VIDEO BRIEF</span>
           <div className="flex-1" />
-          <span className="font-mono text-[7px] tracking-[0.1em] text-tx-4">{"\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"}</span>
+          <span className="font-mono text-[10px] tracking-[0.1em] text-tx-3">{"\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"}</span>
         </div>
 
         <div className="crt-monitor-content p-6 space-y-6">
           {loading && <BootLoader />}
 
           {error && (
-            <div className="font-mono text-[11px] text-err bg-err/10 border border-err/20 rounded-r3 p-3">
+            <div className="font-mono text-[14px] text-err bg-err/10 border border-err/20 rounded-r3 p-3">
               <span className="text-err">[ERROR]</span> {error}
               <button onClick={() => setError("")} className="ml-2 text-err/60 hover:text-err underline">dismiss</button>
             </div>
@@ -182,7 +182,7 @@ export default function VideoBriefPage() {
           {isInputStep && (
             <>
               <div className="reveal d1">
-                <label className="term-label mb-2">TRANSCRIPT / SCRIPT</label>
+                <label className="term-label text-[11px] mb-2">TRANSCRIPT / SCRIPT</label>
                 <textarea
                   value={transcript}
                   onChange={(e) => setTranscript(e.target.value)}
@@ -194,7 +194,7 @@ export default function VideoBriefPage() {
               </div>
 
               <div className="reveal d2">
-                <label className="term-label mb-2">VIDEO_LENGTH</label>
+                <label className="term-label text-[11px] mb-2">VIDEO_LENGTH</label>
                 <div className="space-y-1">
                   <button
                     onClick={() => setVideoLength("short")}
@@ -224,7 +224,7 @@ export default function VideoBriefPage() {
               </div>
 
               <div className="reveal d3">
-                <label className="term-label mb-2">EDITING_STYLE <span className="text-tx-4">(optional)</span></label>
+                <label className="term-label text-[11px] mb-2">EDITING_STYLE <span className="text-tx-3">(optional)</span></label>
                 <div className="space-y-1">
                   {EDITING_STYLES.map((s, i) => (
                     <button
@@ -254,7 +254,7 @@ export default function VideoBriefPage() {
                   {">>"} ANALYZE TRANSCRIPT
                 </button>
                 {!valid && (
-                  <span className="font-mono text-[8px] text-tx-4 tracking-wider">NEED MORE TEXT</span>
+                  <span className="font-mono text-[11px] text-tx-3 tracking-wider">NEED MORE TEXT</span>
                 )}
               </div>
             </>
@@ -263,12 +263,12 @@ export default function VideoBriefPage() {
           {isResultsStep && brief && (
             <div ref={outputRef} className="space-y-6">
               <div className="flex items-center justify-between reveal d1">
-                <label className="term-label mb-0">EDITING_BRIEF</label>
+                <label className="term-label text-[11px] mb-0">EDITING_BRIEF</label>
                 <div className="flex items-center gap-2">
-                  <button onClick={handleSave} className="btn-terminal text-[9px]">
+                  <button onClick={handleSave} className="btn-terminal text-[12px]">
                     {"[SAVE]"}
                   </button>
-                  <button onClick={handleAnalyze} className="btn-terminal text-[9px]">
+                  <button onClick={handleAnalyze} className="btn-terminal text-[12px]">
                     {"[REGEN]"}
                   </button>
                 </div>
@@ -276,92 +276,92 @@ export default function VideoBriefPage() {
 
               <div className="crt-monitor relative crt-brackets reveal d2" style={{ background: "rgba(0,0,0,0.25)" }}>
                 <div className="crt-micro-tl">
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-te-400/60">analysis</span>
-                  <span className="text-tx-4">|</span>
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase">edit_points</span>
+                  <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-te-400/60">analysis</span>
+                  <span className="text-tx-3">|</span>
+                  <span className="font-mono text-[10px] tracking-[0.18em] uppercase">edit_points</span>
                 </div>
                 <div className="crt-monitor-header">
                   <span className="w-2 h-2 rounded-full bg-fu-400/60" />
-                  <span className="font-mono text-[10px] font-semibold text-tx-1 tracking-tight ml-2">Hook Moment</span>
+                  <span className="font-mono text-[13px] font-semibold text-tx-1 tracking-tight ml-2">Hook Moment</span>
                   <div className="flex-1" />
-                  <span className="font-mono text-[7px] text-fu-400">{brief.analysis.hook_moment}</span>
+                  <span className="font-mono text-[10px] text-fu-400">{brief.analysis.hook_moment}</span>
                 </div>
                 <div className="crt-monitor-content p-4 space-y-3">
                   <div>
-                    <span className="font-mono text-[8px] text-tx-4 uppercase tracking-wider">Edit Points</span>
+                    <span className="font-mono text-[11px] text-tx-3 uppercase tracking-wider">Edit Points</span>
                     <div className="space-y-1 mt-1">
                       {brief.analysis.edit_points.map((ep, i) => (
                         <div key={i} className="flex items-start gap-2 py-1 border-b border-white/[0.02] last:border-0">
-                          <span className="font-mono text-[7px] text-tx-4 w-12 flex-shrink-0">{ep.timestamp}</span>
-                          <span className={`font-mono text-[7px] tracking-wider uppercase px-1 py-0.5 border rounded-sm ${typeColors[ep.type] || typeColors.key_point}`}>
+                          <span className="font-mono text-[10px] text-tx-3 w-12 flex-shrink-0">{ep.timestamp}</span>
+                          <span className={`font-mono text-[10px] tracking-wider uppercase px-1 py-0.5 border rounded-sm ${typeColors[ep.type] || typeColors.key_point}`}>
                             {ep.type}
                           </span>
-                          <span className="font-mono text-[9px] text-tx-1">{ep.description}</span>
+                          <span className="font-mono text-[12px] text-tx-1">{ep.description}</span>
                         </div>
                       ))}
                     </div>
                   </div>
                   <div className="pt-2 border-t border-white/[0.04]">
-                    <span className="font-mono text-[8px] text-tx-4 uppercase tracking-wider">Pacing</span>
-                    <p className="font-mono text-[9px] text-tx-2 mt-1 italic">{brief.analysis.pacing_suggestion}</p>
+                    <span className="font-mono text-[11px] text-tx-3 uppercase tracking-wider">Pacing</span>
+                    <p className="font-mono text-[12px] text-tx-1 mt-1 italic">{brief.analysis.pacing_suggestion}</p>
                   </div>
                 </div>
                 <div className="crt-micro-bl">
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-ok">ANALYSIS COMPLETE</span>
+                  <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-ok">ANALYSIS COMPLETE</span>
                 </div>
               </div>
 
               <div className="crt-monitor relative crt-brackets reveal d3" style={{ background: "rgba(0,0,0,0.25)" }}>
                 <div className="crt-micro-tl">
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-te-400/60">assets</span>
-                  <span className="text-tx-4">|</span>
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase">b-roll</span>
+                  <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-te-400/60">assets</span>
+                  <span className="text-tx-3">|</span>
+                  <span className="font-mono text-[10px] tracking-[0.18em] uppercase">b-roll</span>
                 </div>
                 <div className="crt-monitor-header">
                   <span className="w-2 h-2 rounded-full bg-te-400/60" />
-                  <span className="font-mono text-[10px] font-semibold text-tx-1 tracking-tight ml-2">B-Roll Keywords</span>
+                  <span className="font-mono text-[13px] font-semibold text-tx-1 tracking-tight ml-2">B-Roll Keywords</span>
                 </div>
                 <div className="crt-monitor-content p-4 space-y-3">
                   {brief.broll_keywords.map((br, i) => (
                     <div key={i} className="flex items-start gap-2">
-                      <span className="font-mono text-[7px] text-te-400/60 w-12 flex-shrink-0">{br.timestamp}</span>
+                      <span className="font-mono text-[10px] text-te-400/60 w-12 flex-shrink-0">{br.timestamp}</span>
                       <div className="flex flex-wrap gap-1">
                         {br.keywords.map((kw, j) => (
-                          <span key={j} className="font-mono text-[8px] text-tx-2 bg-white/[0.03] px-1.5 py-0.5 rounded-r2">{kw}</span>
+                          <span key={j} className="font-mono text-[11px] text-tx-1 bg-white/[0.03] px-1.5 py-0.5 rounded-r2">{kw}</span>
                         ))}
                       </div>
                     </div>
                   ))}
                 </div>
                 <div className="crt-micro-bl">
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-ok">ROLL READY</span>
+                  <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-ok">ROLL READY</span>
                 </div>
               </div>
 
               <div className="crt-monitor relative crt-brackets reveal d4" style={{ background: "rgba(0,0,0,0.25)" }}>
                 <div className="crt-micro-tl">
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-te-400/60">captions</span>
-                  <span className="text-tx-4">|</span>
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase">style</span>
+                  <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-te-400/60">captions</span>
+                  <span className="text-tx-3">|</span>
+                  <span className="font-mono text-[10px] tracking-[0.18em] uppercase">style</span>
                 </div>
                 <div className="crt-monitor-header">
                   <span className="w-2 h-2 rounded-full bg-vi-400/60" />
-                  <span className="font-mono text-[10px] font-semibold text-tx-1 tracking-tight ml-2">{brief.caption_style}</span>
+                  <span className="font-mono text-[13px] font-semibold text-tx-1 tracking-tight ml-2">{brief.caption_style}</span>
                 </div>
                 <div className="crt-monitor-content p-4 space-y-2">
                   {brief.caption_examples.map((ex, i) => (
-                    <div key={i} className="font-mono text-[9px] text-tx-2 bg-white/[0.02] p-2 rounded-r2 italic">
+                    <div key={i} className="font-mono text-[12px] text-tx-1 bg-white/[0.02] p-2 rounded-r2 italic">
                       &ldquo;{ex}&rdquo;
                     </div>
                   ))}
                 </div>
                 <div className="crt-micro-bl">
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-ok">CAPTIONS READY</span>
+                  <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-ok">CAPTIONS READY</span>
                 </div>
               </div>
 
               <div className="flex items-center gap-3 pt-2 border-t border-white/[0.04]">
-                <button onClick={handleReset} className="btn-terminal text-[9px]">
+                <button onClick={handleReset} className="btn-terminal text-[12px]">
                   {">>"} NEW BRIEF
                 </button>
               </div>
@@ -370,23 +370,23 @@ export default function VideoBriefPage() {
         </div>
 
         <div className="crt-micro-bl">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase"
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase"
             style={{ color: step === "results" ? "rgba(34,197,94,0.6)" : "rgba(86,86,128,0.6)" }}
           >
             {step === "input" ? "AWAITING INPUT" : "BRIEF READY"}
           </span>
         </div>
         <div className="crt-micro-br">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-tx-3">
             {loading ? "GENERATING..." : "STANDBY"}
           </span>
         </div>
 
         <div className="crt-monitor-footer">
-          <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">
+          <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-tx-3">
             {step === "input" ? "INPUT" : "RESULTS"}
           </span>
-          <span className="font-mono text-[6px] text-center">
+          <span className="font-mono text-[9px] text-center">
             {!isSignedIn ? (
               <span className="text-vi-400/60">
                 {freeActionsLeft > 0 ? `FREE: ${freeActionsLeft} gen` : "FREE: 0 "}
@@ -397,10 +397,10 @@ export default function VideoBriefPage() {
               )}
               </span>
             ) : (
-              <span className="text-tx-4">[system ready]</span>
+              <span className="text-tx-3">[system ready]</span>
             )}
           </span>
-          <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">
+          <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-tx-3">
             {loading ? "BUSY" : "STANDBY"}
           </span>
         </div>

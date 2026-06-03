@@ -24,7 +24,7 @@ interface CarouselOutline {
 export async function generateCarouselOutline(topic: string, audience: string, platform: string, slideCount: number) {
   try {
     const result = await generateJSON<CarouselOutline>({
-      systemPrompt: `You are a carousel strategist. Create a ${slideCount}-slide narrative arc. Each slide must have: slide_number, headline, copy (1-3 lines), visual_direction. Return as JSON with a "slides" array.`,
+      systemPrompt: `You are a carousel strategist. Create a ${slideCount}-slide narrative arc. Each slide must have: slide_number (number), headline (string — short, punchy), copy (string — 1-3 lines, engagement-optimized), visual_direction (string — describe the visual layout). Return as JSON with a "slides" array.`,
       prompt: `Topic: ${topic}. Audience: ${audience}. Platform: ${platform}. Generate exactly ${slideCount} slides.`,
     });
     return { ok: true as const, data: result.slides };
@@ -48,11 +48,12 @@ export async function generateCoverHeadlines(topic: string, audience: string) {
 
 export async function saveCarousel(title: string, slides: Slide[], headlines: string[]) {
   try {
-    const { userId } = await auth();
-    if (!userId) throw new Error("Unauthorized");
+    const sess = await auth();
+    const userId = sess.userId;
+    if (!userId) return { ok: false as const, error: "You need to sign in first" };
 
     const user = await db.select().from(users).where(eq(users.clerkId, userId)).then((r) => r[0]);
-    if (!user) throw new Error("User not found");
+    if (!user) return { ok: false as const, error: "Account not found. Try signing in again." };
 
     const [project] = await db.insert(projects).values({
       userId: user.id,
@@ -70,6 +71,8 @@ export async function saveCarousel(title: string, slides: Slide[], headlines: st
 
     return { ok: true as const, data: project };
   } catch (e) {
-    return { ok: false as const, error: e instanceof Error ? e.message : "Save failed" };
+    const msg = e instanceof Error ? e.message : "Save failed";
+    console.error("Save carousel error:", msg);
+    return { ok: false as const, error: msg.includes("ECONNREFUSED") || msg.includes("connection") ? "Database connection failed. Check SUPABASE_DATABASE_URL." : msg };
   }
 }

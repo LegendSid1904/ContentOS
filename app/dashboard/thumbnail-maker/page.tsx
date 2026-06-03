@@ -21,6 +21,85 @@ interface ThumbnailConcept {
   props: string[];
 }
 
+function getExpressionEmoji(hint: string): string {
+  const lower = hint.toLowerCase();
+  if (lower.includes("surprised") || lower.includes("shock") || lower.includes("amazed") || lower.includes("wow")) return "\uD83D\uDE2E";
+  if (lower.includes("excited") || lower.includes("happy") || lower.includes("joy") || lower.includes("smile")) return "\uD83D\uDE04";
+  if (lower.includes("curious") || lower.includes("intrigued") || lower.includes("wonder")) return "\uD83E\uDD14";
+  if (lower.includes("serious") || lower.includes("intense") || lower.includes("focused") || lower.includes("determined")) return "\uD83D\uDE24";
+  if (lower.includes("skeptical") || lower.includes("doubt") || lower.includes("suspicious") || lower.includes("side-eye")) return "\uD83D\uDE0F";
+  if (lower.includes("sad") || lower.includes("disappointed") || lower.includes("upset")) return "\uD83D\uDE22";
+  if (lower.includes("laugh") || lower.includes("funny") || lower.includes("humor")) return "\uD83D\uDE02";
+  if (lower.includes("angry") || lower.includes("frustrated") || lower.includes("mad")) return "\uD83D\uDE20";
+  if (lower.includes("confused") || lower.includes("confusion") || lower.includes("puzzled")) return "\uD83D\uDE15";
+  if (lower.includes("fear") || lower.includes("scared") || lower.includes("terrified")) return "\uD83D\uDE28";
+  return "\uD83C\uDFAF";
+}
+
+function ThumbnailPreview({ concept, size }: { concept: ThumbnailConcept; size: "sm" | "lg" }) {
+  const gradient = concept.color_palette.length >= 2
+    ? `linear-gradient(135deg, ${concept.color_palette[0]}, ${concept.color_palette[1]})`
+    : concept.color_palette[0] || "#1a1a2e";
+
+  const borderColor = concept.color_palette[0] || "#6366f1";
+  const emoji = getExpressionEmoji(concept.facial_expression_hint);
+
+  if (size === "sm") {
+    return (
+      <div
+        className="relative overflow-hidden rounded-md flex-shrink-0"
+        style={{
+          width: 120,
+          height: 67,
+          background: gradient,
+          border: `1px solid ${borderColor}`,
+          boxShadow: `0 0 8px ${borderColor}40`,
+        }}
+      >
+        <div className="absolute inset-0 bg-black/20" />
+        <div className="relative p-1.5 flex flex-col h-full">
+          <span className="text-[6px] font-bold text-white leading-tight line-clamp-2 drop-shadow-lg">
+            {concept.headline_text}
+          </span>
+          <div className="flex-1" />
+          <div className="flex justify-end">
+            <span className="text-[8px]">{emoji}</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="relative overflow-hidden rounded-lg w-full"
+      style={{
+        aspectRatio: "16/9",
+        background: gradient,
+        border: `2px solid ${borderColor}`,
+        boxShadow: `0 0 24px ${borderColor}50`,
+      }}
+    >
+      <div className="absolute inset-0 bg-black/10" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+      <div className="relative p-4 md:p-6 flex flex-col h-full justify-between">
+        <div className="flex items-start justify-between">
+          <span className="text-[10px] md:text-[12px] font-bold text-white/80 uppercase tracking-wider">
+            {concept.concept_name}
+          </span>
+          <span className="text-lg md:text-2xl">{emoji}</span>
+        </div>
+        <div className="space-y-1">
+          <h3 className="text-sm md:text-lg font-extrabold text-white leading-tight drop-shadow-lg">
+            {concept.headline_text}
+          </h3>
+          <p className="text-[9px] md:text-[11px] text-white/60">{concept.background_suggestion}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function BootLoader() {
   const steps = ["ANALYZING TOPIC", "GENERATING CONCEPTS", "OPTIMIZING FOR CTR"];
   return (
@@ -151,29 +230,29 @@ export default function ThumbnailMakerPage() {
         <div className="crt-sweep" />
 
         <div className="crt-micro-tl">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-te-400/60">sys</span>
-          <span className="text-tx-4">|</span>
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase">thumbnail_maker</span>
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-te-400/60">sys</span>
+          <span className="text-tx-3">|</span>
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase">thumbnail_maker</span>
         </div>
         <div className="crt-micro-tr">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">v1.0.0</span>
-          <span className="text-tx-4">|</span>
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">id: {isSignedIn ? "active" : "preview"}</span>
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-tx-3">v1.0.0</span>
+          <span className="text-tx-3">|</span>
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-tx-3">id: {isSignedIn ? "active" : "preview"}</span>
         </div>
 
         <div className="crt-monitor-header">
-          <span className="font-mono text-[7px] tracking-[0.24em] uppercase text-tx-4">MODULE</span>
-          <span className="font-mono text-[6px] text-tx-4">|</span>
-          <span className="font-mono text-[7px] tracking-[0.24em] uppercase text-te-400/70">THUMBNAIL MAKER</span>
+          <span className="font-mono text-[10px] tracking-[0.24em] uppercase text-tx-3">MODULE</span>
+          <span className="font-mono text-[9px] text-tx-3">|</span>
+          <span className="font-mono text-[10px] tracking-[0.24em] uppercase text-te-400/70">THUMBNAIL MAKER</span>
           <div className="flex-1" />
-          <span className="font-mono text-[7px] tracking-[0.1em] text-tx-4">{"\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"}</span>
+          <span className="font-mono text-[10px] tracking-[0.1em] text-tx-3">{"\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"}</span>
         </div>
 
         <div className="crt-monitor-content p-6 space-y-6">
           {loading && <BootLoader />}
 
           {error && (
-            <div className="font-mono text-[11px] text-err bg-err/10 border border-err/20 rounded-r3 p-3">
+            <div className="font-mono text-[14px] text-err bg-err/10 border border-err/20 rounded-r3 p-3">
               <span className="text-err">[ERROR]</span> {error}
               <button onClick={() => setError("")} className="ml-2 text-err/60 hover:text-err underline">dismiss</button>
             </div>
@@ -182,18 +261,18 @@ export default function ThumbnailMakerPage() {
           {isInputStep && (
             <>
               <div className="reveal d1">
-                <label className="term-label mb-2">VIDEO_TOPIC</label>
+                <label className="term-label text-[11px] mb-2">VIDEO_TOPIC</label>
                 <input
                   value={topic}
                   onChange={(e) => setTopic(e.target.value)}
-                  placeholder="e.g. I Tried 100 AI Tools — Here Are The Best"
+                  placeholder="e.g. I Tried 100 AI Tools \u2014 Here Are The Best"
                   className="term-field"
                   autoFocus
                 />
               </div>
 
               <div className="reveal d2">
-                <label className="term-label mb-2">TARGET_AUDIENCE</label>
+                <label className="term-label text-[11px] mb-2">TARGET_AUDIENCE</label>
                 <input
                   value={audience}
                   onChange={(e) => setAudience(e.target.value)}
@@ -203,7 +282,7 @@ export default function ThumbnailMakerPage() {
               </div>
 
               <div className="reveal d3">
-                <label className="term-label mb-2">PLATFORM</label>
+                <label className="term-label text-[11px] mb-2">PLATFORM</label>
                 <div className="space-y-1">
                   {PLATFORMS.map((p, i) => (
                     <button
@@ -233,7 +312,7 @@ export default function ThumbnailMakerPage() {
                   {">>"} GENERATE CONCEPTS
                 </button>
                 {!valid && (
-                  <span className="font-mono text-[8px] text-tx-4 tracking-wider">AWAITING INPUT</span>
+                  <span className="font-mono text-[11px] text-tx-3 tracking-wider">AWAITING INPUT</span>
                 )}
               </div>
             </>
@@ -242,18 +321,18 @@ export default function ThumbnailMakerPage() {
           {isConceptsStep && (
             <div ref={outputRef} className="space-y-4">
               <div className="flex items-center justify-between reveal d1">
-                <label className="term-label mb-0">THUMBNAIL_CONCEPTS</label>
+                <label className="term-label text-[11px] mb-0">THUMBNAIL_CONCEPTS</label>
                 <div className="flex items-center gap-2">
-                  <button onClick={handleSave} className="btn-terminal text-[9px]">
+                  <button onClick={handleSave} className="btn-terminal text-[12px]">
                     {"[SAVE]"}
                   </button>
-                  <button onClick={handleGenerate} className="btn-terminal text-[9px]">
+                  <button onClick={handleGenerate} className="btn-terminal text-[12px]">
                     {"[REGEN]"}
                   </button>
                 </div>
               </div>
 
-              <p className="font-mono text-[10px] text-tx-3 reveal d2">
+              <p className="font-mono text-[13px] text-tx-2 reveal d2">
                 &gt; {concepts.length} concepts generated. Click to expand details.
               </p>
 
@@ -268,21 +347,25 @@ export default function ThumbnailMakerPage() {
                         {selectedIndex === i ? "\u25BC" : "\u25B6"}
                       </span>
                       <span className="boot-option-label flex flex-col gap-1 min-w-0">
-                        <span className="text-[10px] text-tx-1 font-semibold">{concept.concept_name}</span>
+                        <span className="text-[13px] text-tx-1 font-semibold">{concept.concept_name}</span>
                         <span className="text-[12px] text-te-400 font-bold tracking-tight">&ldquo;{concept.headline_text}&rdquo;</span>
                       </span>
-                      <span className={`diag-badge ${selectedIndex === i ? "diag-ok" : "diag-idle"}`}>
-                        {selectedIndex === i ? "[VIEWING]" : "[IDLE]"}
+                      <span className="flex items-center gap-2 ml-auto">
+                        <ThumbnailPreview concept={concept} size="sm" />
+                        <span className={`diag-badge ${selectedIndex === i ? "diag-ok" : "diag-idle"}`}>
+                          {selectedIndex === i ? "[VIEWING]" : "[IDLE]"}
+                        </span>
                       </span>
                     </button>
                     {selectedIndex === i && (
-                      <div className="ml-6 pl-4 border-l border-white/[0.04] space-y-2 py-2 reveal d1">
+                      <div className="ml-6 pl-4 border-l border-white/[0.04] space-y-3 py-3 reveal d1">
+                        <ThumbnailPreview concept={concept} size="lg" />
                         <div>
-                          <span className="font-mono text-[7px] text-tx-4 uppercase tracking-wider">Visual</span>
-                          <p className="font-mono text-[9px] text-tx-2 mt-0.5">{concept.visual_description}</p>
+                          <span className="font-mono text-[10px] text-tx-3 uppercase tracking-wider">Visual</span>
+                          <p className="font-mono text-[12px] text-tx-1 mt-0.5">{concept.visual_description}</p>
                         </div>
                         <div>
-                          <span className="font-mono text-[7px] text-tx-4 uppercase tracking-wider">Colors</span>
+                          <span className="font-mono text-[10px] text-tx-3 uppercase tracking-wider">Colors</span>
                           <div className="flex gap-1 mt-0.5">
                             {concept.color_palette.map((c, j) => (
                               <ColorSwatch key={j} hex={c} />
@@ -290,19 +373,19 @@ export default function ThumbnailMakerPage() {
                           </div>
                         </div>
                         <div>
-                          <span className="font-mono text-[7px] text-tx-4 uppercase tracking-wider">Expression</span>
-                          <p className="font-mono text-[9px] text-tx-2 mt-0.5">{concept.facial_expression_hint}</p>
+                          <span className="font-mono text-[10px] text-tx-3 uppercase tracking-wider">Expression</span>
+                          <p className="font-mono text-[12px] text-tx-1 mt-0.5">{concept.facial_expression_hint}</p>
                         </div>
                         <div>
-                          <span className="font-mono text-[7px] text-tx-4 uppercase tracking-wider">Background</span>
-                          <p className="font-mono text-[9px] text-tx-2 mt-0.5">{concept.background_suggestion}</p>
+                          <span className="font-mono text-[10px] text-tx-3 uppercase tracking-wider">Background</span>
+                          <p className="font-mono text-[12px] text-tx-1 mt-0.5">{concept.background_suggestion}</p>
                         </div>
                         {concept.props.length > 0 && (
                           <div>
-                            <span className="font-mono text-[7px] text-tx-4 uppercase tracking-wider">Props</span>
+                            <span className="font-mono text-[10px] text-tx-3 uppercase tracking-wider">Props</span>
                             <div className="flex flex-wrap gap-1 mt-0.5">
                               {concept.props.map((prop, j) => (
-                                <span key={j} className="font-mono text-[7px] text-fu-400 bg-fu-400/10 px-1.5 py-0.5 rounded-r2">{prop}</span>
+                                <span key={j} className="font-mono text-[10px] text-fu-400 bg-fu-400/10 px-1.5 py-0.5 rounded-r2">{prop}</span>
                               ))}
                             </div>
                           </div>
@@ -314,7 +397,7 @@ export default function ThumbnailMakerPage() {
               </div>
 
               <div className="flex items-center gap-3 pt-2 border-t border-white/[0.04]">
-                <button onClick={handleReset} className="btn-terminal text-[9px]">
+                <button onClick={handleReset} className="btn-terminal text-[12px]">
                   {">>"} NEW BATCH
                 </button>
               </div>
@@ -323,23 +406,23 @@ export default function ThumbnailMakerPage() {
         </div>
 
         <div className="crt-micro-bl">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase"
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase"
             style={{ color: step === "concepts" ? "rgba(34,197,94,0.6)" : "rgba(86,86,128,0.6)" }}
           >
             {step === "input" ? "AWAITING INPUT" : "CONCEPTS READY"}
           </span>
         </div>
         <div className="crt-micro-br">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-tx-3">
             {loading ? "GENERATING..." : "STANDBY"}
           </span>
         </div>
 
         <div className="crt-monitor-footer">
-          <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">
+          <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-tx-3">
             {step === "input" ? "INPUT" : "CONCEPTS"}
           </span>
-          <span className="font-mono text-[6px] text-center">
+          <span className="font-mono text-[9px] text-center">
             {!isSignedIn ? (
               <span className="text-vi-400/60">
                 {freeActionsLeft > 0 ? `FREE: ${freeActionsLeft} gen` : "FREE: 0 "}
@@ -350,10 +433,10 @@ export default function ThumbnailMakerPage() {
               )}
               </span>
             ) : (
-              <span className="text-tx-4">[system ready]</span>
+              <span className="text-tx-3">[system ready]</span>
             )}
           </span>
-          <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">
+          <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-tx-3">
             {loading ? "BUSY" : "STANDBY"}
           </span>
         </div>

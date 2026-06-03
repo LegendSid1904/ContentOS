@@ -35,7 +35,7 @@ interface EditingBrief {
 export async function analyzeTranscript(transcript: string, videoLength: "short" | "long", style: string) {
   try {
     const result = await generateJSON<EditingBrief>({
-      systemPrompt: `You are a video editor. Analyze the transcript and identify: hook_moment (string), edit_points (array of {timestamp, type: "hook"|"key_point"|"transition"|"cta", description}), retention_markers (array of strings), section_breaks (array of {timestamp, label}), pacing_suggestion (string). Also generate broll_keywords (array of {timestamp, keywords[]}) for stock footage searches, caption_style (string), and 3 caption_examples. Return as JSON.`,
+      systemPrompt: `You are a video editor. Analyze the transcript and identify: hook_moment (string), edit_points (array of {timestamp, type: "hook"|"key_point"|"transition"|"cta", description}), retention_markers (array of strings), section_breaks (array of {timestamp, label}), pacing_suggestion (string). Also generate broll_keywords (array of {timestamp, keywords[]}) for stock footage, caption_style (string), and 3 caption_examples (strings). Return as JSON.`,
       prompt: `Transcript: "${transcript}". Video length: ${videoLength === "short" ? "Short-form (<90s)" : "Long-form (>8min)"}. Style: ${style || "Standard"}.`,
     });
     return { ok: true as const, data: result };
@@ -46,11 +46,12 @@ export async function analyzeTranscript(transcript: string, videoLength: "short"
 
 export async function saveEditingBrief(title: string, brief: EditingBrief) {
   try {
-    const { userId } = await auth();
-    if (!userId) throw new Error("Unauthorized");
+    const sess = await auth();
+    const userId = sess.userId;
+    if (!userId) return { ok: false as const, error: "You need to sign in first" };
 
     const user = await db.select().from(users).where(eq(users.clerkId, userId)).then((r) => r[0]);
-    if (!user) throw new Error("User not found");
+    if (!user) return { ok: false as const, error: "Account not found. Try signing in again." };
 
     const [project] = await db.insert(projects).values({
       userId: user.id,
@@ -68,6 +69,8 @@ export async function saveEditingBrief(title: string, brief: EditingBrief) {
 
     return { ok: true as const, data: project };
   } catch (e) {
-    return { ok: false as const, error: e instanceof Error ? e.message : "Save failed" };
+    const msg = e instanceof Error ? e.message : "Save failed";
+    console.error("Save video brief error:", msg);
+    return { ok: false as const, error: msg.includes("ECONNREFUSED") || msg.includes("connection") ? "Database connection failed. Check SUPABASE_DATABASE_URL." : msg };
   }
 }

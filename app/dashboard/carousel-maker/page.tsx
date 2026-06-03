@@ -18,6 +18,19 @@ interface Slide {
   visual_direction: string;
 }
 
+const slideColors = [
+  { bg: "linear-gradient(135deg, #0d9488, #14b8a6)", accent: "#14b8a6" },
+  { bg: "linear-gradient(135deg, #7c3aed, #a78bfa)", accent: "#a78bfa" },
+  { bg: "linear-gradient(135deg, #d946ef, #f0abfc)", accent: "#f0abfc" },
+  { bg: "linear-gradient(135deg, #f59e0b, #fbbf24)", accent: "#fbbf24" },
+  { bg: "linear-gradient(135deg, #06b6d4, #22d3ee)", accent: "#22d3ee" },
+  { bg: "linear-gradient(135deg, #ef4444, #f87171)", accent: "#f87171" },
+  { bg: "linear-gradient(135deg, #10b981, #34d399)", accent: "#34d399" },
+  { bg: "linear-gradient(135deg, #f97316, #fb923c)", accent: "#fb923c" },
+  { bg: "linear-gradient(135deg, #3b82f6, #60a5fa)", accent: "#60a5fa" },
+  { bg: "linear-gradient(135deg, #ec4899, #f9a8d4)", accent: "#f9a8d4" },
+];
+
 function BootLoader() {
   const steps = ["COMPOSING NARRATIVE ARC", "WRITING SLIDE COPY", "GENERATING VISUAL DIRECTION"];
   return (
@@ -188,29 +201,29 @@ export default function CarouselMakerPage() {
         <div className="crt-sweep" />
 
         <div className="crt-micro-tl">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-te-400/60">sys</span>
-          <span className="text-tx-4">|</span>
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase">carousel_maker</span>
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-te-400/60">sys</span>
+          <span className="text-tx-3">|</span>
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase">carousel_maker</span>
         </div>
         <div className="crt-micro-tr">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">v1.0.0</span>
-          <span className="text-tx-4">|</span>
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">id: {isSignedIn ? "active" : "preview"}</span>
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-tx-3">v1.0.0</span>
+          <span className="text-tx-3">|</span>
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-tx-3">id: {isSignedIn ? "active" : "preview"}</span>
         </div>
 
         <div className="crt-monitor-header">
-          <span className="font-mono text-[7px] tracking-[0.24em] uppercase text-tx-4">MODULE</span>
-          <span className="font-mono text-[6px] text-tx-4">|</span>
-          <span className="font-mono text-[7px] tracking-[0.24em] uppercase text-te-400/70">CAROUSEL MAKER</span>
+          <span className="font-mono text-[10px] tracking-[0.24em] uppercase text-tx-3">MODULE</span>
+          <span className="font-mono text-[9px] text-tx-3">|</span>
+          <span className="font-mono text-[10px] tracking-[0.24em] uppercase text-te-400/70">CAROUSEL MAKER</span>
           <div className="flex-1" />
-          <span className="font-mono text-[7px] tracking-[0.1em] text-tx-4">{"\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"}</span>
+          <span className="font-mono text-[10px] tracking-[0.1em] text-tx-3">{"\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"}</span>
         </div>
 
         <div className="crt-monitor-content p-6 space-y-6">
           {loading && <BootLoader />}
 
           {error && (
-            <div className="font-mono text-[11px] text-err bg-err/10 border border-err/20 rounded-r3 p-3">
+            <div className="font-mono text-[14px] text-err bg-err/10 border border-err/20 rounded-r3 p-3">
               <span className="text-err">[ERROR]</span> {error}
               <button onClick={() => setError("")} className="ml-2 text-err/60 hover:text-err underline">dismiss</button>
             </div>
@@ -219,7 +232,7 @@ export default function CarouselMakerPage() {
           {isInputStep && (
             <>
               <div className="reveal d1">
-                <label className="term-label mb-2">TOPIC</label>
+                <label className="term-label mb-2 text-[12px]">TOPIC</label>
                 <input
                   value={topic}
                   onChange={(e) => setTopic(e.target.value)}
@@ -230,7 +243,7 @@ export default function CarouselMakerPage() {
               </div>
 
               <div className="reveal d2">
-                <label className="term-label mb-2">TARGET_AUDIENCE</label>
+                <label className="term-label mb-2 text-[12px]">TARGET_AUDIENCE</label>
                 <input
                   value={audience}
                   onChange={(e) => setAudience(e.target.value)}
@@ -240,7 +253,7 @@ export default function CarouselMakerPage() {
               </div>
 
               <div className="reveal d3">
-                <label className="term-label mb-2">PLATFORM</label>
+                <label className="term-label mb-2 text-[12px]">PLATFORM</label>
                 <div className="space-y-1">
                   {PLATFORMS.map((p, i) => (
                     <button
@@ -262,7 +275,7 @@ export default function CarouselMakerPage() {
               </div>
 
               <div className="reveal d4">
-                <label className="term-label mb-2">SLIDES <span className="text-tx-4">({slideCount})</span></label>
+                <label className="term-label mb-2 text-[12px]">SLIDES <span className="text-tx-3">({slideCount})</span></label>
                 <input
                   type="range"
                   min={3}
@@ -271,7 +284,7 @@ export default function CarouselMakerPage() {
                   onChange={(e) => setSlideCount(Number(e.target.value))}
                   className="w-full accent-vi-500"
                 />
-                <div className="flex justify-between font-mono text-[7px] text-tx-4 mt-1">
+                <div className="flex justify-between font-mono text-[10px] text-tx-3 mt-1">
                   <span>3</span>
                   <span>10</span>
                 </div>
@@ -286,7 +299,7 @@ export default function CarouselMakerPage() {
                   {">>"} GENERATE CAROUSEL
                 </button>
                 {!valid && (
-                  <span className="font-mono text-[8px] text-tx-4 tracking-wider">AWAITING INPUT</span>
+                  <span className="font-mono text-[11px] text-tx-3 tracking-wider">AWAITING INPUT</span>
                 )}
               </div>
             </>
@@ -295,8 +308,8 @@ export default function CarouselMakerPage() {
           {isHeadlinesStep && (
             <>
               <div className="reveal d1">
-                <label className="term-label mb-2">SELECT_COVER_HEADLINE</label>
-                <p className="font-mono text-[10px] text-tx-3 mb-3 leading-relaxed">
+                <label className="term-label mb-2 text-[12px]">SELECT_COVER_HEADLINE</label>
+                <p className="font-mono text-[13px] text-tx-2 mb-3 leading-relaxed">
                   &gt; {headlines.length} headline variants generated. Pick one to build your carousel.
                 </p>
               </div>
@@ -334,54 +347,79 @@ export default function CarouselMakerPage() {
           {isSlidesStep && (
             <div ref={outputRef} className="space-y-4 reveal d1">
               <div className="flex items-center justify-between">
-                <label className="term-label mb-0">GENERATED_SLIDES</label>
+                <label className="term-label mb-0 text-[12px]">GENERATED_SLIDES</label>
                 <div className="flex items-center gap-2">
-                  <button onClick={handleSave} className="btn-terminal text-[9px]">
+                  <button onClick={handleSave} className="btn-terminal text-[12px]">
                     {"[SAVE]"}
                   </button>
-                  <button onClick={handleRegenerate} className="btn-terminal text-[9px]">
+                  <button onClick={handleRegenerate} className="btn-terminal text-[12px]">
                     {"[REGEN]"}
                   </button>
                 </div>
               </div>
 
-              <p className="font-mono text-[10px] text-tx-3 leading-relaxed">
+              <p className="font-mono text-[13px] text-tx-2 leading-relaxed">
                 &gt; Cover: <span className="text-te-400">{selectedHeadline}</span> &mdash; {slides.length} slides generated
               </p>
 
-              {slides.map((slide) => (
-                <div key={slide.slide_number} className="crt-monitor relative crt-brackets" style={{ background: "rgba(0,0,0,0.25)" }}>
-                  <div className="crt-micro-tl">
-                    <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-te-400/60">slide</span>
-                    <span className="text-tx-4">|</span>
-                    <span className="font-mono text-[7px] tracking-[0.18em] uppercase">{slide.slide_number}/{slides.length}</span>
-                  </div>
-                  <div className="crt-micro-tr">
-                    <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">{slide.visual_direction}</span>
-                  </div>
-                  <div className="crt-monitor-header">
-                    <span className="w-2 h-2 rounded-full bg-fu-400/60" />
-                    <span className="font-mono text-[10px] font-semibold text-tx-1 tracking-tight ml-2">{slide.headline}</span>
-                  </div>
-                  <div className="crt-monitor-content p-4">
-                    <p className="font-mono text-[11px] text-tx-1 leading-[1.7] whitespace-pre-line">{slide.copy}</p>
-                    <div className="mt-3 pt-2 border-t border-white/[0.04]">
-                      <span className="font-mono text-[8px] text-tx-4 italic">
-                        &gt; Visual: {slide.visual_direction}
-                      </span>
+              {slides.map((slide, idx) => {
+                const colors = slideColors[idx % slideColors.length];
+                return (
+                  <div key={slide.slide_number} className="crt-monitor relative crt-brackets" style={{ background: "rgba(0,0,0,0.25)" }}>
+                    <div className="crt-scanlines" />
+                    <div className="crt-grain" />
+                    <div className="crt-vignette" />
+                    <div className="crt-sweep" />
+                    <div className="crt-micro-tl">
+                      <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-te-400/60">slide</span>
+                      <span className="text-tx-3">|</span>
+                      <span className="font-mono text-[10px] tracking-[0.18em] uppercase">{slide.slide_number}/{slides.length}</span>
+                    </div>
+                    <div className="crt-micro-tr">
+                      <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-tx-3">{slide.visual_direction}</span>
+                    </div>
+                    <div className="crt-monitor-header">
+                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: colors.accent }} />
+                      <span className="font-mono text-[13px] font-semibold text-tx-1 tracking-tight ml-2">SLIDE PREVIEW</span>
+                    </div>
+                    <div className="crt-monitor-content p-4">
+                      <div
+                        className="relative rounded-lg overflow-hidden"
+                        style={{
+                          background: colors.bg,
+                          minHeight: "220px",
+                          padding: "28px",
+                          display: "flex",
+                          flexDirection: "column",
+                          justifyContent: "center",
+                          boxShadow: "inset 0 0 60px rgba(0,0,0,0.3)",
+                        }}
+                      >
+                        <h3 className="font-mono text-[18px] font-bold text-white leading-tight mb-3">
+                          {slide.headline}
+                        </h3>
+                        <p className="font-mono text-[14px] text-white/80 leading-relaxed whitespace-pre-line">
+                          {slide.copy}
+                        </p>
+                        <div className="mt-auto pt-4">
+                          <span className="font-mono text-[11px] text-white/50 italic">
+                            {"\u25B6"} {slide.visual_direction}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="crt-micro-bl">
+                      <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-ok">SLIDE READY</span>
                     </div>
                   </div>
-                  <div className="crt-micro-bl">
-                    <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-ok">SLIDE READY</span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
 
               <div className="flex items-center gap-3 pt-2 border-t border-white/[0.04]">
-                <button onClick={handleReset} className="btn-terminal text-[9px]">
+                <button onClick={handleReset} className="btn-terminal text-[12px]">
                   {">>"} NEW CAROUSEL
                 </button>
-                <button onClick={handleBackToHeadlines} className="btn-terminal text-[9px]">
+                <button onClick={handleBackToHeadlines} className="btn-terminal text-[12px]">
                   {"^C"} BACK TO HEADLINES
                 </button>
               </div>
@@ -390,23 +428,23 @@ export default function CarouselMakerPage() {
         </div>
 
         <div className="crt-micro-bl">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase"
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase"
             style={{ color: step === "slides" ? "rgba(34,197,94,0.6)" : "rgba(86,86,128,0.6)" }}
           >
             {step === "input" ? "AWAITING INPUT" : step === "headlines" ? "HEADLINES READY" : "SLIDES READY"}
           </span>
         </div>
         <div className="crt-micro-br">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-tx-3">
             {loading ? "GENERATING..." : "STANDBY"}
           </span>
         </div>
 
         <div className="crt-monitor-footer">
-          <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">
+          <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-tx-3">
             {step === "input" ? "INPUT" : step === "headlines" ? "HEADLINES" : "SLIDES"}
           </span>
-          <span className="font-mono text-[6px] text-center">
+          <span className="font-mono text-[9px] text-center">
             {!isSignedIn ? (
               <span className="text-vi-400/60">
                 {freeActionsLeft > 0 ? `FREE: ${freeActionsLeft} gen` : "FREE: 0 "}
@@ -417,10 +455,10 @@ export default function CarouselMakerPage() {
               )}
               </span>
             ) : (
-              <span className="text-tx-4">[system ready]</span>
+              <span className="text-tx-3">[system ready]</span>
             )}
           </span>
-          <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">
+          <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-tx-3">
             {loading ? "BUSY" : "STANDBY"}
           </span>
         </div>

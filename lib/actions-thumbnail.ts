@@ -6,7 +6,7 @@ import { db } from "@/lib/drizzle";
 import { users, projects, contentOutputs } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
-interface ThumbnailConcept {
+export interface ThumbnailConcept {
   concept_name: string;
   headline_text: string;
   visual_description: string;
@@ -23,7 +23,7 @@ interface ThumbnailResponse {
 export async function generateThumbnails(topic: string, platform: string, audience: string) {
   try {
     const result = await generateJSON<ThumbnailResponse>({
-      systemPrompt: `You are a thumbnail strategist. Generate 5 unique thumbnail concepts. Each concept must have: concept_name, headline_text (2-5 words), visual_description, color_palette (array of hex colors), facial_expression_hint, background_suggestion, props (array of strings). Return as JSON with a "concepts" array.`,
+      systemPrompt: `You are a thumbnail strategist. Generate 5 unique thumbnail concepts. Each concept must have: concept_name (string), headline_text (string — 2-5 words, CTR-optimized), visual_description (string), color_palette (array of 3-4 hex colors), facial_expression_hint (string), background_suggestion (string), props (array of strings). Return as JSON with a "concepts" array.`,
       prompt: `Topic: ${topic}. Platform: ${platform}. Audience: ${audience}.`,
       temperature: 0.8,
     });
@@ -35,11 +35,12 @@ export async function generateThumbnails(topic: string, platform: string, audien
 
 export async function saveThumbnailBrief(title: string, concepts: ThumbnailConcept[]) {
   try {
-    const { userId } = await auth();
-    if (!userId) throw new Error("Unauthorized");
+    const sess = await auth();
+    const userId = sess.userId;
+    if (!userId) return { ok: false as const, error: "You need to sign in first" };
 
     const user = await db.select().from(users).where(eq(users.clerkId, userId)).then((r) => r[0]);
-    if (!user) throw new Error("User not found");
+    if (!user) return { ok: false as const, error: "Account not found. Try signing in again." };
 
     const [project] = await db.insert(projects).values({
       userId: user.id,
@@ -57,6 +58,8 @@ export async function saveThumbnailBrief(title: string, concepts: ThumbnailConce
 
     return { ok: true as const, data: project };
   } catch (e) {
-    return { ok: false as const, error: e instanceof Error ? e.message : "Save failed" };
+    const msg = e instanceof Error ? e.message : "Save failed";
+    console.error("Save thumbnail error:", msg);
+    return { ok: false as const, error: msg.includes("ECONNREFUSED") || msg.includes("connection") ? "Database connection failed. Check SUPABASE_DATABASE_URL." : msg };
   }
 }

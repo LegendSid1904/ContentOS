@@ -56,11 +56,12 @@ export async function generateGrowthStrategy(niche: string, followers: number, p
 
 export async function saveGrowthStrategy(title: string, data: GrowthStrategyData) {
   try {
-    const { userId } = await auth();
-    if (!userId) throw new Error("Unauthorized");
+    const sess = await auth();
+    const userId = sess.userId;
+    if (!userId) return { ok: false as const, error: "You need to sign in first" };
 
     const user = await db.select().from(users).where(eq(users.clerkId, userId)).then((r) => r[0]);
-    if (!user) throw new Error("User not found");
+    if (!user) return { ok: false as const, error: "Account not found. Try signing in again." };
 
     const [project] = await db.insert(projects).values({
       userId: user.id,
@@ -78,6 +79,8 @@ export async function saveGrowthStrategy(title: string, data: GrowthStrategyData
 
     return { ok: true as const, data: project };
   } catch (e) {
-    return { ok: false as const, error: e instanceof Error ? e.message : "Save failed" };
+    const msg = e instanceof Error ? e.message : "Save failed";
+    console.error("Save growth strategy error:", msg);
+    return { ok: false as const, error: msg.includes("ECONNREFUSED") || msg.includes("connection") ? "Database connection failed. Check SUPABASE_DATABASE_URL." : msg };
   }
 }
