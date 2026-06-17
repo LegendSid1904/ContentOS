@@ -39,7 +39,16 @@ export async function generateHooks(topic: string, audience: string, platform: s
 export async function generateScript(topic: string, audience: string, platform: string, tone: string, selectedHook: string, context?: string) {
   try {
     const script = await generateJSON<FullScript>({
-      systemPrompt: `You are a professional script writer. Write a ${platform}-optimized script with timestamps, B-roll cues, and a CTA. Use the selected hook as the opening. Return as JSON with fields: title (string), sections (array of {timestamp, content, broll}), cta (string).`,
+      systemPrompt: `You are a professional script writer. Write a ${platform}-optimized script using this exact structure:
+
+1. HOOK (first 3-5 seconds) — Use the selected hook. Follow the "Common Belief + Contradiction" framework: state what most people think about the topic, then immediately contradict it with a surprising fact or perspective.
+2. FEEL SEEN (next 10-15 seconds) — Validate the audience's pain point or desire. Show that you understand their struggle.
+3. NET NEW VALUE (body, 60-70% of runtime) — Deliver unique insights, frameworks, or strategies they haven't heard before. Include specific examples, data points, or case studies.
+4. PROOF (15-20 seconds) — Social proof, credentials, or results that build credibility. Can be woven into the value section.
+5. CONTRADICTION / PLOT TWIST (10 seconds) — A final surprising insight that reframes everything they just learned.
+6. CTA (5-10 seconds) — Clear, specific call to action.
+
+Include timestamps for each section, B-roll and visual cues, and pacing notes. Return as JSON with fields: title (string), sections (array of {timestamp, content, broll}), cta (string).`,
       prompt: `Topic: ${topic}. Audience: ${audience}. Platform: ${platform}. Tone: ${tone}. Selected hook: "${selectedHook}".${context ? ` Additional context: ${context}` : ""}`,
       temperature: 0.7,
     });

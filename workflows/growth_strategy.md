@@ -9,8 +9,17 @@ Generate a personalized 90-day growth plan with platform-specific tactics, conte
 - **Primary Platform** (required): YouTube / Instagram / LinkedIn / Twitter/X
 - **Goals** (required): Brand awareness / Monetization / Community building / Authority
 - **Additional Platforms** (optional): Secondary platforms to include
+- **Competitor Intel Data** (optional): JSON output from competitor_intel workflow — includes analyzed hooks, CTAs, thumbnails, content gaps, and virality patterns from top competitors
 
 ## Steps
+
+### 0. Integrate Competitor Intel (Optional)
+If `Competitor Intel Data` is provided, first synthesize competitor findings into the strategy context:
+```
+python tools/claude_generate.py --system-prompt "You are a growth strategist integrating competitive research into a personalized growth plan. Extract the most actionable insights from the competitor data: winning hook archetypes, CTA patterns, thumbnail formulas, content format preferences, and content gaps. Return as JSON with: recommended_hooks, recommended_ctas, thumbnail_template, format_recommendations, gap_opportunities." --prompt "Competitor intel: {competitor_data}. Creator niche: {niche}. Platform: {platform}." --json
+```
+
+This output feeds directly into Steps 1-3 as contextual data, ensuring the growth plan is grounded in real competitive benchmarks rather than generic advice.
 
 ### 1. Growth Audit
 Call `tools/claude_generate.py` with:
@@ -44,10 +53,18 @@ Generate platform-specific algorithm tips based on the creator's niche and goals
 - **Very small audience (<1000)**: Focus strategy on discovery tactics (SEO, hashtags, collaborations)
 - **Multiple platforms**: Generate primary platform plan first, then adaptation notes for secondary platforms
 - **Unrealistic goals**: If goals don't match follower count (e.g., 100 followers → monetization in 30 days), flag and suggest intermediate milestones
+- **No competitor data available**: Generate strategy using platform best practices and general niche benchmarks instead
+- **Competitor data is outdated**: If competitor intel is >90 days old, flag that social media trends may have shifted; treat patterns as directional, not definitive
 
 ## Tools Used
 - `tools/claude_generate.py`
 - `tools/export_pdf.py`
 
 ## Output
-Saved to `content_outputs` table with type "growth_strategy".
+- Structured JSON with full growth plan, hook/CTA playbook, and content matrix
+- PDF report via `tools/export_pdf.py`
+- Saved to `content_outputs` table with type "growth_strategy"
+
+## Cross-References
+- `.claude/skills/competitor-research/SKILL.md` — Full competitor research skill with video-level analysis protocol
+- `workflows/competitor_intel.md` — Generate the competitor intel data that feeds into this workflow

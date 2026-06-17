@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useAuth } from "@clerk/nextjs";
 
 const STORAGE_KEY = "preview_free_actions";
@@ -28,12 +28,12 @@ interface PreviewState {
 export function useAuthGate(context?: string) {
   const { isSignedIn } = useAuth();
   const [showModal, setShowModal] = useState(false);
-  const freeCount = useRef(getFreeActionsUsed());
-  const previewState = useRef<PreviewState | null>(null);
+  const [freeCount, setFreeCount] = useState(getFreeActionsUsed());
+  const [previewState, setPreviewState] = useState<PreviewState | null>(null);
 
   useEffect(() => {
     if (isSignedIn) {
-      freeCount.current = 99;
+      setFreeCount(99);
       setFreeActionsUsed(99);
     }
   }, [isSignedIn]);
@@ -45,15 +45,16 @@ export function useAuthGate(context?: string) {
         return;
       }
 
-      if (freeCount.current < 1) {
-        freeCount.current += 1;
-        setFreeActionsUsed(freeCount.current);
+      if (freeCount < 1) {
+        const next = freeCount + 1;
+        setFreeCount(next);
+        setFreeActionsUsed(next);
         action();
       } else {
         setShowModal(true);
       }
     },
-    [isSignedIn],
+    [isSignedIn, freeCount],
   );
 
   const closeModal = useCallback(() => {
@@ -61,7 +62,7 @@ export function useAuthGate(context?: string) {
   }, []);
 
   const savePreviewState = useCallback((state: PreviewState) => {
-    previewState.current = state;
+    setPreviewState(state);
     try {
       sessionStorage.setItem("preview_restore", JSON.stringify(state));
     } catch {}
@@ -79,7 +80,7 @@ export function useAuthGate(context?: string) {
     return null;
   }, []);
 
-  const freeActionsLeft = Math.max(0, 1 - freeCount.current);
+  const freeActionsLeft = Math.max(0, 1 - freeCount);
 
   return {
     showModal,

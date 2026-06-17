@@ -1,4 +1,3 @@
-import { Webhook } from "svix";
 import { headers } from "next/headers";
 import type { WebhookEvent } from "@clerk/nextjs/server";
 import { db } from "@/lib/drizzle";
@@ -24,6 +23,7 @@ export async function POST(req: Request) {
   const payload = await req.json();
   const body = JSON.stringify(payload);
 
+  const { Webhook } = await import("svix");
   const wh = new Webhook(WEBHOOK_SECRET);
   let evt: WebhookEvent;
 

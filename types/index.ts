@@ -54,3 +54,18 @@ export interface AIGenerationResponse {
     outputTokens: number;
   };
 }
+
+export interface Idea {
+  id: string;
+  title: string;
+  format: "video" | "post" | "carousel";
+  pillar: string;
+  effort: "Low" | "Medium" | "High";
+  shareability: number;
+  seo_value: number;
+  viral_angle: string;
+}
+
+export interface IdeaWithAngles extends Idea {
+  angles: string[];
+}

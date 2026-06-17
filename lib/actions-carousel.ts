@@ -5,12 +5,18 @@ import { generateJSON } from "@/lib/ai";
 import { db } from "@/lib/drizzle";
 import { users, projects, contentOutputs } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { generateCarouselSlideImages } from "@/lib/image";
 
-interface Slide {
+export interface Slide {
   slide_number: number;
   headline: string;
   copy: string;
   visual_direction: string;
+}
+
+export interface SlideImage {
+  slide_number: number;
+  image: { index: number; b64_json: string; revised_prompt: string; storageUrl?: string };
 }
 
 interface CoverHeadlines {
@@ -46,7 +52,16 @@ export async function generateCoverHeadlines(topic: string, audience: string) {
   }
 }
 
-export async function saveCarousel(title: string, slides: Slide[], headlines: string[]) {
+export async function generateCarouselImages(slides: { slide_number: number; headline: string; visual_direction: string }[], topic: string, brandColor?: string) {
+  try {
+    const images = await generateCarouselSlideImages({ slides, topic, brandColor });
+    return { ok: true as const, data: images };
+  } catch (e) {
+    return { ok: false as const, error: e instanceof Error ? e.message : "Image generation failed" };
+  }
+}
+
+export async function saveCarousel(title: string, slides: Slide[], headlines: string[], images?: SlideImage[]) {
   try {
     const sess = await auth();
     const userId = sess.userId;
@@ -65,7 +80,7 @@ export async function saveCarousel(title: string, slides: Slide[], headlines: st
     await db.insert(contentOutputs).values({
       projectId: project.id,
       type: "carousel",
-      contentJson: { slides, headlines } as unknown as Record<string, unknown>,
+      contentJson: { slides, headlines, images } as unknown as Record<string, unknown>,
       version: 1,
     });
 

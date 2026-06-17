@@ -5,21 +5,8 @@ import { generateJSON, generateText } from "@/lib/ai";
 import { db } from "@/lib/drizzle";
 import { users, projects, contentOutputs } from "@/db/schema";
 import { eq } from "drizzle-orm";
-
-export interface Idea {
-  id: string;
-  title: string;
-  format: "video" | "post" | "carousel";
-  pillar: string;
-  effort: "Low" | "Medium" | "High";
-  shareability: number;
-  seo_value: number;
-  viral_angle: string;
-}
-
-export interface IdeaWithAngles extends Idea {
-  angles: string[];
-}
+import type { Idea, IdeaWithAngles } from "@/types";
+export type { Idea, IdeaWithAngles };
 
 interface IdeasResponse {
   pillars: string[];

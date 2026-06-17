@@ -146,8 +146,7 @@ export async function updateProfile(formData: FormData) {
 
   const socialLinks: Record<string, string> = {};
   for (const key of ["youtube", "instagram", "twitter", "tiktok", "linkedin", "website"]) {
-    const val = formData.get(`social_${key}`) as string;
-    if (val) socialLinks[key] = val;
+    socialLinks[key] = (formData.get(`social_${key}`) as string) ?? "";
   }
 
   const defaultPlatform = formData.get("defaultPlatform") as string;
@@ -200,8 +199,22 @@ export async function getContentDefaults() {
   const user = await db.select().from(users).where(eq(users.clerkId, userId)).then((r) => r[0]);
   if (!user) return null;
 
-  const profile = await db.select().from(profiles).where(eq(profiles.userId, user.id)).then((r) => r[0]);
-  if (!profile) return null;
+  const [profile, kit] = await Promise.all([
+    db.select().from(profiles).where(eq(profiles.userId, user.id)).then((r) => r[0]),
+    db.select().from(brandKits).where(eq(brandKits.userId, user.id)).then((r) => r[0]),
+  ]);
 
-  return profile.contentDefaults as { defaultPlatform: string; defaultTone: string; defaultFormat: string } | null;
+  const defaults = profile?.contentDefaults as { defaultPlatform: string; defaultTone: string; defaultFormat: string } | null ?? null;
+
+  return {
+    defaultPlatform: defaults?.defaultPlatform ?? "",
+    defaultTone: defaults?.defaultTone ?? "",
+    defaultFormat: defaults?.defaultFormat ?? "",
+    brandKit: kit ? {
+      niche: kit.niche ?? "",
+      tone: kit.tone ?? "",
+      colors: kit.colors ?? [],
+      platforms: kit.platforms ?? [],
+    } : null,
+  };
 }

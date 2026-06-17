@@ -8,6 +8,7 @@ export const users = pgTable("users", {
   plan: text("plan").default("Free").notNull(),
   onboardingComplete: boolean("onboarding_complete").default(false).notNull(),
   onboardingStep: integer("onboarding_step").default(1),
+  onboardingData: jsonb("onboarding_data"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
