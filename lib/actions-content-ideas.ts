@@ -6,6 +6,7 @@ import { db } from "@/lib/drizzle";
 import { users, projects, contentOutputs } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import type { Idea, IdeaWithAngles } from "@/types";
+import { ensureUser } from "@/lib/ensure-user";
 export type { Idea, IdeaWithAngles };
 
 interface IdeasResponse {
@@ -83,13 +84,39 @@ export async function generateCalendar(
   }
 }
 
+interface RepurposeFormat {
+  format: string;
+  title: string;
+  hook: string;
+  key_points: string[];
+  platform: string;
+}
+
+interface RepurposeMap {
+  original: string;
+  formats: RepurposeFormat[];
+}
+
+export async function generateRepurposingMap(ideaTitle: string, niche: string, audience: string) {
+  try {
+    const result = await generateJSON<RepurposeMap>({
+      systemPrompt: `You are a content repurposing strategist. For the given content idea, generate 6 ways to repurpose it across different formats and platforms. Each format should have: format (string — e.g. "Twitter Thread", "LinkedIn Post", "Instagram Carousel", "YouTube Shorts", "Blog Post", "Newsletter"), title (string — repurposed title), hook (string — opening line for that format), key_points (string[] — 3-5 key points adapted for the format), platform (string — target platform). Return as JSON with fields: original (string), formats (array of objects).`,
+      prompt: `Idea: ${ideaTitle}. Niche: ${niche}. Audience: ${audience}.`,
+      temperature: 0.7,
+    });
+
+    return { ok: true as const, data: result };
+  } catch (e) {
+    return { ok: false as const, error: e instanceof Error ? e.message : "Repurposing map generation failed" };
+  }
+}
+
 export async function saveIdeas(title: string, ideasJson: IdeasResponse) {
   try {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized");
 
-    const user = await db.select().from(users).where(eq(users.clerkId, userId)).then((r) => r[0]);
-    if (!user) throw new Error("User not found");
+    const user = await ensureUser(userId);
 
     const [project] = await db.insert(projects).values({
       userId: user.id,

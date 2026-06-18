@@ -3,12 +3,25 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
-import { generateIdeas, generateAngles, generateCalendar, saveIdeas, type Idea } from "@/lib/actions-content-ideas";
+import { generateIdeas, generateAngles, generateCalendar, generateRepurposingMap, saveIdeas, type Idea } from "@/lib/actions-content-ideas";
 import { getContentDefaults } from "@/lib/actions";
 import { useAuthGate } from "@/lib/use-auth-gate";
 import { SignInModal } from "@/components/auth/sign-in-modal";
 
-type Step = "input" | "ideas" | "angles" | "calendar";
+type Step = "input" | "ideas" | "angles" | "calendar" | "repurpose";
+
+interface RepurposeFormat {
+  format: string;
+  title: string;
+  hook: string;
+  key_points: string[];
+  platform: string;
+}
+
+interface RepurposeMap {
+  original: string;
+  formats: RepurposeFormat[];
+}
 
 function BootLoader({ type }: { type: string }) {
   const steps = type === "ideas"
@@ -88,7 +101,7 @@ function ScoreBar({ value, label }: { value: number; label: string }) {
   );
 }
 
-function PillarSection({ name, ideas }: { name: string; ideas: Idea[] }) {
+function PillarSection({ name, ideas, onRepurpose }: { name: string; ideas: Idea[]; onRepurpose: (idea: Idea) => void }) {
   const [expanded, setExpanded] = useState<string | null>(null);
 
   return (
@@ -120,6 +133,12 @@ function PillarSection({ name, ideas }: { name: string; ideas: Idea[] }) {
             <div className="ml-6 pl-4 border-l border-white/[0.04] space-y-2 py-2 reveal d1">
               <ScoreBar value={idea.shareability} label="share" />
               <ScoreBar value={idea.seo_value} label="seo" />
+              <button
+                onClick={(e) => { e.stopPropagation(); onRepurpose(idea); }}
+                className="btn-terminal text-[8px] mt-1"
+              >
+                {"[REPURPOSE]"} 6 formats
+              </button>
             </div>
           )}
         </div>
@@ -175,6 +194,7 @@ export default function ContentIdeasPage() {
   const [pillars, setPillars] = useState<string[]>([]);
   const [selectedIdea, setSelectedIdea] = useState<Idea | null>(null);
   const [angles, setAngles] = useState<string[]>([]);
+  const [repurposeMap, setRepurposeMap] = useState<RepurposeMap | null>(null);
   const [calendar, setCalendar] = useState<{ day: number; title: string; format: string; platform: string; pillar: string }[]>([]);
   const [error, setError] = useState("");
   const outputRef = useRef<HTMLDivElement>(null);
@@ -182,7 +202,7 @@ export default function ContentIdeasPage() {
   const { showModal, gate, closeModal, freeActionsLeft, savePreviewState, restorePreviewState } = useAuthGate("generate ideas");
 
   useEffect(() => {
-    const saved = restorePreviewState<{ ideas: Idea[]; pillars: string[]; angles: string[]; calendar: typeof calendar; step: Step; selectedIdea: Idea | null }>();
+    const saved = restorePreviewState<{ ideas: Idea[]; pillars: string[]; angles: string[]; calendar: typeof calendar; step: Step; selectedIdea: Idea | null; repurposeMap: RepurposeMap | null }>();
     if (saved) {
       setIdeas(saved.ideas ?? []);
       setPillars(saved.pillars ?? []);
@@ -190,6 +210,7 @@ export default function ContentIdeasPage() {
       setCalendar(saved.calendar ?? []);
       setStep(saved.step ?? "input");
       setSelectedIdea(saved.selectedIdea ?? null);
+      setRepurposeMap(saved.repurposeMap ?? null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -205,7 +226,7 @@ export default function ContentIdeasPage() {
 
   async function handleGenerateIdeas() {
     if (!valid) return;
-    savePreviewState({ ideas, pillars, angles, calendar, step, selectedIdea });
+    savePreviewState({ ideas, pillars, angles, calendar, repurposeMap, step, selectedIdea });
     gate(async () => {
       setLoading(true);
       setLoadingType("ideas");
@@ -225,7 +246,7 @@ export default function ContentIdeasPage() {
 
   async function handleSelectIdea(idea: Idea) {
     setSelectedIdea(idea);
-    savePreviewState({ ideas, pillars, angles, calendar, step, selectedIdea: idea });
+    savePreviewState({ ideas, pillars, angles, calendar, repurposeMap, step, selectedIdea: idea });
     gate(async () => {
       setLoading(true);
       setLoadingType("angles");
@@ -243,8 +264,28 @@ export default function ContentIdeasPage() {
     });
   }
 
+  async function handleRepurpose(idea: Idea) {
+    setSelectedIdea(idea);
+    savePreviewState({ ideas, pillars, angles, calendar, repurposeMap, step, selectedIdea: idea });
+    gate(async () => {
+      setLoading(true);
+      setLoadingType("ideas");
+      setError("");
+      try {
+        const result = await generateRepurposingMap(idea.title, niche, audience);
+        if (!result.ok) { setError(result.error); setLoading(false); return; }
+        setRepurposeMap(result.data);
+        setStep("repurpose");
+        setTimeout(() => outputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Repurposing failed");
+      }
+      setLoading(false);
+    });
+  }
+
   async function handleGenerateCalendar() {
-    savePreviewState({ ideas, pillars, angles, calendar, step, selectedIdea });
+    savePreviewState({ ideas, pillars, angles, calendar, repurposeMap, step, selectedIdea });
     gate(async () => {
       setLoading(true);
       setLoadingType("calendar");
@@ -263,7 +304,7 @@ export default function ContentIdeasPage() {
   }
 
   async function handleSave() {
-    savePreviewState({ ideas, pillars, angles, calendar, step, selectedIdea });
+    savePreviewState({ ideas, pillars, angles, calendar, repurposeMap, step, selectedIdea });
     gate(async () => {
       try {
         const result = await saveIdeas(`Ideas: ${niche}`, { pillars, ideas });
@@ -293,6 +334,7 @@ export default function ContentIdeasPage() {
   const isInputStep = step === "input" && !loading;
   const isIdeasStep = step === "ideas" && !loading;
   const isAnglesStep = step === "angles" && !loading;
+  const isRepurposeStep = step === "repurpose" && !loading;
   const isCalendarStep = step === "calendar" && !loading;
 
   return (
@@ -429,6 +471,7 @@ export default function ContentIdeasPage() {
                     key={pillar}
                     name={pillar}
                     ideas={ideas.filter((i) => i.pillar === pillar)}
+                    onRepurpose={handleRepurpose}
                   />
                 ))}
               </div>
@@ -498,6 +541,58 @@ export default function ContentIdeasPage() {
             </div>
           )}
 
+          {isRepurposeStep && repurposeMap && (
+            <div ref={outputRef} className="space-y-4">
+              <div className="flex items-center justify-between reveal d1">
+                <label className="term-label mb-0">REPURPOSE_MAP</label>
+                <button onClick={() => handleSelectIdea(selectedIdea!)} className="btn-terminal text-[9px]">
+                  {"[REGEN]"}
+                </button>
+              </div>
+
+              <p className="font-mono text-[10px] text-tx-3 reveal d2">
+                &gt; 6 formats for &ldquo;{repurposeMap.original}&rdquo;
+              </p>
+
+              <div className="space-y-3 reveal d3">
+                {repurposeMap.formats.map((f, i) => (
+                  <div key={i} className="crt-monitor relative crt-brackets" style={{ background: "rgba(0,0,0,0.25)" }}>
+                    <div className="crt-micro-tl">
+                      <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-te-400/60">fmt</span>
+                      <span className="text-tx-4">|</span>
+                      <span className="font-mono text-[7px] tracking-[0.18em] uppercase">{f.format.toUpperCase().replace(/\s+/g, "_")}</span>
+                    </div>
+                    <div className="crt-micro-tr">
+                      <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">{f.platform}</span>
+                    </div>
+
+                    <div className="crt-monitor-content p-3 space-y-2">
+                      <div className="font-mono text-[11px] text-tx-1 font-semibold">{f.title}</div>
+                      <div className="font-mono text-[9px] text-te-400/70 italic">&gt; {f.hook}</div>
+                      <ul className="space-y-0.5">
+                        {f.key_points.map((kp, j) => (
+                          <li key={j} className="font-mono text-[9px] text-tx-3 flex items-start gap-1.5">
+                            <span className="text-tx-4 mt-0.5">&bull;</span>
+                            {kp}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-3 pt-2 border-t border-white/[0.04] reveal d4">
+                <button onClick={handleBackToIdeas} className="btn-terminal text-[9px]">
+                  {">>"} BACK TO IDEAS
+                </button>
+                <button onClick={handleReset} className="btn-terminal text-[9px]">
+                  {"[NEW]"} NEW BATCH
+                </button>
+              </div>
+            </div>
+          )}
+
           {isCalendarStep && (
             <div ref={outputRef} className="space-y-4">
               <div className="flex items-center justify-between reveal d1">
@@ -529,7 +624,7 @@ export default function ContentIdeasPage() {
           <span className="font-mono text-[7px] tracking-[0.18em] uppercase"
             style={{ color: step === "calendar" ? "rgba(34,197,94,0.6)" : "rgba(86,86,128,0.6)" }}
           >
-            {step === "input" ? "AWAITING INPUT" : step === "ideas" ? "IDEAS READY" : step === "angles" ? "ANGLES READY" : "CALENDAR READY"}
+            {step === "input" ? "AWAITING INPUT" : step === "ideas" ? "IDEAS READY" : step === "angles" ? "ANGLES READY" : step === "repurpose" ? "REPURPOSE MAP READY" : "CALENDAR READY"}
           </span>
         </div>
         <div className="crt-micro-br">
@@ -540,7 +635,7 @@ export default function ContentIdeasPage() {
 
         <div className="crt-monitor-footer">
           <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">
-            {step === "input" ? "INPUT" : step === "ideas" ? "IDEAS" : step === "angles" ? "ANGLES" : "CALENDAR"}
+            {step === "input" ? "INPUT" : step === "ideas" ? "IDEAS" : step === "angles" ? "ANGLES" : step === "repurpose" ? "REPURPOSE" : "CALENDAR"}
           </span>
           <span className="font-mono text-[6px] text-center">
             {!isSignedIn ? (

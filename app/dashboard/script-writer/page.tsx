@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
-import { PLATFORMS, TONES } from "@/lib/constants";
+import { PLATFORMS, TONES, LANGUAGES } from "@/lib/constants";
 import { generateHooks, generateScript, saveScript } from "@/lib/actions-script";
 import { getContentDefaults } from "@/lib/actions";
 import { useAuthGate } from "@/lib/use-auth-gate";
@@ -64,23 +64,28 @@ export default function ScriptWriterPage() {
   const [audience, setAudience] = useState("");
   const [platform, setPlatform] = useState("");
   const [tone, setTone] = useState("");
+  const [language, setLanguage] = useState("English");
   const [context, setContext] = useState("");
   const [hooks, setHooks] = useState<Hook[]>([]);
   const [selectedHookId, setSelectedHookId] = useState<string | null>(null);
   const [script, setScript] = useState<FullScript | null>(null);
   const [error, setError] = useState("");
   const [loadingType, setLoadingType] = useState<"hooks" | "script">("hooks");
+  const [teleprompter, setTeleprompter] = useState(false);
+  const [prompterSpeed, setPrompterSpeed] = useState(180);
   const outputRef = useRef<HTMLDivElement>(null);
+  const prompterRef = useRef<HTMLDivElement>(null);
   const { isSignedIn } = useAuth();
   const { showModal, gate, closeModal, freeActionsLeft, savePreviewState, restorePreviewState } = useAuthGate("generate hooks");
 
   useEffect(() => {
-    const saved = restorePreviewState<{ hooks: Hook[]; script: FullScript | null; step: Step; selectedHookId: string | null }>();
+    const saved = restorePreviewState<{ hooks: Hook[]; script: FullScript | null; step: Step; selectedHookId: string | null; language?: string }>();
     if (saved) {
       setHooks(saved.hooks ?? []);
       setScript(saved.script ?? null);
       setStep(saved.step ?? "input");
       setSelectedHookId(saved.selectedHookId ?? null);
+      if (saved.language) setLanguage(saved.language);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -100,13 +105,13 @@ export default function ScriptWriterPage() {
 
   async function handleGenerateHooks() {
     if (!valid) return;
-    savePreviewState({ hooks, script, step, selectedHookId });
+    savePreviewState({ hooks, script, step, selectedHookId, language });
     gate(async () => {
       setLoading(true);
       setLoadingType("hooks");
       setError("");
       try {
-        const result = await generateHooks(topic, audience, platform, tone);
+        const result = await generateHooks(topic, audience, platform, tone, language);
         if (!result.ok) { setError(result.error); return; }
         setHooks(result.data);
         setStep("hooks");
@@ -129,7 +134,7 @@ export default function ScriptWriterPage() {
       setLoadingType("script");
       setError("");
       try {
-        const result = await generateScript(topic, audience, platform, tone, hook.hook_text, context);
+        const result = await generateScript(topic, audience, platform, tone, hook.hook_text, context, language);
         if (!result.ok) { setError(result.error); return; }
         setScript(result.data);
         setStep("script");
@@ -146,13 +151,13 @@ export default function ScriptWriterPage() {
     if (!selectedHookId) return;
     const hook = hooks.find((h) => h.id === selectedHookId);
     if (!hook) return;
-    savePreviewState({ hooks, script, step, selectedHookId });
+    savePreviewState({ hooks, script, step, selectedHookId, language });
     gate(async () => {
       setLoading(true);
       setLoadingType("script");
       setError("");
       try {
-        const result = await generateScript(topic, audience, platform, tone, hook.hook_text, context);
+        const result = await generateScript(topic, audience, platform, tone, hook.hook_text, context, language);
         if (!result.ok) { setError(result.error); return; }
         setScript(result.data);
         setTimeout(() => outputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
@@ -190,6 +195,47 @@ export default function ScriptWriterPage() {
     const text = script.sections.map((s) => `[${s.timestamp}] ${s.content}\n[B-ROLL] ${s.broll}`).join("\n\n") + `\n\nCTA: ${script.cta}`;
     navigator.clipboard.writeText(text);
   }
+
+  function exportPDF() {
+    if (!script) return;
+    const win = window.open("", "_blank");
+    if (!win) return;
+    win.document.write(`<!DOCTYPE html><html><head><title>${script.title}</title>
+<style>
+  @page { margin: 0.75in; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Courier New', monospace; font-size: 11pt; line-height: 1.6; color: #111; padding: 20px; }
+  h1 { font-size: 16pt; margin-bottom: 16px; border-bottom: 2px solid #333; padding-bottom: 8px; }
+  .section { margin-bottom: 16px; }
+  .timestamp { font-weight: bold; color: #555; font-size: 9pt; margin-bottom: 4px; }
+  .content { margin-bottom: 4px; }
+  .broll { color: #888; font-style: italic; font-size: 9pt; }
+  .cta { margin-top: 16px; padding: 12px; background: #f5f5f5; border-left: 3px solid #333; }
+  .footer { margin-top: 24px; font-size: 8pt; color: #999; text-align: center; border-top: 1px solid #ddd; padding-top: 8px; }
+</style></head><body>
+<h1>${script.title}</h1>
+${script.sections.map((s) => `<div class="section"><div class="timestamp">[${s.timestamp}]</div><div class="content">${s.content}</div>${s.broll ? `<div class="broll">&gt; B-roll: ${s.broll}</div>` : ""}</div>`).join("")}
+<div class="cta"><strong>CTA:</strong> ${script.cta}</div>
+<div class="footer">Generated by ContentOS AI</div>
+<script>window.onload = function() { window.print(); }</script>
+</body></html>`);
+    win.document.close();
+  }
+
+  const scrollPrompter = useCallback(() => {
+    if (!prompterRef.current) return;
+    const start = prompterRef.current.scrollTop;
+    const target = prompterRef.current.scrollHeight - prompterRef.current.clientHeight;
+    const duration = (target / prompterSpeed) * 1000;
+    const startTime = performance.now();
+    function step(time: number) {
+      const elapsed = time - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      if (prompterRef.current) prompterRef.current.scrollTop = start + (target - start) * progress;
+      if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }, [prompterSpeed]);
 
   const isInputStep = step === "input" && !loading;
   const isHooksStep = step === "hooks" && !loading;
@@ -311,6 +357,25 @@ export default function ScriptWriterPage() {
               </div>
 
               <div className="reveal d5">
+                <label className="term-label mb-2">LANGUAGE</label>
+                <div className="flex gap-2">
+                  {LANGUAGES.map((l) => (
+                    <button
+                      key={l}
+                      onClick={() => setLanguage(l)}
+                      className={`boot-option ${l === language ? "active" : ""}`}
+                    >
+                      <span className="boot-option-arrow">{l === language ? "\u25B6" : ">>"}</span>
+                      <span className="boot-option-label">{l}</span>
+                      <span className={`diag-badge ${l === language ? "diag-ok" : "diag-idle"}`}>
+                        {l === language ? "[SELECTED]" : "[IDLE]"}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="reveal d6">
                 <label className="term-label mb-2">ADDITIONAL_CONTEXT <span className="text-tx-4">(optional)</span></label>
                 <input
                   value={context}
@@ -320,7 +385,7 @@ export default function ScriptWriterPage() {
                 />
               </div>
 
-              <div className="reveal d6 flex items-center gap-3 pt-2 border-t border-white/[0.04]">
+              <div className="reveal d7 flex items-center gap-3 pt-2 border-t border-white/[0.04]">
                 <button
                   onClick={handleGenerateHooks}
                   disabled={!valid}
@@ -388,6 +453,12 @@ export default function ScriptWriterPage() {
                 <div className="flex items-center gap-2">
                   <button onClick={copyToClipboard} className="btn-terminal text-[9px]">
                     {"[COPY]"}
+                  </button>
+                  <button onClick={exportPDF} className="btn-terminal text-[9px]">
+                    {"[PDF]"}
+                  </button>
+                  <button onClick={() => setTeleprompter(true)} className="btn-terminal text-[9px]">
+                    {"[PROM]"}
                   </button>
                   <button onClick={handleSave} className="btn-terminal text-[9px]">
                     {"[SAVE]"}
@@ -493,6 +564,68 @@ export default function ScriptWriterPage() {
           </span>
         </div>
       </div>
+
+      {teleprompter && script && (
+        <div className="fixed inset-0 z-50 bg-[#050508] flex flex-col">
+          <div className="flex items-center justify-between px-6 py-3 border-b border-white/[0.06] bg-black/50">
+            <span className="font-mono text-[10px] text-te-400/80 tracking-wider uppercase">Teleprompter — {script.title}</span>
+            <div className="flex items-center gap-4">
+              <label className="font-mono text-[8px] text-tx-4 tracking-wider uppercase flex items-center gap-2">
+                Speed
+                <input
+                  type="range"
+                  min="60"
+                  max="400"
+                  value={prompterSpeed}
+                  onChange={(e) => setPrompterSpeed(Number(e.target.value))}
+                  className="w-20"
+                />
+                <span className="text-tx-3 w-8">{prompterSpeed} wpm</span>
+              </label>
+              <button onClick={scrollPrompter} className="btn-terminal text-[9px] text-ok">
+                {"[PLAY]"}
+              </button>
+              <button onClick={() => setTeleprompter(false)} className="btn-terminal text-[9px]">
+                {"[ESC]"}
+              </button>
+            </div>
+          </div>
+          <div
+            ref={prompterRef}
+            className="flex-1 overflow-y-auto px-12 py-8 max-w-3xl mx-auto w-full"
+            style={{ scrollBehavior: "auto" }}
+          >
+            <div className="space-y-8">
+              {script.sections.map((section, i) => (
+                <div key={i} className="space-y-3">
+                  <div className="font-mono text-[11px] text-te-400/60 tracking-wider">
+                    [{section.timestamp}]
+                  </div>
+                  <p className="font-mono text-[22px] text-tx-1 leading-[1.7]">
+                    {section.content}
+                  </p>
+                  {section.broll && (
+                    <p className="font-mono text-[10px] text-tx-4 italic">
+                      &gt; B-roll: {section.broll}
+                    </p>
+                  )}
+                  {i === 0 && (
+                    <div className="font-mono text-[10px] text-fu-400/50 uppercase tracking-wider">[hook]</div>
+                  )}
+                </div>
+              ))}
+              <div className="border-t border-white/[0.08] pt-6 mt-8">
+                <div className="font-mono text-[11px] text-tx-4 mb-2">CTA</div>
+                <p className="font-mono text-[22px] text-tx-1 leading-[1.7]">{script.cta}</p>
+              </div>
+            </div>
+          </div>
+          <div className="border-t border-white/[0.06] px-6 py-2 bg-black/50 flex items-center justify-between">
+            <span className="font-mono text-[7px] text-tx-4 tracking-wider">SPACE = PAUSE/RESUME | SPEED: {prompterSpeed} WPM</span>
+            <span className="font-mono text-[7px] text-tx-4 tracking-wider">ContentOS Teleprompter v1</span>
+          </div>
+        </div>
+      )}
 
       <SignInModal open={showModal} onClose={closeModal} context="generate hooks" />
     </div>

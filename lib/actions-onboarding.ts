@@ -7,6 +7,7 @@ import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { generateJSON } from "@/lib/ai";
 import { searchWeb } from "@/lib/search";
+import { ensureUser } from "@/lib/ensure-user";
 
 export interface OnboardingData {
   niche: string;
@@ -56,8 +57,7 @@ export async function saveOnboardingData(data: OnboardingData) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  const user = await db.select().from(users).where(eq(users.clerkId, userId)).then((r) => r[0]);
-  if (!user) throw new Error("User not found");
+  const user = await ensureUser(userId);
 
   await db
     .update(users)
@@ -200,8 +200,7 @@ export async function saveOnboardingPlan(
     const userId = sess.userId;
     if (!userId) return { ok: false as const, error: "Unauthorized" };
 
-    const user = await db.select().from(users).where(eq(users.clerkId, userId)).then((r) => r[0]);
-    if (!user) return { ok: false as const, error: "User not found" };
+    const user = await ensureUser(userId);
 
     const [project] = await db.insert(projects).values({
       userId: user.id,

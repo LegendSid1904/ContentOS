@@ -5,6 +5,7 @@ import { generateJSON } from "@/lib/ai";
 import { db } from "@/lib/drizzle";
 import { users, projects, contentOutputs } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { ensureUser } from "@/lib/ensure-user";
 
 interface Hook {
   id: string;
@@ -24,10 +25,14 @@ interface FullScript {
   cta: string;
 }
 
-export async function generateHooks(topic: string, audience: string, platform: string, tone: string) {
+export async function generateHooks(topic: string, audience: string, platform: string, tone: string, language: string = "English") {
   try {
+    const langInstr = language === "Hinglish"
+      ? "Write in Hinglish — a natural mix of Hindi (Devanagari script for Hindi words) and English, as Indian creators speak. Use casual Indian social media tone. Code-switch naturally between Hindi and English within sentences."
+      : "";
+
     const hooks = await generateJSON<{ hooks: Hook[] }>({
-      systemPrompt: `You are a hook specialist for content creators. Generate 5 high-impact hooks using PAS, AIDA, and Open Loop frameworks. Return as JSON with a "hooks" array, each with fields: id (string), hook_text (string), framework (string).`,
+      systemPrompt: `You are a hook specialist for content creators. Generate 5 high-impact hooks using PAS, AIDA, and Open Loop frameworks. Return as JSON with a "hooks" array, each with fields: id (string), hook_text (string), framework (string). ${langInstr}`,
       prompt: `Topic: ${topic}. Audience: ${audience}. Platform: ${platform}. Tone: ${tone}.`,
     });
     return { ok: true as const, data: hooks.hooks };
@@ -36,8 +41,12 @@ export async function generateHooks(topic: string, audience: string, platform: s
   }
 }
 
-export async function generateScript(topic: string, audience: string, platform: string, tone: string, selectedHook: string, context?: string) {
+export async function generateScript(topic: string, audience: string, platform: string, tone: string, selectedHook: string, context?: string, language: string = "English") {
   try {
+    const langInstr = language === "Hinglish"
+      ? "Write in Hinglish — a natural mix of Hindi (Devanagari script for Hindi words) and English, as Indian creators speak. Use casual Indian social media tone. Code-switch naturally between Hindi and English within sentences."
+      : "";
+
     const script = await generateJSON<FullScript>({
       systemPrompt: `You are a professional script writer. Write a ${platform}-optimized script using this exact structure:
 
@@ -48,7 +57,7 @@ export async function generateScript(topic: string, audience: string, platform: 
 5. CONTRADICTION / PLOT TWIST (10 seconds) — A final surprising insight that reframes everything they just learned.
 6. CTA (5-10 seconds) — Clear, specific call to action.
 
-Include timestamps for each section, B-roll and visual cues, and pacing notes. Return as JSON with fields: title (string), sections (array of {timestamp, content, broll}), cta (string).`,
+Include timestamps for each section, B-roll and visual cues, and pacing notes. Return as JSON with fields: title (string), sections (array of {timestamp, content, broll}), cta (string).${langInstr ? `\n\n${langInstr}` : ""}`,
       prompt: `Topic: ${topic}. Audience: ${audience}. Platform: ${platform}. Tone: ${tone}. Selected hook: "${selectedHook}".${context ? ` Additional context: ${context}` : ""}`,
       temperature: 0.7,
     });
@@ -63,8 +72,7 @@ export async function saveScript(title: string, scriptJson: FullScript) {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized");
 
-    const user = await db.select().from(users).where(eq(users.clerkId, userId)).then((r) => r[0]);
-    if (!user) throw new Error("User not found");
+    const user = await ensureUser(userId);
 
     const [project] = await db.insert(projects).values({
       userId: user.id,

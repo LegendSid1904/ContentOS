@@ -5,6 +5,7 @@ import { generateJSON } from "@/lib/ai";
 import { db } from "@/lib/drizzle";
 import { users, projects, contentOutputs } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { ensureUser } from "@/lib/ensure-user";
 
 interface GrowthAudit {
   content_quality: number;
@@ -54,14 +55,39 @@ export async function generateGrowthStrategy(niche: string, followers: number, p
   }
 }
 
+export async function generateAudiencePersona(niche: string, platform: string) {
+  try {
+    const result = await generateJSON<{ persona: { name: string; demographics: string; psychographics: string[]; pain_points: string[]; content_preferences: string[]; best_time_to_post: string; language_tone: string; platforms_frequent: string[]; influencers_they_follow: string[] } }>({
+      systemPrompt: `You are an audience researcher. Create a detailed ideal audience persona for the given niche and platform. The persona must include: name (string), demographics (string), psychographics (string[] — values, interests, lifestyle), pain_points (string[]), content_preferences (string[]), best_time_to_post (string), language_tone (string), platforms_frequent (string[]), influencers_they_follow (string[]). Return as JSON with a "persona" field.`,
+      prompt: `Niche: ${niche}. Platform: ${platform}.`,
+      temperature: 0.7,
+    });
+    return { ok: true as const, data: result.persona };
+  } catch (e) {
+    return { ok: false as const, error: e instanceof Error ? e.message : "Persona generation failed" };
+  }
+}
+
+export async function generateEngagementPrompts(niche: string, platform: string, goals: string) {
+  try {
+    const result = await generateJSON<{ dm_scripts: { scenario: string; script: string }[]; comment_templates: { type: string; template: string }[]; cta_frameworks: { name: string; framework: string }[] }>({
+      systemPrompt: `You are a community engagement strategist. Generate engagement prompts for the given niche and platform. Include: dm_scripts (array of {scenario, script} — 3 DM outreach scripts), comment_templates (array of {type, template} — 5 comment templates for different post types), cta_frameworks (array of {name, framework} — 4 CTA frameworks). Return as JSON.`,
+      prompt: `Niche: ${niche}. Platform: ${platform}. Goals: ${goals}.`,
+      temperature: 0.7,
+    });
+    return { ok: true as const, data: result };
+  } catch (e) {
+    return { ok: false as const, error: e instanceof Error ? e.message : "Prompt generation failed" };
+  }
+}
+
 export async function saveGrowthStrategy(title: string, data: GrowthStrategyData) {
   try {
     const sess = await auth();
     const userId = sess.userId;
     if (!userId) return { ok: false as const, error: "You need to sign in first" };
 
-    const user = await db.select().from(users).where(eq(users.clerkId, userId)).then((r) => r[0]);
-    if (!user) return { ok: false as const, error: "Account not found. Try signing in again." };
+    const user = await ensureUser(userId);
 
     const [project] = await db.insert(projects).values({
       userId: user.id,

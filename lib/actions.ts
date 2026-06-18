@@ -5,6 +5,7 @@ import { db } from "@/lib/drizzle";
 import { users, brandKits, profiles } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { ensureUser } from "@/lib/ensure-user";
 
 export async function updateProfileName(formData: FormData) {
   const { userId } = await auth();
@@ -12,6 +13,8 @@ export async function updateProfileName(formData: FormData) {
 
   const firstName = formData.get("firstName") as string;
   const lastName = formData.get("lastName") as string;
+
+  await ensureUser(userId);
 
   await db
     .update(users)
@@ -25,8 +28,7 @@ export async function saveBrandKit(formData: FormData) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  const user = await db.select().from(users).where(eq(users.clerkId, userId)).then((r) => r[0]);
-  if (!user) throw new Error("User not found");
+  const user = await ensureUser(userId);
 
   const niche = formData.get("niche") as string;
   const tone = formData.get("tone") as string;
@@ -51,8 +53,7 @@ export async function deleteBrandKit() {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  const user = await db.select().from(users).where(eq(users.clerkId, userId)).then((r) => r[0]);
-  if (!user) throw new Error("User not found");
+  const user = await ensureUser(userId);
 
   await db.delete(brandKits).where(eq(brandKits.userId, user.id));
 
@@ -63,8 +64,7 @@ export async function getBrandKit() {
   const { userId } = await auth();
   if (!userId) return null;
 
-  const user = await db.select().from(users).where(eq(users.clerkId, userId)).then((r) => r[0]);
-  if (!user) return null;
+  const user = await ensureUser(userId);
 
   const kit = await db.select().from(brandKits).where(eq(brandKits.userId, user.id)).then((r) => r[0]);
   return kit || null;
@@ -73,6 +73,8 @@ export async function getBrandKit() {
 export async function completeOnboardingStep(step: number) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
+
+  await ensureUser(userId);
 
   await db
     .update(users)
@@ -86,6 +88,8 @@ export async function finishOnboarding() {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
+  await ensureUser(userId);
+
   await db
     .update(users)
     .set({ onboardingComplete: true, onboardingStep: null, updatedAt: new Date() })
@@ -98,8 +102,7 @@ export async function getOnboardingStatus() {
   const { userId } = await auth();
   if (!userId) return null;
 
-  const user = await db.select().from(users).where(eq(users.clerkId, userId)).then((r) => r[0]);
-  if (!user) return null;
+  const user = await ensureUser(userId);
 
   return {
     onboardingComplete: user.onboardingComplete,
@@ -111,8 +114,7 @@ export async function getProfile() {
   const { userId } = await auth();
   if (!userId) return null;
 
-  const user = await db.select().from(users).where(eq(users.clerkId, userId)).then((r) => r[0]);
-  if (!user) return null;
+  const user = await ensureUser(userId);
 
   const profile = await db.select().from(profiles).where(eq(profiles.userId, user.id)).then((r) => r[0]);
 
@@ -136,8 +138,7 @@ export async function updateProfile(formData: FormData) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  const user = await db.select().from(users).where(eq(users.clerkId, userId)).then((r) => r[0]);
-  if (!user) throw new Error("User not found");
+  const user = await ensureUser(userId);
 
   const username = formData.get("username") as string;
   const bio = formData.get("bio") as string;
@@ -196,8 +197,7 @@ export async function getContentDefaults() {
   const { userId } = await auth();
   if (!userId) return null;
 
-  const user = await db.select().from(users).where(eq(users.clerkId, userId)).then((r) => r[0]);
-  if (!user) return null;
+  const user = await ensureUser(userId);
 
   const [profile, kit] = await Promise.all([
     db.select().from(profiles).where(eq(profiles.userId, user.id)).then((r) => r[0]),

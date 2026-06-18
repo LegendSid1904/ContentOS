@@ -1,0 +1,9 @@
+{
+  "name": "ContentOS",
+  "description": "AI content operating system — near-black canvas, lavender-blue accent, precision typography inspired by Linear",
+  "category": "productivity",
+  "version": "2.0.0",
+  "author": "ContentOS Team",
+  "tokens": ["bg", "surface", "fg", "accent", "font-display", "font-mono"],
+  "features": ["dark-mode", "precision-ui", "surface-ladder", "hairline-borders"]
+}

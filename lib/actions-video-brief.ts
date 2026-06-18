@@ -5,6 +5,7 @@ import { generateJSON } from "@/lib/ai";
 import { db } from "@/lib/drizzle";
 import { users, projects, contentOutputs } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { ensureUser } from "@/lib/ensure-user";
 
 interface EditPoint {
   timestamp: string;
@@ -50,8 +51,7 @@ export async function saveEditingBrief(title: string, brief: EditingBrief) {
     const userId = sess.userId;
     if (!userId) return { ok: false as const, error: "You need to sign in first" };
 
-    const user = await db.select().from(users).where(eq(users.clerkId, userId)).then((r) => r[0]);
-    if (!user) return { ok: false as const, error: "Account not found. Try signing in again." };
+    const user = await ensureUser(userId);
 
     const [project] = await db.insert(projects).values({
       userId: user.id,

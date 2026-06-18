@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
 import { PLATFORMS } from "@/lib/constants";
-import { generateGrowthStrategy, saveGrowthStrategy } from "@/lib/actions-growth";
+import { generateGrowthStrategy, generateAudiencePersona, generateEngagementPrompts, saveGrowthStrategy } from "@/lib/actions-growth";
 import { getContentDefaults } from "@/lib/actions";
 import { useAuthGate } from "@/lib/use-auth-gate";
 import { SignInModal } from "@/components/auth/sign-in-modal";
@@ -18,6 +18,16 @@ interface GrowthStrategyData {
   plan: { week_number: number; theme: string; content_focus: string[]; growth_tactic: string; milestone: string }[];
   monetization: { phase: string; timeframe: string; tactics: string[]; revenue_target: string }[];
   algorithm_tips: string[];
+}
+
+interface AudiencePersona {
+  name: string; demographics: string; psychographics: string[]; pain_points: string[]; content_preferences: string[]; best_time_to_post: string; language_tone: string; platforms_frequent: string[]; influencers_they_follow: string[];
+}
+
+interface EngagementPrompts {
+  dm_scripts: { scenario: string; script: string }[];
+  comment_templates: { type: string; template: string }[];
+  cta_frameworks: { name: string; framework: string }[];
 }
 
 function BootLoader() {
@@ -71,6 +81,10 @@ export default function GrowthStrategyPage() {
   const [platform, setPlatform] = useState("");
   const [goals, setGoals] = useState<string[]>([]);
   const [data, setData] = useState<GrowthStrategyData | null>(null);
+  const [persona, setPersona] = useState<AudiencePersona | null>(null);
+  const [personaLoading, setPersonaLoading] = useState(false);
+  const [engagement, setEngagement] = useState<EngagementPrompts | null>(null);
+  const [engagementLoading, setEngagementLoading] = useState(false);
   const [error, setError] = useState("");
   const outputRef = useRef<HTMLDivElement>(null);
   const { isSignedIn } = useAuth();
@@ -130,6 +144,34 @@ export default function GrowthStrategyPage() {
         setError(e instanceof Error ? e.message : "Save failed");
       }
     });
+  }
+
+  async function handlePersona() {
+    if (!data) return;
+    setPersonaLoading(true);
+    setError("");
+    try {
+      const result = await generateAudiencePersona(niche, platform);
+      if (!result.ok) { setError(result.error); setPersonaLoading(false); return; }
+      setPersona(result.data);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Persona generation failed");
+    }
+    setPersonaLoading(false);
+  }
+
+  async function handleEngagement() {
+    if (!data) return;
+    setEngagementLoading(true);
+    setError("");
+    try {
+      const result = await generateEngagementPrompts(niche, platform, goals.join(", "));
+      if (!result.ok) { setError(result.error); setEngagementLoading(false); return; }
+      setEngagement(result.data);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Engagement prompt generation failed");
+    }
+    setEngagementLoading(false);
   }
 
   function handleReset() {
@@ -277,6 +319,12 @@ export default function GrowthStrategyPage() {
               <div className="flex items-center justify-between reveal d1">
                 <label className="term-label text-[11px] mb-0">GROWTH_STRATEGY</label>
                 <div className="flex items-center gap-2">
+                  <button onClick={handlePersona} disabled={personaLoading} className="btn-terminal text-[12px]">
+                    {"[PERSONA]"}
+                  </button>
+                  <button onClick={handleEngagement} disabled={engagementLoading} className="btn-terminal text-[12px]">
+                    {"[ENGAGE]"}
+                  </button>
                   <button onClick={handleSave} className="btn-terminal text-[12px]">
                     {"[SAVE]"}
                   </button>
@@ -422,6 +470,127 @@ export default function GrowthStrategyPage() {
                   </div>
                   <div className="crt-micro-bl">
                     <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-ok">TIPS READY</span>
+                  </div>
+                </div>
+              )}
+
+              {persona && (
+                <div className="crt-monitor relative crt-brackets reveal" style={{ background: "rgba(0,0,0,0.25)" }}>
+                  <div className="crt-micro-tl">
+                    <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-te-400/60">audience</span>
+                    <span className="text-tx-3">|</span>
+                    <span className="font-mono text-[10px] tracking-[0.18em] uppercase">persona</span>
+                  </div>
+                  <div className="crt-monitor-header">
+                    <span className="w-2 h-2 rounded-full bg-fu-400/60" />
+                    <span className="font-mono text-[13px] font-semibold text-tx-1 tracking-tight ml-2">{persona.name}</span>
+                  </div>
+                  <div className="crt-monitor-content p-4 space-y-3">
+                    <div>
+                      <span className="font-mono text-[10px] text-tx-3 uppercase tracking-wider">Demographics</span>
+                      <p className="font-mono text-[11px] text-tx-1">{persona.demographics}</p>
+                    </div>
+                    <div>
+                      <span className="font-mono text-[10px] text-tx-3 uppercase tracking-wider">Psychographics</span>
+                      {persona.psychographics.map((p, i) => (
+                        <div key={i} className="flex items-start gap-2 mt-0.5">
+                          <span className="font-mono text-[10px] text-te-400 mt-0.5">&bull;</span>
+                          <span className="font-mono text-[11px] text-tx-1">{p}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div>
+                      <span className="font-mono text-[10px] text-err uppercase tracking-wider">Pain Points</span>
+                      {persona.pain_points.map((p, i) => (
+                        <div key={i} className="flex items-start gap-2 mt-0.5">
+                          <span className="font-mono text-[10px] text-err mt-0.5">&mdash;</span>
+                          <span className="font-mono text-[11px] text-tx-1">{p}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div>
+                      <span className="font-mono text-[10px] text-tx-3 uppercase tracking-wider">Content Preferences</span>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {persona.content_preferences.map((p, i) => (
+                          <span key={i} className="font-mono text-[10px] text-tx-2 bg-white/[0.03] px-1.5 py-0.5 rounded-r2">{p}</span>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 pt-2 border-t border-white/[0.04]">
+                      <div>
+                        <span className="font-mono text-[10px] text-tx-3 uppercase tracking-wider">Best Time</span>
+                        <p className="font-mono text-[11px] text-te-400">{persona.best_time_to_post}</p>
+                      </div>
+                      <div>
+                        <span className="font-mono text-[10px] text-tx-3 uppercase tracking-wider">Language/Tone</span>
+                        <p className="font-mono text-[11px] text-tx-1">{persona.language_tone}</p>
+                      </div>
+                    </div>
+                    <div className="pt-2 border-t border-white/[0.04]">
+                      <span className="font-mono text-[10px] text-tx-3 uppercase tracking-wider">Platforms</span>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {persona.platforms_frequent.map((p, i) => (
+                          <span key={i} className="font-mono text-[10px] text-vi-400 bg-vi-400/10 px-1.5 py-0.5 rounded-r2">{p}</span>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="pt-2 border-t border-white/[0.04]">
+                      <span className="font-mono text-[10px] text-tx-3 uppercase tracking-wider">Influencers They Follow</span>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {persona.influencers_they_follow.map((inf, i) => (
+                          <span key={i} className="font-mono text-[10px] text-fu-400/80 bg-fu-400/10 px-1.5 py-0.5 rounded-r2">{inf}</span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="crt-micro-bl">
+                    <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-ok">PERSONA READY</span>
+                  </div>
+                </div>
+              )}
+
+              {engagement && (
+                <div className="crt-monitor relative crt-brackets reveal" style={{ background: "rgba(0,0,0,0.25)" }}>
+                  <div className="crt-micro-tl">
+                    <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-te-400/60">engage</span>
+                    <span className="text-tx-3">|</span>
+                    <span className="font-mono text-[10px] tracking-[0.18em] uppercase">prompts</span>
+                  </div>
+                  <div className="crt-monitor-header">
+                    <span className="w-2 h-2 rounded-full bg-te-400/60" />
+                    <span className="font-mono text-[13px] font-semibold text-tx-1 tracking-tight ml-2">Engagement Prompts</span>
+                  </div>
+                  <div className="crt-monitor-content p-4 space-y-4">
+                    <div>
+                      <span className="font-mono text-[10px] text-te-400 uppercase tracking-wider">DM Scripts</span>
+                      {engagement.dm_scripts.map((dm, i) => (
+                        <div key={i} className="mt-2 pb-2 border-b border-white/[0.04] last:border-0">
+                          <span className="font-mono text-[10px] text-tx-3">{dm.scenario}</span>
+                          <p className="font-mono text-[11px] text-tx-1 mt-0.5">{dm.script}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="pt-2 border-t border-white/[0.04]">
+                      <span className="font-mono text-[10px] text-vi-400 uppercase tracking-wider">Comment Templates</span>
+                      {engagement.comment_templates.map((ct, i) => (
+                        <div key={i} className="mt-2 pb-2 border-b border-white/[0.04] last:border-0">
+                          <span className="font-mono text-[10px] text-tx-3">[{ct.type}]</span>
+                          <p className="font-mono text-[11px] text-tx-1 mt-0.5">{ct.template}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="pt-2 border-t border-white/[0.04]">
+                      <span className="font-mono text-[10px] text-fu-400 uppercase tracking-wider">CTA Frameworks</span>
+                      {engagement.cta_frameworks.map((cta, i) => (
+                        <div key={i} className="mt-2 pb-2 border-b border-white/[0.04] last:border-0">
+                          <span className="font-mono text-[10px] text-tx-3 font-semibold">{cta.name}</span>
+                          <p className="font-mono text-[11px] text-tx-1 mt-0.5">{cta.framework}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="crt-micro-bl">
+                    <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-ok">PROMPTS READY</span>
                   </div>
                 </div>
               )}

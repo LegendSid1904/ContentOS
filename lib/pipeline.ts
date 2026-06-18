@@ -4,6 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/drizzle";
 import { users, projects, contentOutputs } from "@/db/schema";
 import { eq, desc, and } from "drizzle-orm";
+import { ensureUser } from "@/lib/ensure-user";
 
 export interface PipelineLink {
   moduleId: string;
@@ -69,8 +70,7 @@ export async function savePipelineProject(sourceProjectId: string, targetModule:
   const userId = sess.userId;
   if (!userId) return { ok: false as const, error: "Sign in required" };
 
-  const user = await db.select().from(users).where(eq(users.clerkId, userId)).then(r => r[0]);
-  if (!user) return { ok: false as const, error: "User not found" };
+  const user = await ensureUser(userId);
 
   const [project] = await db.insert(projects).values({
     userId: user.id,
@@ -94,8 +94,7 @@ export async function getSavedProjects(moduleFilter?: string): Promise<SavedProj
   const userId = sess.userId;
   if (!userId) return [];
 
-  const user = await db.select().from(users).where(eq(users.clerkId, userId)).then(r => r[0]);
-  if (!user) return [];
+  const user = await ensureUser(userId);
 
   const conditions = [eq(projects.userId, user.id)];
   if (moduleFilter) {
@@ -136,8 +135,7 @@ export async function deleteProject(projectId: string) {
   const userId = sess.userId;
   if (!userId) return { ok: false as const, error: "Sign in required" };
 
-  const user = await db.select().from(users).where(eq(users.clerkId, userId)).then(r => r[0]);
-  if (!user) return { ok: false as const, error: "User not found" };
+  const user = await ensureUser(userId);
 
   const project = await db.select().from(projects).where(eq(projects.id, projectId)).then(r => r[0]);
   if (!project || project.userId !== user.id) return { ok: false as const, error: "Project not found" };
@@ -152,8 +150,7 @@ export async function getBrandKitData() {
   const userId = sess.userId;
   if (!userId) return null;
 
-  const user = await db.select().from(users).where(eq(users.clerkId, userId)).then(r => r[0]);
-  if (!user) return null;
+  const user = await ensureUser(userId);
 
   const { brandKits, profiles } = await import("@/db/schema");
   const kit = await db.select().from(brandKits).where(eq(brandKits.userId, user.id)).then(r => r[0] ?? null);

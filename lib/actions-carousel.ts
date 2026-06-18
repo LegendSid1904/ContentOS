@@ -6,6 +6,7 @@ import { db } from "@/lib/drizzle";
 import { users, projects, contentOutputs } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { generateCarouselSlideImages } from "@/lib/image";
+import { ensureUser } from "@/lib/ensure-user";
 
 export interface Slide {
   slide_number: number;
@@ -61,14 +62,38 @@ export async function generateCarouselImages(slides: { slide_number: number; hea
   }
 }
 
+export async function generateCarouselCTA(topic: string, audience: string, platform: string) {
+  try {
+    const result = await generateJSON<{ ctas: { slide: number; text: string; style: string }[] }>({
+      systemPrompt: `You are a carousel CTA specialist. Generate 4 CTA options: 2 for the second slide (engagement/curiosity hooks to keep scrolling) and 2 for the final slide (conversion/drive action). Each CTA must have: slide (number — 2 or final), text (string), style ("curiosity" | "engagement" | "conversion" | "social"). Return as JSON with a "ctas" array.`,
+      prompt: `Topic: ${topic}. Audience: ${audience}. Platform: ${platform}.`,
+      temperature: 0.7,
+    });
+    return { ok: true as const, data: result.ctas };
+  } catch (e) {
+    return { ok: false as const, error: e instanceof Error ? e.message : "CTA generation failed" };
+  }
+}
+
+export async function generateCanvaPrompt(topic: string, brandColor?: string) {
+  try {
+    const result = await generateJSON<{ templates: { name: string; prompt: string; colors: string[]; fonts: string[] }[] }>({
+      systemPrompt: `You are a Canva template designer. For the given carousel topic, generate 3 Canva template design prompts. Each template must have: name (string), prompt (string — detailed Canva design prompt ready to paste), colors (string[] — hex color palette), fonts (string[] — font pairings). Return as JSON with a "templates" array.`,
+      prompt: `Topic: ${topic}.${brandColor ? ` Brand color: ${brandColor}.` : ""}`,
+    });
+    return { ok: true as const, data: result.templates };
+  } catch (e) {
+    return { ok: false as const, error: e instanceof Error ? e.message : "Canva prompt generation failed" };
+  }
+}
+
 export async function saveCarousel(title: string, slides: Slide[], headlines: string[], images?: SlideImage[]) {
   try {
     const sess = await auth();
     const userId = sess.userId;
     if (!userId) return { ok: false as const, error: "You need to sign in first" };
 
-    const user = await db.select().from(users).where(eq(users.clerkId, userId)).then((r) => r[0]);
-    if (!user) return { ok: false as const, error: "Account not found. Try signing in again." };
+    const user = await ensureUser(userId);
 
     const [project] = await db.insert(projects).values({
       userId: user.id,

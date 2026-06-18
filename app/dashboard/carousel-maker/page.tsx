@@ -4,12 +4,25 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
 import { PLATFORMS } from "@/lib/constants";
-import { generateCarouselOutline, generateCoverHeadlines, saveCarousel } from "@/lib/actions-carousel";
+import { generateCarouselOutline, generateCoverHeadlines, generateCarouselCTA, generateCanvaPrompt, saveCarousel } from "@/lib/actions-carousel";
 import { getContentDefaults } from "@/lib/actions";
 import { useAuthGate } from "@/lib/use-auth-gate";
 import { SignInModal } from "@/components/auth/sign-in-modal";
 
-type Step = "input" | "headlines" | "slides";
+type Step = "input" | "headlines" | "slides" | "cta";
+
+interface CTAOption {
+  slide: number;
+  text: string;
+  style: string;
+}
+
+interface CanvaTemplate {
+  name: string;
+  prompt: string;
+  colors: string[];
+  fonts: string[];
+}
 
 interface Slide {
   slide_number: number;
@@ -67,18 +80,24 @@ export default function CarouselMakerPage() {
   const [selectedHeadline, setSelectedHeadline] = useState<string | null>(null);
   const [slides, setSlides] = useState<Slide[]>([]);
   const [error, setError] = useState("");
+  const [ctaOptions, setCtaOptions] = useState<CTAOption[]>([]);
+  const [selectedCtas, setSelectedCtas] = useState<{ slide2: string; final: string }>({ slide2: "", final: "" });
+  const [canvaTemplates, setCanvaTemplates] = useState<CanvaTemplate[]>([]);
   const [generatingHeadlines, setGeneratingHeadlines] = useState(false);
   const outputRef = useRef<HTMLDivElement>(null);
   const { isSignedIn } = useAuth();
   const { showModal, gate, closeModal, freeActionsLeft, savePreviewState, restorePreviewState } = useAuthGate("generate carousel");
 
   useEffect(() => {
-    const saved = restorePreviewState<{ slides: Slide[]; headlines: string[]; step: Step; selectedHeadline: string | null }>();
+    const saved = restorePreviewState<{ slides: Slide[]; headlines: string[]; step: Step; selectedHeadline: string | null; ctaOptions: CTAOption[]; selectedCtas: { slide2: string; final: string }; canvaTemplates: CanvaTemplate[] }>();
     if (saved) {
       setSlides(saved.slides ?? []);
       setHeadlines(saved.headlines ?? []);
       setStep(saved.step ?? "input");
       setSelectedHeadline(saved.selectedHeadline ?? null);
+      setCtaOptions(saved.ctaOptions ?? []);
+      setSelectedCtas(saved.selectedCtas ?? { slide2: "", final: "" });
+      setCanvaTemplates(saved.canvaTemplates ?? []);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -96,7 +115,7 @@ export default function CarouselMakerPage() {
 
   async function handleGenerateHeadlines() {
     if (!valid) return;
-    savePreviewState({ slides, headlines, step, selectedHeadline });
+    savePreviewState({ slides, headlines, ctaOptions, selectedCtas, canvaTemplates, step, selectedHeadline });
     gate(async () => {
       setLoading(true);
       setGeneratingHeadlines(true);
@@ -115,7 +134,7 @@ export default function CarouselMakerPage() {
 
   async function handleSelectHeadline(headline: string) {
     setSelectedHeadline(headline);
-    savePreviewState({ slides, headlines, step: "headlines", selectedHeadline: headline });
+    savePreviewState({ slides, headlines, ctaOptions, selectedCtas, canvaTemplates, step: "headlines", selectedHeadline: headline });
     gate(async () => {
       setLoading(true);
       setGeneratingHeadlines(false);
@@ -135,7 +154,7 @@ export default function CarouselMakerPage() {
 
   async function handleRegenerate() {
     if (!selectedHeadline) return;
-    savePreviewState({ slides, headlines, step, selectedHeadline });
+    savePreviewState({ slides, headlines, ctaOptions, selectedCtas, canvaTemplates, step, selectedHeadline });
     gate(async () => {
       setLoading(true);
       setError("");
@@ -151,9 +170,62 @@ export default function CarouselMakerPage() {
     });
   }
 
+  async function handleGenerateCTA() {
+    if (!slides.length) return;
+    savePreviewState({ slides, headlines, ctaOptions, selectedCtas, canvaTemplates, step, selectedHeadline });
+    gate(async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const result = await generateCarouselCTA(topic, audience, platform);
+        if (!result.ok) { setError(result.error); setLoading(false); return; }
+        setCtaOptions(result.data);
+        setStep("cta");
+        setTimeout(() => outputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "CTA generation failed");
+      }
+      setLoading(false);
+    });
+  }
+
+  async function handleGenerateCanvaPrompts() {
+    savePreviewState({ slides, headlines, ctaOptions, selectedCtas, canvaTemplates, step, selectedHeadline });
+    gate(async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const result = await generateCanvaPrompt(topic);
+        if (!result.ok) { setError(result.error); setLoading(false); return; }
+        setCanvaTemplates(result.data);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Canva prompt generation failed");
+      }
+      setLoading(false);
+    });
+  }
+
+  function exportSlideAsPNG(slideEl: HTMLElement, filename: string) {
+    const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080">
+        <foreignObject width="1080" height="1080">
+          <div xmlns="http://www.w3.org/1999/xhtml" style="width:1080px;height:1080px;font-family:'Courier New',monospace;">
+            ${slideEl.innerHTML}
+          </div>
+        </foreignObject>
+      </svg>`;
+    const blob = new Blob([svg], { type: "image/svg+xml" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   async function handleSave() {
     if (!slides.length) return;
-    savePreviewState({ slides, headlines, step, selectedHeadline });
+    savePreviewState({ slides, headlines, ctaOptions, selectedCtas, canvaTemplates, step, selectedHeadline });
     gate(async () => {
       try {
         const result = await saveCarousel(`Carousel: ${topic}`, slides, headlines);
@@ -180,6 +252,7 @@ export default function CarouselMakerPage() {
   const isInputStep = step === "input" && !loading;
   const isHeadlinesStep = step === "headlines" && !loading;
   const isSlidesStep = step === "slides" && !loading;
+  const isCTAStep = step === "cta" && !loading;
 
   return (
     <div className="max-w-3xl space-y-6 relative z-10">
@@ -344,15 +417,82 @@ export default function CarouselMakerPage() {
             </>
           )}
 
+          {isCTAStep && ctaOptions.length > 0 && (
+            <div ref={outputRef} className="space-y-4 reveal d1">
+              <label className="term-label mb-2 text-[12px]">CTA_BUILDER</label>
+              <p className="font-mono text-[13px] text-tx-2 mb-3 leading-relaxed">
+                &gt; Select CTA for slide 2 (engagement) and final slide (conversion)
+              </p>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="font-mono text-[9px] text-tx-4 tracking-wider uppercase mb-2 block">Slide 2 CTA (engagement)</label>
+                  <div className="space-y-1">
+                    {ctaOptions.filter((c) => c.slide === 2 || c.slide.toString() === "2").map((c, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setSelectedCtas((prev) => ({ ...prev, slide2: c.text }))}
+                        className={`boot-option ${selectedCtas.slide2 === c.text ? "active" : ""}`}
+                      >
+                        <span className="boot-option-arrow">{selectedCtas.slide2 === c.text ? "\u25B6" : `0${i + 1}`}</span>
+                        <span className="boot-option-label flex flex-col gap-0.5">
+                          <span className="text-[10px] text-tx-1">{c.text}</span>
+                          <span className="text-[8px] text-tx-4 tracking-wider uppercase">style: {c.style}</span>
+                        </span>
+                        <span className={`diag-badge ${selectedCtas.slide2 === c.text ? "diag-ok" : "diag-idle"}`}>
+                          {selectedCtas.slide2 === c.text ? "[SELECTED]" : "[IDLE]"}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="font-mono text-[9px] text-tx-4 tracking-wider uppercase mb-2 block">Final Slide CTA (conversion)</label>
+                  <div className="space-y-1">
+                    {ctaOptions.filter((c) => c.slide.toString() === "final" || c.slide === slides.length).map((c, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setSelectedCtas((prev) => ({ ...prev, final: c.text }))}
+                        className={`boot-option ${selectedCtas.final === c.text ? "active" : ""}`}
+                      >
+                        <span className="boot-option-arrow">{selectedCtas.final === c.text ? "\u25B6" : `0${i + 1}`}</span>
+                        <span className="boot-option-label flex flex-col gap-0.5">
+                          <span className="text-[10px] text-tx-1">{c.text}</span>
+                          <span className="text-[8px] text-tx-4 tracking-wider uppercase">style: {c.style}</span>
+                        </span>
+                        <span className={`diag-badge ${selectedCtas.final === c.text ? "diag-ok" : "diag-idle"}`}>
+                          {selectedCtas.final === c.text ? "[SELECTED]" : "[IDLE]"}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 pt-2 border-t border-white/[0.04]">
+                <button onClick={handleBackToHeadlines} className="btn-terminal">
+                  {">>"} BACK TO SLIDES
+                </button>
+              </div>
+            </div>
+          )}
+
           {isSlidesStep && (
             <div ref={outputRef} className="space-y-4 reveal d1">
               <div className="flex items-center justify-between">
                 <label className="term-label mb-0 text-[12px]">GENERATED_SLIDES</label>
                 <div className="flex items-center gap-2">
-                  <button onClick={handleSave} className="btn-terminal text-[12px]">
+                  <button onClick={handleGenerateCTA} className="btn-terminal text-[9px]">
+                    {"[CTA]"}
+                  </button>
+                  <button onClick={handleGenerateCanvaPrompts} className="btn-terminal text-[9px]">
+                    {"[CANVA]"}
+                  </button>
+                  <button onClick={handleSave} className="btn-terminal text-[9px]">
                     {"[SAVE]"}
                   </button>
-                  <button onClick={handleRegenerate} className="btn-terminal text-[12px]">
+                  <button onClick={handleRegenerate} className="btn-terminal text-[9px]">
                     {"[REGEN]"}
                   </button>
                 </div>
@@ -381,9 +521,17 @@ export default function CarouselMakerPage() {
                     <div className="crt-monitor-header">
                       <span className="w-2 h-2 rounded-full" style={{ backgroundColor: colors.accent }} />
                       <span className="font-mono text-[13px] font-semibold text-tx-1 tracking-tight ml-2">SLIDE PREVIEW</span>
+                      <div className="flex-1" />
+                      <button
+                        onClick={() => exportSlideAsPNG(document.querySelector(`[data-slide="${slide.slide_number}"]`) as HTMLElement, `slide-${slide.slide_number}.png`)}
+                        className="btn-terminal text-[8px]"
+                      >
+                        {"[PNG]"}
+                      </button>
                     </div>
                     <div className="crt-monitor-content p-4">
                       <div
+                        data-slide={slide.slide_number}
                         className="relative rounded-lg overflow-hidden"
                         style={{
                           background: colors.bg,
@@ -415,6 +563,31 @@ export default function CarouselMakerPage() {
                 );
               })}
 
+              {canvaTemplates.length > 0 && (
+                <div className="reveal d1 space-y-3">
+                  <label className="term-label text-[12px]">CANVA_TEMPLATES</label>
+                  {canvaTemplates.map((t, i) => (
+                    <div key={i} className="crt-monitor relative crt-brackets" style={{ background: "rgba(0,0,0,0.2)" }}>
+                      <div className="crt-monitor-content p-3 space-y-2">
+                        <div className="font-mono text-[11px] text-te-400/80 tracking-wider uppercase">{t.name}</div>
+                        <div className="font-mono text-[10px] text-tx-2 leading-relaxed">{t.prompt}</div>
+                        <div className="flex gap-2 flex-wrap">
+                          {t.colors.map((c, j) => (
+                            <span key={j} className="font-mono text-[8px] text-tx-4 tracking-wider">{c}</span>
+                          ))}
+                        </div>
+                        <button
+                          onClick={() => navigator.clipboard.writeText(t.prompt)}
+                          className="btn-terminal text-[8px]"
+                        >
+                          {"[COPY PROMPT]"}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <div className="flex items-center gap-3 pt-2 border-t border-white/[0.04]">
                 <button onClick={handleReset} className="btn-terminal text-[12px]">
                   {">>"} NEW CAROUSEL
@@ -431,7 +604,7 @@ export default function CarouselMakerPage() {
           <span className="font-mono text-[10px] tracking-[0.18em] uppercase"
             style={{ color: step === "slides" ? "rgba(34,197,94,0.6)" : "rgba(86,86,128,0.6)" }}
           >
-            {step === "input" ? "AWAITING INPUT" : step === "headlines" ? "HEADLINES READY" : "SLIDES READY"}
+            {step === "input" ? "AWAITING INPUT" : step === "headlines" ? "HEADLINES READY" : step === "cta" ? "CTA READY" : "SLIDES READY"}
           </span>
         </div>
         <div className="crt-micro-br">
@@ -442,7 +615,7 @@ export default function CarouselMakerPage() {
 
         <div className="crt-monitor-footer">
           <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-tx-3">
-            {step === "input" ? "INPUT" : step === "headlines" ? "HEADLINES" : "SLIDES"}
+            {step === "input" ? "INPUT" : step === "headlines" ? "HEADLINES" : step === "cta" ? "CTA" : "SLIDES"}
           </span>
           <span className="font-mono text-[9px] text-center">
             {!isSignedIn ? (

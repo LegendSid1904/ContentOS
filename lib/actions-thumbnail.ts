@@ -7,6 +7,7 @@ import { users, projects, contentOutputs } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { generateThumbnailImage } from "@/lib/image";
 import { searchWeb } from "@/lib/search";
+import { ensureUser } from "@/lib/ensure-user";
 
 export interface ThumbnailConcept {
   concept_name: string;
@@ -94,14 +95,37 @@ export async function generateThumbnailImages(concepts: ThumbnailConcept[]) {
   }
 }
 
+export async function generateCanvaThumbnailPrompts(concepts: ThumbnailConcept[]) {
+  try {
+    const result = await generateJSON<{ prompts: { concept: string; canva_prompt: string; template_type: string }[] }>({
+      systemPrompt: `For each thumbnail concept, generate a Canva design prompt ready to paste into Canva's design tool. Include template type, layout, colors, fonts, and text placement. Return as JSON with a "prompts" array, each having: concept (string), canva_prompt (string), template_type (string).`,
+      prompt: `Concepts: ${JSON.stringify(concepts.map((c) => ({ name: c.concept_name, headline: c.headline_text, colors: c.color_palette, background: c.background_suggestion })))}`,
+    });
+    return { ok: true as const, data: result.prompts };
+  } catch (e) {
+    return { ok: false as const, error: e instanceof Error ? e.message : "Prompt generation failed" };
+  }
+}
+
+export async function generateABTestPlan(topic: string, concepts: ThumbnailConcept[]) {
+  try {
+    const result = await generateJSON<{ test_plan: { variant_a: string; variant_b: string; hypothesis: string; metric: string; duration_days: number }[] }>({
+      systemPrompt: `Create 3 A/B thumbnail test plans pairing different concepts. Each test plan must have: variant_a (concept name), variant_b (concept name), hypothesis (string), metric (string — e.g. "CTR", "Impressions"), duration_days (number 3-7). Return as JSON with a "test_plan" array.`,
+      prompt: `Topic: ${topic}. Available concepts: ${concepts.map((c) => c.concept_name).join(", ")}.`,
+    });
+    return { ok: true as const, data: result.test_plan };
+  } catch (e) {
+    return { ok: false as const, error: e instanceof Error ? e.message : "Test plan generation failed" };
+  }
+}
+
 export async function saveThumbnailBrief(title: string, concepts: ThumbnailConcept[], thumbnails?: GeneratedThumbnail[], nichePatterns?: NicheThumbnailReport | null) {
   try {
     const sess = await auth();
     const userId = sess.userId;
     if (!userId) return { ok: false as const, error: "You need to sign in first" };
 
-    const user = await db.select().from(users).where(eq(users.clerkId, userId)).then((r) => r[0]);
-    if (!user) return { ok: false as const, error: "Account not found. Try signing in again." };
+    const user = await ensureUser(userId);
 
     const [project] = await db.insert(projects).values({
       userId: user.id,

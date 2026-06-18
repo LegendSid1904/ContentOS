@@ -2,6 +2,9 @@ export const APP_NAME = "ContentOS AI";
 export const APP_TAGLINE = "Where ideas become viral content";
 export const APP_DESC = "The all-in-one AI-powered content operating system for creators, agencies, and personal brands.";
 
+export const LANGUAGES = ["English", "Hinglish"] as const;
+export type Lang = (typeof LANGUAGES)[number];
+
 export const PLATFORMS = ["YouTube", "Instagram Reels", "LinkedIn", "YouTube Shorts"] as const;
 export type Platform = (typeof PLATFORMS)[number];
 
