@@ -33,10 +33,11 @@ interface EditingBrief {
   caption_examples: string[];
 }
 
-export async function analyzeTranscript(transcript: string, videoLength: "short" | "long", style: string) {
+export async function analyzeTranscript(transcript: string, videoLength: "short" | "long", style: string, niche?: string) {
   try {
+    const nicheContext = niche ? `\nNiche/industry context: ${niche}.` : "";
     const result = await generateJSON<EditingBrief>({
-      systemPrompt: `You are a video editor. Analyze the transcript and identify: hook_moment (string), edit_points (array of {timestamp, type: "hook"|"key_point"|"transition"|"cta", description}), retention_markers (array of strings), section_breaks (array of {timestamp, label}), pacing_suggestion (string). Also generate broll_keywords (array of {timestamp, keywords[]}) for stock footage, caption_style (string), and 3 caption_examples (strings). Return as JSON.`,
+      systemPrompt: `You are a video editor. Analyze the transcript and identify: hook_moment (string), edit_points (array of {timestamp, type: "hook"|"key_point"|"transition"|"cta", description}), retention_markers (array of strings), section_breaks (array of {timestamp, label}), pacing_suggestion (string). Also generate broll_keywords (array of {timestamp, keywords[]}) for stock footage, caption_style (string), and 3 caption_examples (strings). Return as JSON.${nicheContext}`,
       prompt: `Transcript: "${transcript}". Video length: ${videoLength === "short" ? "Short-form (<90s)" : "Long-form (>8min)"}. Style: ${style || "Standard"}.`,
     });
     return { ok: true as const, data: result };

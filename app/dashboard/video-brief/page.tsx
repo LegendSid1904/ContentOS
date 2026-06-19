@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
 import { analyzeTranscript, saveEditingBrief } from "@/lib/actions-video-brief";
+import { getBrandKit } from "@/lib/actions";
 import { useAuthGate } from "@/lib/use-auth-gate";
 import { SignInModal } from "@/components/auth/sign-in-modal";
 
@@ -74,6 +75,7 @@ export default function VideoBriefPage() {
   const [videoLength, setVideoLength] = useState<"short" | "long">("short");
   const [style, setStyle] = useState("");
   const [brief, setBrief] = useState<EditingBrief | null>(null);
+  const [niche, setNiche] = useState("");
   const [error, setError] = useState("");
   const outputRef = useRef<HTMLDivElement>(null);
   const { isSignedIn } = useAuth();
@@ -85,8 +87,13 @@ export default function VideoBriefPage() {
       setBrief(saved.brief ?? null);
       setStep(saved.step ?? "input");
     }
+    if (isSignedIn) {
+      getBrandKit().then((kit) => {
+        if (kit && kit.niche) setNiche(kit.niche);
+      });
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isSignedIn]);
 
   const valid = transcript.trim().length > 20;
 
@@ -97,7 +104,7 @@ export default function VideoBriefPage() {
       setLoading(true);
       setError("");
       try {
-        const result = await analyzeTranscript(transcript, videoLength, style);
+        const result = await analyzeTranscript(transcript, videoLength, style, niche);
         if (!result.ok) { setError(result.error); setLoading(false); return; }
         setBrief(result.data);
         setStep("results");

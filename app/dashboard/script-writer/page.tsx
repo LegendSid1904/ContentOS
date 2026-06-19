@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
 import { PLATFORMS, TONES, LANGUAGES } from "@/lib/constants";
-import { generateHooks, generateScript, saveScript } from "@/lib/actions-script";
+import { generateHooks, generateScript, saveScript, getScriptVersions, getScriptVersionByOutputId } from "@/lib/actions-script";
 import { getContentDefaults } from "@/lib/actions";
 import { useAuthGate } from "@/lib/use-auth-gate";
 import { SignInModal } from "@/components/auth/sign-in-modal";
@@ -73,6 +73,9 @@ export default function ScriptWriterPage() {
   const [loadingType, setLoadingType] = useState<"hooks" | "script">("hooks");
   const [teleprompter, setTeleprompter] = useState(false);
   const [prompterSpeed, setPrompterSpeed] = useState(180);
+  const [showHistory, setShowHistory] = useState(false);
+  const [history, setHistory] = useState<{ projectId: string; projectTitle: string; outputId: string; version: number; createdAt: string }[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
   const outputRef = useRef<HTMLDivElement>(null);
   const prompterRef = useRef<HTMLDivElement>(null);
   const { isSignedIn } = useAuth();
@@ -180,6 +183,36 @@ export default function ScriptWriterPage() {
         setError(e instanceof Error ? e.message : "Save failed");
       }
     });
+  }
+
+  async function handleOpenHistory() {
+    setHistoryLoading(true);
+    try {
+      const result = await getScriptVersions(10);
+      if (result.ok) {
+        setHistory(result.data.map((v) => ({ projectId: v.projectId, projectTitle: v.projectTitle, outputId: v.outputId, version: v.version, createdAt: v.createdAt })));
+        setShowHistory(true);
+      }
+    } catch {
+      // silently fail
+    }
+    setHistoryLoading(false);
+  }
+
+  async function handleLoadVersion(outputId: string) {
+    try {
+      const result = await getScriptVersionByOutputId(outputId);
+      if (!result.ok || !result.data) return;
+      const loaded = result.data.contentJson as unknown as FullScript;
+      if (loaded) {
+        setScript(loaded);
+        setStep("script");
+        setShowHistory(false);
+        setTimeout(() => outputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+      }
+    } catch {
+      // silently fail
+    }
   }
 
   function handleReset() {
@@ -460,6 +493,9 @@ ${script.sections.map((s) => `<div class="section"><div class="timestamp">[${s.t
                   <button onClick={() => setTeleprompter(true)} className="btn-terminal text-[9px]">
                     {"[PROM]"}
                   </button>
+                  <button onClick={handleOpenHistory} className="btn-terminal text-[9px]">
+                    {"[VERS]"}
+                  </button>
                   <button onClick={handleSave} className="btn-terminal text-[9px]">
                     {"[SAVE]"}
                   </button>
@@ -623,6 +659,51 @@ ${script.sections.map((s) => `<div class="section"><div class="timestamp">[${s.t
           <div className="border-t border-white/[0.06] px-6 py-2 bg-black/50 flex items-center justify-between">
             <span className="font-mono text-[7px] text-tx-4 tracking-wider">SPACE = PAUSE/RESUME | SPEED: {prompterSpeed} WPM</span>
             <span className="font-mono text-[7px] text-tx-4 tracking-wider">ContentOS Teleprompter v1</span>
+          </div>
+        </div>
+      )}
+
+      {showHistory && (
+        <div className="fixed inset-0 z-50 bg-[#050508]/90 flex items-center justify-center p-6">
+          <div className="crt-monitor relative crt-brackets w-full max-w-lg max-h-[70vh]">
+            <div className="crt-scanlines" />
+            <div className="crt-grain" />
+            <div className="crt-vignette" />
+            <div className="crt-micro-tl">
+              <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-te-400/60">sys</span>
+              <span className="text-tx-4">|</span>
+              <span className="font-mono text-[7px] tracking-[0.18em] uppercase">version_history</span>
+            </div>
+            <div className="crt-monitor-header">
+              <span className="w-2 h-2 rounded-full bg-vi-400/60" />
+              <span className="font-mono text-[10px] font-semibold text-tx-1 tracking-tight ml-2">VERSION HISTORY</span>
+              <div className="flex-1" />
+              <button onClick={() => setShowHistory(false)} className="btn-terminal text-[8px]">[CLOSE]</button>
+            </div>
+            <div className="crt-monitor-content p-4 max-h-[55vh] overflow-y-auto space-y-2">
+              {history.length === 0 && (
+                <div className="font-mono text-[10px] text-tx-4 text-center py-8">No saved scripts yet</div>
+              )}
+              {history.map((v) => (
+                <button
+                  key={v.outputId}
+                  onClick={() => handleLoadVersion(v.outputId)}
+                  className="w-full text-left boot-option"
+                >
+                  <span className="boot-option-arrow">{">>"}</span>
+                  <span className="boot-option-label flex flex-col gap-0.5 min-w-0">
+                    <span className="text-[9px] text-tx-1 truncate">{v.projectTitle}</span>
+                    <span className="text-[7px] text-tx-4 tracking-wider">
+                      v{v.version} — {new Date(v.createdAt).toLocaleDateString()}
+                    </span>
+                  </span>
+                  <span className="diag-badge diag-idle">[LOAD]</span>
+                </button>
+              ))}
+            </div>
+            <div className="crt-micro-bl">
+              <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">{history.length} VERSIONS</span>
+            </div>
           </div>
         </div>
       )}

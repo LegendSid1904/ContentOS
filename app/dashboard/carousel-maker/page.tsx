@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
 import { PLATFORMS } from "@/lib/constants";
 import { generateCarouselOutline, generateCoverHeadlines, generateCarouselCTA, generateCanvaPrompt, saveCarousel } from "@/lib/actions-carousel";
-import { getContentDefaults } from "@/lib/actions";
+import { getContentDefaults, getCanvaStatus } from "@/lib/actions";
 import { useAuthGate } from "@/lib/use-auth-gate";
 import { SignInModal } from "@/components/auth/sign-in-modal";
 
@@ -83,6 +83,9 @@ export default function CarouselMakerPage() {
   const [ctaOptions, setCtaOptions] = useState<CTAOption[]>([]);
   const [selectedCtas, setSelectedCtas] = useState<{ slide2: string; final: string }>({ slide2: "", final: "" });
   const [canvaTemplates, setCanvaTemplates] = useState<CanvaTemplate[]>([]);
+  const [canvaConnected, setCanvaConnected] = useState(false);
+  const [canvaBrandTemplateId, setCanvaBrandTemplateId] = useState("");
+  const [canvaDesignUrl, setCanvaDesignUrl] = useState("");
   const [generatingHeadlines, setGeneratingHeadlines] = useState(false);
   const outputRef = useRef<HTMLDivElement>(null);
   const { isSignedIn } = useAuth();
@@ -107,6 +110,10 @@ export default function CarouselMakerPage() {
     getContentDefaults().then((defaults) => {
       if (!defaults) return;
       if (defaults.defaultPlatform && !platform) setPlatform(defaults.defaultPlatform);
+    });
+    getCanvaStatus().then((status) => {
+      setCanvaConnected(status.connected);
+      if (status.brandTemplateId) setCanvaBrandTemplateId(status.brandTemplateId);
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSignedIn]);
@@ -195,6 +202,25 @@ export default function CarouselMakerPage() {
       setLoading(true);
       setError("");
       try {
+        if (canvaConnected && slides.length > 0) {
+          const res = await fetch("/api/canva/design", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              title: `Carousel: ${topic}`,
+              designType: "custom",
+              slides,
+              brandTemplateId: canvaBrandTemplateId || undefined,
+            }),
+          });
+          const data = await res.json();
+          if (data.ok) {
+            setCanvaDesignUrl(data.editUrl);
+            window.open(data.editUrl, "_blank");
+            setLoading(false);
+            return;
+          }
+        }
         const result = await generateCanvaPrompt(topic);
         if (!result.ok) { setError(result.error); setLoading(false); return; }
         setCanvaTemplates(result.data);
@@ -483,6 +509,11 @@ export default function CarouselMakerPage() {
               <div className="flex items-center justify-between">
                 <label className="term-label mb-0 text-[12px]">GENERATED_SLIDES</label>
                 <div className="flex items-center gap-2">
+                  {isSignedIn && (
+                    <span className={`font-mono text-[8px] tracking-wider ${canvaConnected ? "text-ok" : "text-tx-4"}`}>
+                      {canvaConnected ? "[CANVA:ON]" : "[CANVA:OFF]"}
+                    </span>
+                  )}
                   <button onClick={handleGenerateCTA} className="btn-terminal text-[9px]">
                     {"[CTA]"}
                   </button>
@@ -562,6 +593,34 @@ export default function CarouselMakerPage() {
                   </div>
                 );
               })}
+
+              {isSignedIn && !canvaConnected && (
+                <div className="reveal d1 pt-2">
+                  <a
+                    href="/api/canva"
+                    className="btn-terminal text-[10px] inline-block"
+                  >
+                    {"[CONNECT CANVA]"}
+                  </a>
+                  <span className="font-mono text-[9px] text-tx-4 ml-2">— create designs directly in Canva</span>
+                </div>
+              )}
+
+              {canvaDesignUrl && (
+                <div className="crt-monitor relative crt-brackets" style={{ background: "rgba(0,0,0,0.15)" }}>
+                  <div className="crt-monitor-content p-3 space-y-2">
+                    <div className="font-mono text-[10px] text-ok tracking-wider">DESIGN_READY</div>
+                    <a
+                      href={canvaDesignUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-mono text-[11px] text-te-400 underline underline-offset-2"
+                    >
+                      {">>"} Open in Canva
+                    </a>
+                  </div>
+                </div>
+              )}
 
               {canvaTemplates.length > 0 && (
                 <div className="reveal d1 space-y-3">

@@ -65,15 +65,19 @@ export async function researchNicheThumbnails(niche: string, platform: string = 
   }
 }
 
-export async function generateThumbnails(topic: string, platform: string, audience: string, nichePatterns?: NicheThumbnailReport | null) {
+export async function generateThumbnails(topic: string, platform: string, audience: string, nichePatterns?: NicheThumbnailReport | null, brandColors?: string[]) {
   try {
     const nicheContext = nichePatterns?.patterns_found
       ? `\nNiche thumbnail research findings:\n- Common compositions: ${(nichePatterns.composition_breakdown || []).map((c) => `${c.type} (${c.percentage}%)`).join(", ")}\n- Dominant colors: ${(nichePatterns.dominant_colors_across_niche || []).join(", ")}\n- Top CTR factors: ${(nichePatterns.top_ctr_factors || []).map((f) => f.factor).join(", ")}\n- Winning expression: ${nichePatterns.most_common_expression}\n- Text overlay used in: ${nichePatterns.text_overlay_percentage}% of top thumbnails`
       : "";
 
+    const brandContext = brandColors && brandColors.length > 0
+      ? `\nBrand color palette: ${brandColors.join(", ")}. Incorporate these brand colors into the color_palette for each concept where appropriate.`
+      : "";
+
     const result = await generateJSON<ThumbnailResponse>({
-      systemPrompt: `You are a thumbnail strategist. Generate 5 unique thumbnail concepts. Each concept must have: concept_name (string), headline_text (string — 2-5 words, CTR-optimized), visual_description (string), color_palette (array of 3-4 hex colors), facial_expression_hint (string), background_suggestion (string), props (array of strings). Return as JSON with a "concepts" array. Use niche research data to inform but not constrain the designs.`,
-      prompt: `Topic: ${topic}. Platform: ${platform}. Audience: ${audience}.${nicheContext}`,
+      systemPrompt: `You are a thumbnail strategist. Generate 5 unique thumbnail concepts. Each concept must have: concept_name (string), headline_text (string — 2-5 words, CTR-optimized), visual_description (string), color_palette (array of 3-4 hex colors), facial_expression_hint (string), background_suggestion (string), props (array of strings). Return as JSON with a "concepts" array. Use niche research data and brand colors to inform but not constrain the designs.`,
+      prompt: `Topic: ${topic}. Platform: ${platform}. Audience: ${audience}.${nicheContext}${brandContext}`,
       temperature: 0.8,
     });
     return { ok: true as const, data: result.concepts };

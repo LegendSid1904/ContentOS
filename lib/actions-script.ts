@@ -4,7 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { generateJSON } from "@/lib/ai";
 import { db } from "@/lib/drizzle";
 import { users, projects, contentOutputs } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { ensureUser } from "@/lib/ensure-user";
 
 interface Hook {
@@ -64,6 +64,67 @@ Include timestamps for each section, B-roll and visual cues, and pacing notes. R
     return { ok: true as const, data: script };
   } catch (e) {
     return { ok: false as const, error: e instanceof Error ? e.message : "Script generation failed" };
+  }
+}
+
+export async function getScriptVersions(limit: number = 5) {
+  try {
+    const { userId } = await auth();
+    if (!userId) return { ok: false as const, error: "Unauthorized" };
+
+    const user = await ensureUser(userId);
+
+    const rows = await db
+      .select({
+        projectId: projects.id,
+        projectTitle: projects.title,
+        outputId: contentOutputs.id,
+        version: contentOutputs.version,
+        createdAt: contentOutputs.createdAt,
+        contentJson: contentOutputs.contentJson,
+      })
+      .from(projects)
+      .innerJoin(contentOutputs, eq(contentOutputs.projectId, projects.id))
+      .where(
+        and(
+          eq(projects.userId, user.id),
+          eq(projects.module, "script-writer"),
+          eq(projects.status, "completed")
+        )
+      )
+      .orderBy(desc(contentOutputs.createdAt))
+      .limit(limit);
+
+    const data = rows.map((r) => ({
+      ...r,
+      createdAt: r.createdAt?.toString() ?? "",
+    }));
+
+    return { ok: true as const, data };
+  } catch (e) {
+    return { ok: false as const, error: e instanceof Error ? e.message : "Fetch failed" };
+  }
+}
+
+export async function getScriptVersionByOutputId(outputId: string) {
+  try {
+    const { userId } = await auth();
+    if (!userId) return { ok: false as const, error: "Unauthorized" };
+
+    const result = await db
+      .select({
+        contentJson: contentOutputs.contentJson,
+        version: contentOutputs.version,
+        createdAt: contentOutputs.createdAt,
+      })
+      .from(contentOutputs)
+      .where(eq(contentOutputs.id, outputId))
+      .limit(1);
+
+    if (!result.length) return { ok: false as const, error: "Version not found" };
+    return { ok: true as const, data: result[0] };
+  } catch (e) {
+    return { ok: false as const, error: e instanceof Error ? e.message : "Fetch failed" };
   }
 }
 

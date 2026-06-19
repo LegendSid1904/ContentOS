@@ -193,6 +193,39 @@ export async function updateProfile(formData: FormData) {
   revalidatePath("/dashboard/growth-strategy");
 }
 
+export async function getCanvaStatus() {
+  const sess = await auth();
+  const authId = sess.userId;
+  if (!authId) return { connected: false, brandTemplateId: null };
+
+  const user = await ensureUser(authId);
+  const profile = await db.select().from(profiles).where(eq(profiles.userId, user.id)).then((r) => r[0]);
+  const defaults = profile?.contentDefaults as Record<string, unknown> | null;
+  const canvaToken = defaults?.canvaToken as { refreshToken: string; accessToken: string; expiresAt: number } | undefined;
+
+  return {
+    connected: !!canvaToken?.refreshToken,
+    brandTemplateId: (defaults?.canvaBrandTemplateId as string) ?? null,
+  };
+}
+
+export async function saveCanvaTemplateId(templateId: string) {
+  const sess = await auth();
+  const authId = sess.userId;
+  if (!authId) throw new Error("Unauthorized");
+
+  const user = await ensureUser(authId);
+  const profile = await db.select().from(profiles).where(eq(profiles.userId, user.id)).then((r) => r[0]);
+  const existingDefaults = (profile?.contentDefaults ?? {}) as Record<string, unknown>;
+
+  await db.update(profiles).set({
+    contentDefaults: { ...existingDefaults, canvaBrandTemplateId: templateId },
+  }).where(eq(profiles.userId, user.id));
+
+  revalidatePath("/dashboard/carousel-maker");
+  revalidatePath("/dashboard/thumbnail-maker");
+}
+
 export async function getContentDefaults() {
   const { userId } = await auth();
   if (!userId) return null;

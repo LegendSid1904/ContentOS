@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
 import { PLATFORMS } from "@/lib/constants";
 import { generatePageSetup, savePageSetup } from "@/lib/actions-page-setup";
-import { getContentDefaults } from "@/lib/actions";
+import { getContentDefaults, getBrandKit } from "@/lib/actions";
 import { useAuthGate } from "@/lib/use-auth-gate";
 import { SignInModal } from "@/components/auth/sign-in-modal";
 
@@ -94,6 +94,9 @@ export default function PageSetupPage() {
     getContentDefaults().then((defaults) => {
       if (!defaults) return;
       if (defaults.defaultPlatform && !platform) setPlatform(defaults.defaultPlatform);
+    });
+    getBrandKit().then((kit) => {
+      if (kit && kit.niche && !niche) setNiche(kit.niche);
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSignedIn]);
