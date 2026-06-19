@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { UserButton, useAuth, useUser } from "@clerk/nextjs";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { SidebarNav } from "@/components/sidebar-nav";
 import { Icons } from "@/components/icons";
 import { MODULES } from "@/lib/constants";
 import { getProfile } from "@/lib/actions";
+import { useKeyboardShortcuts } from "@/lib/use-keyboard-shortcuts";
 
 const moduleNames: Record<string, string> = {};
 for (const m of MODULES) {
@@ -19,8 +20,15 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [username, setUsername] = useState("");
   const pathname = usePathname();
+  const router = useRouter();
   const { isSignedIn } = useAuth();
   const { user } = useUser();
+
+  const goHome = useCallback(() => router.push("/dashboard"), [router]);
+  useKeyboardShortcuts([
+    { key: "k", meta: true, handler: goHome },
+    { key: "Escape", handler: () => setSidebarOpen(false) },
+  ]);
 
   useEffect(() => {
     const il = document.getElementById("instant-loader");
@@ -65,7 +73,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         )}
       >
         <div className="px-4 h-[56px] flex items-center flex-shrink-0 border-b border-white/[0.04]">
-          <Link href="/dashboard" className="flex items-center gap-2.5 group cursor-pointer">
+          <Link href="/" className="flex items-center gap-2.5 group cursor-pointer">
             <div className="w-7 h-7 rounded-[7px] bg-gradient-to-br from-vi-500 to-te-400 flex items-center justify-center font-display text-[13px] font-bold text-white shadow-[0_0_16px_rgba(139,92,246,0.3)] group-hover:shadow-[0_0_24px_rgba(139,92,246,0.5)] transition-shadow duration-200">
               C
             </div>
@@ -125,6 +133,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             </span>
           </div>
           <div className="flex items-center gap-3 flex-shrink-0">
+            <Link href="/" className="hidden md:flex items-center gap-1.5 group cursor-pointer">
+              <span className="font-display text-[11px] font-bold text-tx-3 tracking-tight group-hover:text-te-400 transition-colors duration-200">ContentOS</span>
+              <span className="font-mono text-[7px] text-tx-4 tracking-[0.15em] uppercase">[home]</span>
+            </Link>
             <span className="flex items-center gap-1.5 font-mono text-[9px] text-vi-400 tracking-[0.15em] uppercase border border-vi-500/15 bg-vi-500/10 px-2.5 h-[22px] rounded-full">
               <span className="w-1.5 h-1.5 rounded-full bg-vi-400 animate-beat-pulse" />
               AI Ready

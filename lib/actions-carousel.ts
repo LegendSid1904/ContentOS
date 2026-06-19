@@ -29,6 +29,8 @@ interface CarouselOutline {
 }
 
 export async function generateCarouselOutline(topic: string, audience: string, platform: string, slideCount: number) {
+  const { userId } = await auth();
+  if (!userId) return { ok: false as const, error: "You need to sign in first" };
   try {
     const result = await generateJSON<CarouselOutline>({
       systemPrompt: `You are a carousel strategist. Create a ${slideCount}-slide narrative arc. Each slide must have: slide_number (number), headline (string — short, punchy), copy (string — 1-3 lines, engagement-optimized), visual_direction (string — describe the visual layout). Return as JSON with a "slides" array.`,
@@ -41,6 +43,8 @@ export async function generateCarouselOutline(topic: string, audience: string, p
 }
 
 export async function generateCoverHeadlines(topic: string, audience: string) {
+  const { userId } = await auth();
+  if (!userId) return { ok: false as const, error: "You need to sign in first" };
   try {
     const result = await generateJSON<CoverHeadlines>({
       systemPrompt: `Generate 5 cover slide headline variants for a carousel. Each should be click-stopping and curiosity-driven. Return as JSON with a "variants" array of strings.`,
@@ -54,6 +58,8 @@ export async function generateCoverHeadlines(topic: string, audience: string) {
 }
 
 export async function generateCarouselImages(slides: { slide_number: number; headline: string; visual_direction: string }[], topic: string, brandColor?: string) {
+  const { userId } = await auth();
+  if (!userId) return { ok: false as const, error: "You need to sign in first" };
   try {
     const images = await generateCarouselSlideImages({ slides, topic, brandColor });
     return { ok: true as const, data: images };
@@ -63,6 +69,8 @@ export async function generateCarouselImages(slides: { slide_number: number; hea
 }
 
 export async function generateCarouselCTA(topic: string, audience: string, platform: string) {
+  const { userId } = await auth();
+  if (!userId) return { ok: false as const, error: "You need to sign in first" };
   try {
     const result = await generateJSON<{ ctas: { slide: number; text: string; style: string }[] }>({
       systemPrompt: `You are a carousel CTA specialist. Generate 4 CTA options: 2 for the second slide (engagement/curiosity hooks to keep scrolling) and 2 for the final slide (conversion/drive action). Each CTA must have: slide (number — 2 or final), text (string), style ("curiosity" | "engagement" | "conversion" | "social"). Return as JSON with a "ctas" array.`,
@@ -76,6 +84,8 @@ export async function generateCarouselCTA(topic: string, audience: string, platf
 }
 
 export async function generateCanvaPrompt(topic: string, brandColor?: string) {
+  const { userId } = await auth();
+  if (!userId) return { ok: false as const, error: "You need to sign in first" };
   try {
     const result = await generateJSON<{ templates: { name: string; prompt: string; colors: string[]; fonts: string[] }[] }>({
       systemPrompt: `You are a Canva template designer. For the given carousel topic, generate 3 Canva template design prompts. Each template must have: name (string), prompt (string — detailed Canva design prompt ready to paste), colors (string[] — hex color palette), fonts (string[] — font pairings). Return as JSON with a "templates" array.`,

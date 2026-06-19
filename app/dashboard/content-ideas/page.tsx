@@ -7,6 +7,7 @@ import { generateIdeas, generateAngles, generateCalendar, generateRepurposingMap
 import { getContentDefaults } from "@/lib/actions";
 import { useAuthGate } from "@/lib/use-auth-gate";
 import { SignInModal } from "@/components/auth/sign-in-modal";
+import { StreamingLoader } from "@/components/streaming-loader";
 
 type Step = "input" | "ideas" | "angles" | "calendar" | "repurpose";
 
@@ -21,36 +22,6 @@ interface RepurposeFormat {
 interface RepurposeMap {
   original: string;
   formats: RepurposeFormat[];
-}
-
-function BootLoader({ type }: { type: string }) {
-  const steps = type === "ideas"
-    ? ["ANALYZING NICHE", "GENERATING 30 IDEAS", "ORGANIZING BY PILLAR"]
-    : type === "angles"
-    ? ["DECONSTRUCTING TOPIC", "GENERATING VIRAL ANGLES", "RANKING BY IMPACT"]
-    : ["MAPPING CONTENT MIX", "ASSIGNING PLATFORMS", "BUILDING CALENDAR"];
-
-  return (
-    <div className="boot-loader">
-      {steps.map((s, i) => (
-        <div key={i} className="boot-loader-line" style={{ animationDelay: `${0.1 + i * 0.2}s` }}>
-          <span className="boot-loader-arrow">{">>"}</span>
-          <span className="boot-loader-text">{s}</span>
-          <span className="boot-loader-ok">
-            {i < 2 ? (
-              <span className="flex gap-0.5 items-center">
-                <span className="w-1 h-1 rounded-full bg-te-400 animate-pulse" style={{ animationDelay: "0s" }} />
-                <span className="w-1 h-1 rounded-full bg-te-400 animate-pulse" style={{ animationDelay: "0.15s" }} />
-                <span className="w-1 h-1 rounded-full bg-te-400 animate-pulse" style={{ animationDelay: "0.3s" }} />
-              </span>
-            ) : (
-              <span className="text-te-400/80 tracking-wider">LOADING</span>
-            )}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
 }
 
 function EffortBadge({ effort }: { effort: string }) {
@@ -376,7 +347,7 @@ export default function ContentIdeasPage() {
         </div>
 
         <div className="crt-monitor-content p-6 space-y-6">
-          {loading && <BootLoader type={loadingType} />}
+          {loading && <StreamingLoader steps={loadingType === "ideas" ? ["ANALYZING NICHE", "GENERATING 30 IDEAS", "ORGANIZING BY PILLAR"] : loadingType === "angles" ? ["DECONSTRUCTING TOPIC", "GENERATING VIRAL ANGLES", "RANKING BY IMPACT"] : ["MAPPING CONTENT MIX", "ASSIGNING PLATFORMS", "BUILDING CALENDAR"]} />}
 
           {error && (
             <div className="font-mono text-[11px] text-err bg-err/10 border border-err/20 rounded-r3 p-3">

@@ -7,41 +7,9 @@ import { PLATFORMS, TONES } from "@/lib/constants";
 import { saveBrandKit, getBrandKit, deleteBrandKit } from "@/lib/actions";
 import { useAuthGate } from "@/lib/use-auth-gate";
 import { SignInModal } from "@/components/auth/sign-in-modal";
+import { StreamingLoader } from "@/components/streaming-loader";
 
 const PRESET_COLORS = ["#7C3AED", "#06B6D4", "#D946EF", "#6366F1", "#22C55E", "#F59E0B"];
-
-function BootLoader() {
-  return (
-    <div className="crt-monitor-content p-0">
-      <div className="boot-loader">
-        <div className="boot-loader-line" style={{ animationDelay: "0.1s" }}>
-          <span className="boot-loader-arrow">{">>"}</span>
-          <span className="boot-loader-text">INITIALIZING BRAND KIT MODULE</span>
-          <span className="boot-loader-ok">OK</span>
-        </div>
-        <div className="boot-loader-line" style={{ animationDelay: "0.3s" }}>
-          <span className="boot-loader-arrow">{">>"}</span>
-          <span className="boot-loader-text">LOADING USER PROFILE</span>
-          <span className="boot-loader-ok">OK</span>
-        </div>
-        <div className="boot-loader-line" style={{ animationDelay: "0.5s" }}>
-          <span className="boot-loader-arrow">{">>"}</span>
-          <span className="boot-loader-text">FETCHING BRAND CONFIGURATION</span>
-          <span className="text-te-400 font-mono text-[7px] tracking-wider animate-pulse">LOADING</span>
-        </div>
-        <div className="boot-loader-line" style={{ animationDelay: "0.7s" }}>
-          <span className="boot-loader-arrow">{">>"}</span>
-          <span className="boot-loader-text">RENDERING TERMINAL INTERFACE</span>
-          <span className="flex gap-0.5 ml-auto items-center">
-            <span className="w-1 h-1 rounded-full bg-te-400 animate-pulse" style={{ animationDelay: "0s" }} />
-            <span className="w-1 h-1 rounded-full bg-te-400 animate-pulse" style={{ animationDelay: "0.2s" }} />
-            <span className="w-1 h-1 rounded-full bg-te-400 animate-pulse" style={{ animationDelay: "0.4s" }} />
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 const DEMO_BRAND_KIT = {
   niche: "Creator Economy",
@@ -141,7 +109,9 @@ export default function BrandKitPage() {
         </div>
 
         {loading ? (
-          <BootLoader />
+          <div className="crt-monitor-content p-0">
+            <StreamingLoader steps={["INITIALIZING BRAND KIT MODULE", "LOADING USER PROFILE", "FETCHING BRAND CONFIGURATION", "RENDERING TERMINAL INTERFACE"]} />
+          </div>
         ) : (
           <div className="crt-monitor-content p-6 space-y-6">
             <div className="reveal d1">

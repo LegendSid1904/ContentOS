@@ -34,6 +34,8 @@ interface EditingBrief {
 }
 
 export async function analyzeTranscript(transcript: string, videoLength: "short" | "long", style: string, niche?: string) {
+  const { userId } = await auth();
+  if (!userId) return { ok: false as const, error: "You need to sign in first" };
   try {
     const nicheContext = niche ? `\nNiche/industry context: ${niche}.` : "";
     const result = await generateJSON<EditingBrief>({

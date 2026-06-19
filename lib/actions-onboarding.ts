@@ -3,7 +3,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/drizzle";
 import { users, brandKits, profiles, projects, contentOutputs } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { generateJSON } from "@/lib/ai";
 import { searchWeb } from "@/lib/search";
@@ -59,49 +59,53 @@ export async function saveOnboardingData(data: OnboardingData) {
 
   const user = await ensureUser(userId);
 
-  await db
-    .update(users)
-    .set({
-      onboardingData: data as unknown as Record<string, unknown>,
-      onboardingStep: 5,
-      updatedAt: new Date(),
-    })
-    .where(eq(users.clerkId, userId));
+  await db.transaction(async (tx) => {
+    await tx
+      .update(users)
+      .set({
+        onboardingData: data as unknown as Record<string, unknown>,
+        onboardingStep: 5,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.clerkId, userId));
 
-  const existing = await db.select().from(brandKits).where(eq(brandKits.userId, user.id)).then((r) => r[0]);
-  if (existing) {
-    await db
-      .update(brandKits)
-      .set({ niche: data.niche, tone: data.tone, colors: data.colors, platforms: data.selectedPlatforms, updatedAt: new Date() })
-      .where(eq(brandKits.id, existing.id));
-  } else {
-    await db.insert(brandKits).values({ userId: user.id, niche: data.niche, tone: data.tone, colors: data.colors, platforms: data.selectedPlatforms });
-  }
+    const existing = await tx.select().from(brandKits).where(eq(brandKits.userId, user.id)).then((r) => r[0]);
+    if (existing) {
+      await tx
+        .update(brandKits)
+        .set({ niche: data.niche, tone: data.tone, colors: data.colors, platforms: data.selectedPlatforms, updatedAt: new Date() })
+        .where(eq(brandKits.id, existing.id));
+    } else {
+      await tx.insert(brandKits).values({ userId: user.id, niche: data.niche, tone: data.tone, colors: data.colors, platforms: data.selectedPlatforms });
+    }
 
-  const existingProfile = await db.select().from(profiles).where(eq(profiles.userId, user.id)).then((r) => r[0]);
-  const profileData = {
-    socialLinks: data.socialLinks,
-    experienceLevel: data.experienceLevel,
-    postingSchedule: data.postingFrequency,
-    contentDefaults: {
-      defaultPlatform: data.selectedPlatforms[0] || "",
-      defaultTone: data.tone,
-      defaultFormat: data.contentFormats[0] || "",
-    },
-    bio: data.targetAudience,
-  };
+    const existingProfile = await tx.select().from(profiles).where(eq(profiles.userId, user.id)).then((r) => r[0]);
+    const profileData = {
+      socialLinks: data.socialLinks,
+      experienceLevel: data.experienceLevel,
+      postingSchedule: data.postingFrequency,
+      contentDefaults: {
+        defaultPlatform: data.selectedPlatforms[0] || "",
+        defaultTone: data.tone,
+        defaultFormat: data.contentFormats[0] || "",
+      },
+      bio: data.targetAudience,
+    };
 
-  if (existingProfile) {
-    await db.update(profiles).set({ ...profileData, updatedAt: new Date() }).where(eq(profiles.id, existingProfile.id));
-  } else {
-    await db.insert(profiles).values({ userId: user.id, username: user.name || "", ...profileData });
-  }
+    if (existingProfile) {
+      await tx.update(profiles).set({ ...profileData, updatedAt: new Date() }).where(eq(profiles.id, existingProfile.id));
+    } else {
+      await tx.insert(profiles).values({ userId: user.id, username: user.name || "", ...profileData });
+    }
+  });
 
   revalidatePath("/onboarding");
   return { ok: true };
 }
 
 export async function discoverCompetitors(niche: string, platforms: string[]) {
+  const { userId } = await auth();
+  if (!userId) return { ok: false as const, error: "You need to sign in first" };
   try {
     const platformQueries = platforms.map((p) => {
       const platform = p.toLowerCase().includes("youtube") ? "YouTube" :
@@ -137,6 +141,8 @@ export async function analyzeCompetitorsForOnboarding(
   niche: string,
   competitors: { name: string; platform: string; url?: string }[]
 ) {
+  const { userId } = await auth();
+  if (!userId) return { ok: false as const, error: "You need to sign in first" };
   try {
     const competitorList = competitors.map((c) => `${c.name} (${c.platform}${c.url ? ` - ${c.url}` : ""})`).join("\n");
 
@@ -158,6 +164,8 @@ export async function analyzeCompetitorsForOnboarding(
 }
 
 export async function generateThirtyDayPlan(data: OnboardingData, competitorInsights?: string) {
+  const { userId } = await auth();
+  if (!userId) return { ok: false as const, error: "You need to sign in first" };
   try {
     const competitorSection = competitorInsights
       ? `\n\nCompetitor Insights:\n${competitorInsights}`
@@ -202,46 +210,48 @@ export async function saveOnboardingPlan(
 
     const user = await ensureUser(userId);
 
-    const [project] = await db.insert(projects).values({
-      userId: user.id,
-      module: "content-ideas",
-      title,
-      status: "completed",
-    }).returning();
-
-    await db.insert(contentOutputs).values({
-      projectId: project.id,
-      type: "ideas",
-      contentJson: plan as unknown as Record<string, unknown>,
-      version: 1,
-    });
-
-    if (competitors.length > 0) {
-      const [compProject] = await db.insert(projects).values({
+    await db.transaction(async (tx) => {
+      const [project] = await tx.insert(projects).values({
         userId: user.id,
-        module: "competitor-intel",
-        title: `Onboarding competitor research — ${title}`,
+        module: "content-ideas",
+        title,
         status: "completed",
       }).returning();
 
-      await db.insert(contentOutputs).values({
-        projectId: compProject.id,
-        type: "competitor_intel",
-        contentJson: {
-          competitors,
-          analysis: competitorAnalysis,
-        } as unknown as Record<string, unknown>,
+      await tx.insert(contentOutputs).values({
+        projectId: project.id,
+        type: "ideas",
+        contentJson: plan as unknown as Record<string, unknown>,
         version: 1,
       });
-    }
 
-    await db
-      .update(users)
-      .set({ onboardingComplete: true, onboardingStep: null, updatedAt: new Date() })
-      .where(eq(users.clerkId, userId));
+      if (competitors.length > 0) {
+        const [compProject] = await tx.insert(projects).values({
+          userId: user.id,
+          module: "competitor-intel",
+          title: `Onboarding competitor research — ${title}`,
+          status: "completed",
+        }).returning();
+
+        await tx.insert(contentOutputs).values({
+          projectId: compProject.id,
+          type: "competitor_intel",
+          contentJson: {
+            competitors,
+            analysis: competitorAnalysis,
+          } as unknown as Record<string, unknown>,
+          version: 1,
+        });
+      }
+
+      await tx
+        .update(users)
+        .set({ onboardingComplete: true, onboardingStep: null, updatedAt: new Date() })
+        .where(eq(users.clerkId, userId));
+    });
 
     revalidatePath("/dashboard");
-    return { ok: true as const, data: { plan, projectId: project.id } };
+    return { ok: true as const, data: { plan, projectId: "" } };
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Save failed";
     return { ok: false as const, error: msg };

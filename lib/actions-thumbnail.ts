@@ -50,6 +50,8 @@ interface ThumbnailResponse {
 }
 
 export async function researchNicheThumbnails(niche: string, platform: string = "youtube") {
+  const { userId } = await auth();
+  if (!userId) return { ok: false as const, error: "You need to sign in first" };
   try {
     const searchResults = await searchWeb(`${niche} thumbnail trends ${platform} 2026`, 10);
 
@@ -66,6 +68,8 @@ export async function researchNicheThumbnails(niche: string, platform: string = 
 }
 
 export async function generateThumbnails(topic: string, platform: string, audience: string, nichePatterns?: NicheThumbnailReport | null, brandColors?: string[]) {
+  const { userId } = await auth();
+  if (!userId) return { ok: false as const, error: "You need to sign in first" };
   try {
     const nicheContext = nichePatterns?.patterns_found
       ? `\nNiche thumbnail research findings:\n- Common compositions: ${(nichePatterns.composition_breakdown || []).map((c) => `${c.type} (${c.percentage}%)`).join(", ")}\n- Dominant colors: ${(nichePatterns.dominant_colors_across_niche || []).join(", ")}\n- Top CTR factors: ${(nichePatterns.top_ctr_factors || []).map((f) => f.factor).join(", ")}\n- Winning expression: ${nichePatterns.most_common_expression}\n- Text overlay used in: ${nichePatterns.text_overlay_percentage}% of top thumbnails`
@@ -87,6 +91,8 @@ export async function generateThumbnails(topic: string, platform: string, audien
 }
 
 export async function generateThumbnailImages(concepts: ThumbnailConcept[]) {
+  const { userId } = await auth();
+  if (!userId) return { ok: false as const, error: "You need to sign in first" };
   try {
     const images: GeneratedThumbnail[] = [];
     for (const concept of concepts) {
@@ -100,6 +106,8 @@ export async function generateThumbnailImages(concepts: ThumbnailConcept[]) {
 }
 
 export async function generateCanvaThumbnailPrompts(concepts: ThumbnailConcept[]) {
+  const { userId } = await auth();
+  if (!userId) return { ok: false as const, error: "You need to sign in first" };
   try {
     const result = await generateJSON<{ prompts: { concept: string; canva_prompt: string; template_type: string }[] }>({
       systemPrompt: `For each thumbnail concept, generate a Canva design prompt ready to paste into Canva's design tool. Include template type, layout, colors, fonts, and text placement. Return as JSON with a "prompts" array, each having: concept (string), canva_prompt (string), template_type (string).`,
@@ -112,6 +120,8 @@ export async function generateCanvaThumbnailPrompts(concepts: ThumbnailConcept[]
 }
 
 export async function generateABTestPlan(topic: string, concepts: ThumbnailConcept[]) {
+  const { userId } = await auth();
+  if (!userId) return { ok: false as const, error: "You need to sign in first" };
   try {
     const result = await generateJSON<{ test_plan: { variant_a: string; variant_b: string; hypothesis: string; metric: string; duration_days: number }[] }>({
       systemPrompt: `Create 3 A/B thumbnail test plans pairing different concepts. Each test plan must have: variant_a (concept name), variant_b (concept name), hypothesis (string), metric (string — e.g. "CTR", "Impressions"), duration_days (number 3-7). Return as JSON with a "test_plan" array.`,

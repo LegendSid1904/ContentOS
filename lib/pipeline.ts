@@ -3,7 +3,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/drizzle";
 import { users, projects, contentOutputs } from "@/db/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, sql } from "drizzle-orm";
 import { ensureUser } from "@/lib/ensure-user";
 
 export interface PipelineLink {
@@ -108,24 +108,24 @@ export async function getSavedProjects(moduleFilter?: string): Promise<SavedProj
     .orderBy(desc(projects.createdAt))
     .limit(50);
 
-  const saved: SavedProject[] = [];
-  for (const p of projectRows) {
-    const outputs = await db
-      .select()
-      .from(contentOutputs)
-      .where(eq(contentOutputs.projectId, p.id))
-      .limit(1);
+  const projectIds = projectRows.map((p) => p.id);
+  const allOutputs = projectIds.length > 0
+    ? await db.select().from(contentOutputs).where(sql`${contentOutputs.projectId} = ANY(${projectIds})`)
+    : [];
+  const latestOutput = new Map(allOutputs.map((o) => [o.projectId, o]));
 
-    saved.push({
+  const saved: SavedProject[] = projectRows.map((p) => {
+    const output = latestOutput.get(p.id);
+    return {
       id: p.id,
       module: p.module,
       title: p.title,
       status: p.status,
       createdAt: p.createdAt,
-      outputType: outputs[0]?.type ?? "",
-      outputPreview: outputs[0]?.contentJson as Record<string, unknown> | null ?? null,
-    });
-  }
+      outputType: output?.type ?? "",
+      outputPreview: (output?.contentJson ?? null) as Record<string, unknown> | null,
+    };
+  });
 
   return saved;
 }

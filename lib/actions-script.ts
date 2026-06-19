@@ -1,11 +1,12 @@
 "use server";
 
 import { auth } from "@clerk/nextjs/server";
-import { generateJSON } from "@/lib/ai";
+import { generateJSON, generateText } from "@/lib/ai";
 import { db } from "@/lib/drizzle";
 import { users, projects, contentOutputs } from "@/db/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { ensureUser } from "@/lib/ensure-user";
+import { SERIES_FORMATS } from "@/lib/series-formats";
 
 interface Hook {
   id: string;
@@ -26,6 +27,8 @@ interface FullScript {
 }
 
 export async function generateHooks(topic: string, audience: string, platform: string, tone: string, language: string = "English") {
+  const { userId } = await auth();
+  if (!userId) return { ok: false as const, error: "You need to sign in first" };
   try {
     const langInstr = language === "Hinglish"
       ? "Write in Hinglish — a natural mix of Hindi (Devanagari script for Hindi words) and English, as Indian creators speak. Use casual Indian social media tone. Code-switch naturally between Hindi and English within sentences."
@@ -42,6 +45,8 @@ export async function generateHooks(topic: string, audience: string, platform: s
 }
 
 export async function generateScript(topic: string, audience: string, platform: string, tone: string, selectedHook: string, context?: string, language: string = "English") {
+  const { userId } = await auth();
+  if (!userId) return { ok: false as const, error: "You need to sign in first" };
   try {
     const langInstr = language === "Hinglish"
       ? "Write in Hinglish — a natural mix of Hindi (Devanagari script for Hindi words) and English, as Indian creators speak. Use casual Indian social media tone. Code-switch naturally between Hindi and English within sentences."
@@ -64,6 +69,56 @@ Include timestamps for each section, B-roll and visual cues, and pacing notes. R
     return { ok: true as const, data: script };
   } catch (e) {
     return { ok: false as const, error: e instanceof Error ? e.message : "Script generation failed" };
+  }
+}
+
+export async function generateSeriesScript(
+  topic: string,
+  audience: string,
+  platform: string,
+  tone: string,
+  formatId: string,
+  selectedHook: string,
+  language: string = "English"
+) {
+  const { userId } = await auth();
+  if (!userId) return { ok: false as const, error: "You need to sign in first" };
+  try {
+    const format = SERIES_FORMATS.find((f) => f.id === formatId);
+    if (!format) return { ok: false as const, error: "Invalid series format" };
+
+    const stepsBlock = format.steps.map((s, i) =>
+      `${i + 1}. ${s} — ${format.templates[i]?.text ?? ""}`
+    ).join("\n");
+
+    const langInstr = language === "Hinglish"
+      ? "Write in Hinglish — a natural mix of Hindi and English, as Indian creators speak. Code-switch naturally."
+      : "";
+
+    const script = await generateText({
+      systemPrompt: `You are a professional short-form series script writer. Write a ${platform}-optimized script for a "${format.name}" series episode.
+
+Use this ${format.steps.length}-step structure with the exact template format:
+${stepsBlock}
+
+Secret Sauce for this format: ${format.secretSauce}
+
+For each section, include:
+- The section header matching the step name
+- The script content (speaker lines, voiceover, dialogue)
+- Timestamp for the section
+- B-roll / visual direction in brackets
+- Pacing notes where relevant
+
+Format the output with clear section breaks using "=== SECTION ===" markers between steps.${langInstr ? `\n\n${langInstr}` : ""}`,
+      prompt: `Topic: ${topic}. Audience: ${audience}. Platform: ${platform}. Tone: ${tone}. Series format: "${format.name}". Selected hook: "${selectedHook}".`,
+      temperature: 0.7,
+      maxTokens: 4096,
+    });
+
+    return { ok: true as const, data: script };
+  } catch (e) {
+    return { ok: false as const, error: e instanceof Error ? e.message : "Series script generation failed" };
   }
 }
 

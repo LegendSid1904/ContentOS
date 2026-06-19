@@ -4,10 +4,12 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
 import { PLATFORMS, TONES, LANGUAGES } from "@/lib/constants";
-import { generateHooks, generateScript, saveScript, getScriptVersions, getScriptVersionByOutputId } from "@/lib/actions-script";
+import { SERIES_FORMATS } from "@/lib/series-formats";
+import { generateHooks, generateScript, generateSeriesScript, saveScript, getScriptVersions, getScriptVersionByOutputId } from "@/lib/actions-script";
 import { getContentDefaults } from "@/lib/actions";
 import { useAuthGate } from "@/lib/use-auth-gate";
 import { SignInModal } from "@/components/auth/sign-in-modal";
+import { StreamingLoader } from "@/components/streaming-loader";
 
 type Step = "input" | "hooks" | "script";
 
@@ -29,34 +31,6 @@ interface FullScript {
   cta: string;
 }
 
-function BootLoader({ type }: { type: string }) {
-  const steps = type === "hooks"
-    ? ["ANALYZING TOPIC", "GENERATING HOOK VARIANTS", "OPTIMIZING FOR PLATFORM"]
-    : ["COMPOSING SCRIPT STRUCTURE", "WRITING SECTIONS", "FINALIZING OUTPUT"];
-
-  return (
-    <div className="boot-loader">
-      {steps.map((s, i) => (
-        <div key={i} className="boot-loader-line" style={{ animationDelay: `${0.1 + i * 0.2}s` }}>
-          <span className="boot-loader-arrow">{">>"}</span>
-          <span className="boot-loader-text">{s}</span>
-          <span className="boot-loader-ok">
-            {i < 2 ? (
-              <span className="flex gap-0.5 items-center">
-                <span className="w-1 h-1 rounded-full bg-te-400 animate-pulse" style={{ animationDelay: "0s" }} />
-                <span className="w-1 h-1 rounded-full bg-te-400 animate-pulse" style={{ animationDelay: "0.15s" }} />
-                <span className="w-1 h-1 rounded-full bg-te-400 animate-pulse" style={{ animationDelay: "0.3s" }} />
-              </span>
-            ) : (
-              <span className="text-te-400/80 tracking-wider">LOADING</span>
-            )}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 export default function ScriptWriterPage() {
   const [step, setStep] = useState<Step>("input");
   const [loading, setLoading] = useState(false);
@@ -69,8 +43,10 @@ export default function ScriptWriterPage() {
   const [hooks, setHooks] = useState<Hook[]>([]);
   const [selectedHookId, setSelectedHookId] = useState<string | null>(null);
   const [script, setScript] = useState<FullScript | null>(null);
+  const [seriesFormat, setSeriesFormat] = useState("");
+  const [seriesScript, setSeriesScript] = useState("");
   const [error, setError] = useState("");
-  const [loadingType, setLoadingType] = useState<"hooks" | "script">("hooks");
+  const [loadingType, setLoadingType] = useState<"hooks" | "script" | "series">("hooks");
   const [teleprompter, setTeleprompter] = useState(false);
   const [prompterSpeed, setPrompterSpeed] = useState(180);
   const [showHistory, setShowHistory] = useState(false);
@@ -126,12 +102,15 @@ export default function ScriptWriterPage() {
     });
   }
 
-  async function handleSelectHook(id: string) {
-    setSelectedHookId(id);
-    const hook = hooks.find((h) => h.id === id);
-    if (!hook) return;
+  function handleSelectHook(id: string) {
+    setSelectedHookId(id === selectedHookId ? null : id);
+  }
 
-    savePreviewState({ hooks, script, step: "hooks", selectedHookId: id });
+  async function handleGenerateFromHook() {
+    if (!selectedHookId) return;
+    const hook = hooks.find((h) => h.id === selectedHookId);
+    if (!hook) return;
+    savePreviewState({ hooks, script, step: "hooks", selectedHookId, language });
     gate(async () => {
       setLoading(true);
       setLoadingType("script");
@@ -169,6 +148,31 @@ export default function ScriptWriterPage() {
       } finally {
         setLoading(false);
       }
+    });
+  }
+
+  async function handleGenerateSeriesScript() {
+    if (!valid || !seriesFormat || !selectedHookId) return;
+    const hook = hooks.find((h) => h.id === selectedHookId);
+    if (!hook) return;
+    savePreviewState({ hooks, script, step, selectedHookId, language });
+    gate(async () => {
+      setLoading(true);
+      setLoadingType("series");
+      setError("");
+      try {
+        const result = await generateSeriesScript(topic, audience, platform, tone, seriesFormat, hook.hook_text, language);
+        if (!result.ok) { setError(result.error); setLoading(false); return; }
+        let text = result.data.content;
+        const format = SERIES_FORMATS.find((f) => f.id === seriesFormat);
+        text = `[SERIES FORMAT: ${format?.name ?? seriesFormat}]\n\n${text}`;
+        setSeriesScript(text);
+        setStep("script");
+        setTimeout(() => outputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Series generation failed");
+      }
+      setLoading(false);
     });
   }
 
@@ -220,16 +224,32 @@ export default function ScriptWriterPage() {
     setHooks([]);
     setSelectedHookId(null);
     setScript(null);
+    setSeriesScript("");
     setError("");
   }
 
   function copyToClipboard() {
+    if (seriesScript) {
+      navigator.clipboard.writeText(seriesScript);
+      return;
+    }
     if (!script) return;
     const text = script.sections.map((s) => `[${s.timestamp}] ${s.content}\n[B-ROLL] ${s.broll}`).join("\n\n") + `\n\nCTA: ${script.cta}`;
     navigator.clipboard.writeText(text);
   }
 
   function exportPDF() {
+    if (seriesScript) {
+      const win = window.open("", "_blank");
+      if (!win) return;
+      win.document.write(`<!DOCTYPE html><html><head><title>Series Script</title>
+<style>@page{margin:0.75in}*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Courier New',monospace;font-size:10pt;line-height:1.5;color:#111;padding:20px;white-space:pre-wrap}
+h1{font-size:14pt;margin-bottom:16px;border-bottom:2px solid #333;padding-bottom:8px}
+</style></head><body><h1>Series Script</h1>${seriesScript.replace(/\n/g, "<br>")}</body></html>`);
+      win.document.close();
+      return;
+    }
     if (!script) return;
     const win = window.open("", "_blank");
     if (!win) return;
@@ -313,7 +333,7 @@ ${script.sections.map((s) => `<div class="section"><div class="timestamp">[${s.t
         </div>
 
         <div className="crt-monitor-content p-6 space-y-6">
-          {loading && <BootLoader type={loadingType} />}
+          {loading && <StreamingLoader steps={loadingType === "hooks" ? ["ANALYZING TOPIC", "GENERATING HOOK VARIANTS", "OPTIMIZING FOR PLATFORM"] : loadingType === "series" ? ["APPLYING SERIES FORMAT", "MAPPING TO TEMPLATES", "GENERATING EPISODE SCRIPT"] : ["COMPOSING SCRIPT STRUCTURE", "WRITING SECTIONS", "FINALIZING OUTPUT"]} />}
 
           {error && (
             <div className="font-mono text-[11px] text-err bg-err/10 border border-err/20 rounded-r3 p-3">
@@ -409,6 +429,28 @@ ${script.sections.map((s) => `<div class="section"><div class="timestamp">[${s.t
               </div>
 
               <div className="reveal d6">
+                <label className="term-label mb-2">SERIES_FORMAT <span className="text-tx-4">(optional — for short-form series)</span></label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                  {SERIES_FORMATS.map((f) => (
+                    <button
+                      key={f.id}
+                      onClick={() => setSeriesFormat(f.id === seriesFormat ? "" : f.id)}
+                      className={`boot-option ${f.id === seriesFormat ? "active" : ""}`}
+                    >
+                      <span className="boot-option-arrow">{f.id === seriesFormat ? "\u25B6" : ">>"}</span>
+                      <div className="min-w-0 flex-1">
+                        <span className="boot-option-label block">{f.name}</span>
+                        <span className="font-mono text-[7px] text-tx-4 tracking-wider block leading-tight">{f.description}</span>
+                      </div>
+                      <span className={`diag-badge ${f.id === seriesFormat ? "diag-ok" : "diag-idle"}`}>
+                        {f.id === seriesFormat ? "[SELECTED]" : "[OFF]"}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="reveal d7">
                 <label className="term-label mb-2">ADDITIONAL_CONTEXT <span className="text-tx-4">(optional)</span></label>
                 <input
                   value={context}
@@ -418,7 +460,7 @@ ${script.sections.map((s) => `<div class="section"><div class="timestamp">[${s.t
                 />
               </div>
 
-              <div className="reveal d7 flex items-center gap-3 pt-2 border-t border-white/[0.04]">
+              <div className="reveal d8 flex items-center gap-3 pt-2 border-t border-white/[0.04] flex-wrap">
                 <button
                   onClick={handleGenerateHooks}
                   disabled={!valid}
@@ -426,6 +468,15 @@ ${script.sections.map((s) => `<div class="section"><div class="timestamp">[${s.t
                 >
                   {">>"} GENERATE HOOKS
                 </button>
+                {seriesFormat && (
+                  <button
+                    onClick={handleGenerateSeriesScript}
+                    disabled={!valid}
+                    className="btn-terminal text-[9px] border-vi-500/30 text-vi-400 hover:bg-vi-500/10 disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    {"[SERIES SCRIPT]"}
+                  </button>
+                )}
                 {!valid && (
                   <span className="font-mono text-[8px] text-tx-4 tracking-wider">AWAITING INPUT</span>
                 )}
@@ -468,7 +519,23 @@ ${script.sections.map((s) => `<div class="section"><div class="timestamp">[${s.t
                 ))}
               </div>
 
-              <div className="flex items-center gap-3 pt-2 border-t border-white/[0.04]">
+              <div className="flex items-center gap-3 pt-2 border-t border-white/[0.04] flex-wrap">
+                <button
+                  onClick={handleGenerateFromHook}
+                  disabled={!selectedHookId}
+                  className="btn-terminal btn-terminal-primary disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  {">>"} GENERATE SCRIPT
+                </button>
+                {seriesFormat && (
+                  <button
+                    onClick={handleGenerateSeriesScript}
+                    disabled={!selectedHookId}
+                    className="btn-terminal text-[9px] border-vi-500/30 text-vi-400 hover:bg-vi-500/10 disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    {"[SERIES SCRIPT]"}
+                  </button>
+                )}
                 <button onClick={handleGenerateHooks} className="btn-terminal">
                   {">>"} REGENERATE
                 </button>
@@ -479,7 +546,7 @@ ${script.sections.map((s) => `<div class="section"><div class="timestamp">[${s.t
             </>
           )}
 
-          {isScriptStep && script && (
+          {isScriptStep && script && !seriesScript && (
             <div ref={outputRef} className="space-y-6 reveal d1">
               <div className="flex items-center justify-between">
                 <label className="term-label">GENERATED_SCRIPT</label>
@@ -562,6 +629,67 @@ ${script.sections.map((s) => `<div class="section"><div class="timestamp">[${s.t
               </div>
             </div>
           )}
+
+          {isScriptStep && seriesScript && (
+            <div ref={outputRef} className="space-y-6 reveal d1">
+              <div className="flex items-center justify-between">
+                <label className="term-label">SERIES_SCRIPT</label>
+                <div className="flex items-center gap-2">
+                  <button onClick={copyToClipboard} className="btn-terminal text-[9px]">
+                    {"[COPY]"}
+                  </button>
+                  <button onClick={exportPDF} className="btn-terminal text-[9px]">
+                    {"[PDF]"}
+                  </button>
+                  <button onClick={() => setTeleprompter(true)} className="btn-terminal text-[9px]">
+                    {"[PROM]"}
+                  </button>
+                  <button onClick={() => { setSeriesScript(""); setStep("hooks"); }} className="btn-terminal text-[9px]">
+                    {"[BACK]"}
+                  </button>
+                </div>
+              </div>
+
+              <div className="crt-monitor relative crt-brackets" style={{ background: "rgba(0,0,0,0.25)" }}>
+                <div className="crt-micro-tl">
+                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-te-400/60">out</span>
+                  <span className="text-tx-4">|</span>
+                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase">series_script</span>
+                </div>
+                <div className="crt-micro-tr">
+                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">{SERIES_FORMATS.find(f => seriesScript.startsWith(`[SERIES FORMAT: ${f.name}`))?.steps ?? 6} steps</span>
+                </div>
+
+                <div className="crt-monitor-header">
+                  <span className="w-2 h-2 rounded-full bg-vi-400/60" />
+                  <span className="font-mono text-[10px] font-semibold text-tx-1 tracking-tight ml-2">
+                    {SERIES_FORMATS.find(f => seriesScript.startsWith(`[SERIES FORMAT: ${f.name}`))?.name ?? "Series Script"}
+                  </span>
+                  <div className="flex-1" />
+                  <span className="font-mono text-[7px] tracking-[0.1em] text-tx-4">{"\u2022\u2022"}</span>
+                </div>
+
+                <div className="crt-monitor-content p-4">
+                  <div className="font-mono text-[11px] text-tx-1 leading-[1.7] whitespace-pre-wrap">
+                    {seriesScript.replace(/^\[SERIES FORMAT:[^\]]+\]\n\n/, "")}
+                  </div>
+                </div>
+
+                <div className="crt-micro-bl">
+                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-ok">OUTPUT READY</span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 pt-2 border-t border-white/[0.04]">
+                <button onClick={() => { setSeriesScript(""); setStep("hooks"); }} className="btn-terminal text-[9px]">
+                  {">>"} BACK TO HOOKS
+                </button>
+                <button onClick={handleReset} className="btn-terminal text-[9px]">
+                  {">>"} NEW SCRIPT
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="crt-micro-bl">
@@ -601,10 +729,10 @@ ${script.sections.map((s) => `<div class="section"><div class="timestamp">[${s.t
         </div>
       </div>
 
-      {teleprompter && script && (
+      {teleprompter && (script || seriesScript) && (
         <div className="fixed inset-0 z-50 bg-[#050508] flex flex-col">
           <div className="flex items-center justify-between px-6 py-3 border-b border-white/[0.06] bg-black/50">
-            <span className="font-mono text-[10px] text-te-400/80 tracking-wider uppercase">Teleprompter — {script.title}</span>
+            <span className="font-mono text-[10px] text-te-400/80 tracking-wider uppercase">Teleprompter — {seriesScript ? "Series Script" : script?.title}</span>
             <div className="flex items-center gap-4">
               <label className="font-mono text-[8px] text-tx-4 tracking-wider uppercase flex items-center gap-2">
                 Speed
@@ -632,28 +760,36 @@ ${script.sections.map((s) => `<div class="section"><div class="timestamp">[${s.t
             style={{ scrollBehavior: "auto" }}
           >
             <div className="space-y-8">
-              {script.sections.map((section, i) => (
-                <div key={i} className="space-y-3">
-                  <div className="font-mono text-[11px] text-te-400/60 tracking-wider">
-                    [{section.timestamp}]
+              {seriesScript ? (
+                <p className="font-mono text-[22px] text-tx-1 leading-[1.7] whitespace-pre-wrap">
+                  {seriesScript.replace(/^\[SERIES FORMAT:[^\]]+\]\n\n/, "")}
+                </p>
+              ) : script ? (
+                <>
+                  {script.sections.map((section, i) => (
+                    <div key={i} className="space-y-3">
+                      <div className="font-mono text-[11px] text-te-400/60 tracking-wider">
+                        [{section.timestamp}]
+                      </div>
+                      <p className="font-mono text-[22px] text-tx-1 leading-[1.7]">
+                        {section.content}
+                      </p>
+                      {section.broll && (
+                        <p className="font-mono text-[10px] text-tx-4 italic">
+                          &gt; B-roll: {section.broll}
+                        </p>
+                      )}
+                      {i === 0 && (
+                        <div className="font-mono text-[10px] text-fu-400/50 uppercase tracking-wider">[hook]</div>
+                      )}
+                    </div>
+                  ))}
+                  <div className="border-t border-white/[0.08] pt-6 mt-8">
+                    <div className="font-mono text-[11px] text-tx-4 mb-2">CTA</div>
+                    <p className="font-mono text-[22px] text-tx-1 leading-[1.7]">{script.cta}</p>
                   </div>
-                  <p className="font-mono text-[22px] text-tx-1 leading-[1.7]">
-                    {section.content}
-                  </p>
-                  {section.broll && (
-                    <p className="font-mono text-[10px] text-tx-4 italic">
-                      &gt; B-roll: {section.broll}
-                    </p>
-                  )}
-                  {i === 0 && (
-                    <div className="font-mono text-[10px] text-fu-400/50 uppercase tracking-wider">[hook]</div>
-                  )}
-                </div>
-              ))}
-              <div className="border-t border-white/[0.08] pt-6 mt-8">
-                <div className="font-mono text-[11px] text-tx-4 mb-2">CTA</div>
-                <p className="font-mono text-[22px] text-tx-1 leading-[1.7]">{script.cta}</p>
-              </div>
+                </>
+              ) : null}
             </div>
           </div>
           <div className="border-t border-white/[0.06] px-6 py-2 bg-black/50 flex items-center justify-between">

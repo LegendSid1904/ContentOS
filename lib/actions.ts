@@ -2,8 +2,8 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/drizzle";
-import { users, brandKits, profiles } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { users, brandKits, profiles, projects } from "@/db/schema";
+import { eq, sql, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { ensureUser } from "@/lib/ensure-user";
 
@@ -255,6 +255,54 @@ export async function saveCanvaTemplateId(templateId: string) {
 
   revalidatePath("/dashboard/carousel-maker");
   revalidatePath("/dashboard/thumbnail-maker");
+}
+
+export async function getGeminiStatus() {
+  const sess = await auth();
+  const authId = sess.userId;
+  if (!authId) return { connected: false };
+
+  const user = await ensureUser(authId);
+  const profile = await db.select().from(profiles).where(eq(profiles.userId, user.id)).then((r) => r[0]);
+  const defaults = profile?.contentDefaults as Record<string, unknown> | null;
+  const apiKey = defaults?.geminiApiKey as string | undefined;
+
+  return { connected: !!apiKey };
+}
+
+export async function saveGeminiSettings(apiKey: string) {
+  const sess = await auth();
+  const authId = sess.userId;
+  if (!authId) throw new Error("Unauthorized");
+
+  const user = await ensureUser(authId);
+  const profile = await db.select().from(profiles).where(eq(profiles.userId, user.id)).then((r) => r[0]);
+  const existing = (profile?.contentDefaults ?? {}) as Record<string, unknown>;
+
+  await db.update(profiles).set({
+    contentDefaults: { ...existing, geminiApiKey: apiKey },
+  }).where(eq(profiles.userId, user.id));
+
+  revalidatePath("/dashboard/carousel-maker");
+  revalidatePath("/dashboard/thumbnail-maker");
+}
+
+export async function getModuleUsage() {
+  const { userId } = await auth();
+  if (!userId) return [];
+
+  const user = await ensureUser(userId);
+
+  const counts = await db
+    .select({
+      module: projects.module,
+      count: sql<number>`cast(count(*) as int)`,
+    })
+    .from(projects)
+    .where(and(eq(projects.userId, user.id), sql`${projects.status} != 'archived'`))
+    .groupBy(projects.module);
+
+  return counts;
 }
 
 export async function getContentDefaults() {

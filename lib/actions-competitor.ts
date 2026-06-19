@@ -38,6 +38,8 @@ function extractCompetitorName(url: string): string {
 }
 
 export async function analyzeCompetitor(competitorUrl: string, niche: string, depth: "basic" | "deep") {
+  const { userId } = await auth();
+  if (!userId) return { ok: false as const, error: "You need to sign in first" };
   try {
     const name = extractCompetitorName(competitorUrl);
     const result = await generateJSON<CompetitorAnalysis>({

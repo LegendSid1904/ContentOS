@@ -48,6 +48,8 @@ const PLATFORM_LIMITS: Record<string, number> = {
 };
 
 export async function generatePageSetup(platform: string, niche: string, currentBio: string) {
+  const { userId } = await auth();
+  if (!userId) return { ok: false as const, error: "You need to sign in first" };
   try {
     const limit = PLATFORM_LIMITS[platform] || 500;
 

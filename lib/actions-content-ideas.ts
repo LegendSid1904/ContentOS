@@ -35,6 +35,8 @@ export async function generateIdeas(
   audience: string,
   trendContext?: string
 ) {
+  const { userId } = await auth();
+  if (!userId) return { ok: false as const, error: "You need to sign in first" };
   try {
     const trendSection = trendContext
       ? `\nIncorporate these trending topics: ${trendContext}`
@@ -56,6 +58,8 @@ export async function generateAngles(
   audience: string,
   ideaTitle: string
 ) {
+  const { userId } = await auth();
+  if (!userId) return { ok: false as const, error: "You need to sign in first" };
   try {
     const result = await generateJSON<AnglesResponse>({
       systemPrompt: `You are a viral content strategist. For the given topic, generate 10 unique angles to make it go viral. Return as JSON with field: angles (string[]).`,
@@ -72,6 +76,8 @@ export async function generateAngles(
 export async function generateCalendar(
   ideas: { title: string; format: string }[]
 ) {
+  const { userId } = await auth();
+  if (!userId) return { ok: false as const, error: "You need to sign in first" };
   try {
     const result = await generateJSON<CalendarResponse>({
       systemPrompt: `You are a content scheduler. Organize these ideas into a 30-day content calendar with platform assignments. Return as JSON with field: calendar (array of {day: number, title: string, format: string, platform: string, pillar: string}).`,
@@ -98,6 +104,8 @@ interface RepurposeMap {
 }
 
 export async function generateRepurposingMap(ideaTitle: string, niche: string, audience: string) {
+  const { userId } = await auth();
+  if (!userId) return { ok: false as const, error: "You need to sign in first" };
   try {
     const result = await generateJSON<RepurposeMap>({
       systemPrompt: `You are a content repurposing strategist. For the given content idea, generate 6 ways to repurpose it across different formats and platforms. Each format should have: format (string — e.g. "Twitter Thread", "LinkedIn Post", "Instagram Carousel", "YouTube Shorts", "Blog Post", "Newsletter"), title (string — repurposed title), hook (string — opening line for that format), key_points (string[] — 3-5 key points adapted for the format), platform (string — target platform). Return as JSON with fields: original (string), formats (array of objects).`,

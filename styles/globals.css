@@ -1270,6 +1270,41 @@ body {
   line-height: 1.4;
 }
 
+/* Usage Cards */
+.usage-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: var(--spacing-s3);
+}
+
+.usage-card {
+  position: relative;
+  background: rgba(15, 15, 25, 0.6);
+  border: 1px solid rgba(34, 211, 238, 0.06);
+  border-radius: 4px;
+  padding: var(--spacing-s3) var(--spacing-s3);
+  transition: border-color 0.2s ease;
+}
+
+.usage-card:hover {
+  border-color: rgba(34, 211, 238, 0.15);
+}
+
+.usage-bar-bg {
+  height: 3px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: var(--spacing-s1);
+}
+
+.usage-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, rgba(34, 211, 238, 0.5), rgba(139, 92, 246, 0.5));
+  border-radius: 2px;
+  transition: width 0.6s ease;
+}
+
 /* ==============================
    CRT FIELD STATION (Stitch)
    ============================== */

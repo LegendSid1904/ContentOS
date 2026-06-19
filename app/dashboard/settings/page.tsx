@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { PLATFORMS, TONES } from "@/lib/constants";
-import { updateProfile, getProfile, saveBBSettings } from "@/lib/actions";
+import { updateProfile, getProfile, saveBBSettings, saveGeminiSettings } from "@/lib/actions";
 
 const EXPERIENCE_LEVELS = [
   { value: "beginner", label: "BEGINNER", desc: "New to content creation" },
@@ -48,6 +48,8 @@ export default function SettingsPage() {
   const [bbApiKey, setBbApiKey] = useState("");
   const [bbTemplateId, setBbTemplateId] = useState("");
   const [bbSaved, setBbSaved] = useState(false);
+  const [geminiApiKey, setGeminiApiKey] = useState("");
+  const [geminiSaved, setGeminiSaved] = useState(false);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -68,6 +70,7 @@ export default function SettingsPage() {
           setDefaultFormat((cd.defaultFormat as string) || "");
           setBbApiKey((cd.bbApiKey as string) || "");
           setBbTemplateId((cd.bbTemplateId as string) || "");
+          setGeminiApiKey((cd.geminiApiKey as string) || "");
         }
       }
       setLoading(false);
@@ -378,6 +381,60 @@ export default function SettingsPage() {
                 className="font-mono text-[8px] text-vi-400 underline"
               >
                 {">>"} Create Bannerbear account (free)
+              </a>
+            </div>
+          </div>
+
+          {/* === GEMINI SUBSECTION === */}
+          <div className="border-t border-white/[0.04]">
+            <div className="px-6 pt-5 pb-1">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-te-400/60" />
+                <span className="font-mono text-[9px] tracking-[0.15em] uppercase text-tx-2">Gemini Imagen</span>
+              </div>
+              <p className="font-mono text-[8px] text-tx-4 tracking-wider mb-4">
+                generate images via Google Imagen 3 &mdash; <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" className="text-te-400 underline">free API key</a>
+              </p>
+            </div>
+            <div className="px-6 pb-6 space-y-4">
+              <div>
+                <label className="term-label mb-2">GEMINI_API_KEY</label>
+                <input
+                  value={geminiApiKey}
+                  onChange={(e) => setGeminiApiKey(e.target.value)}
+                  placeholder="Paste your Gemini API key"
+                  className="term-field"
+                />
+                <p className="font-mono text-[8px] text-tx-4 mt-1 tracking-wider">
+                  get this from aistudio.google.com &mdash; free tier includes Imagen 3
+                </p>
+              </div>
+              <div className="flex items-center gap-3 pt-1">
+                <button
+                  type="button"
+                  disabled={!geminiApiKey}
+                  onClick={async () => {
+                    await saveGeminiSettings(geminiApiKey);
+                    setGeminiSaved(true);
+                    setTimeout(() => setGeminiSaved(false), 3000);
+                  }}
+                  className="btn-terminal text-[10px] disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  {"[SAVE GEMINI KEY]"}
+                </button>
+                {geminiSaved && (
+                  <span className="font-mono text-[8px] text-ok tracking-wider animate-pulse">
+                    [GEMINI KEY SAVED]
+                  </span>
+                )}
+              </div>
+              <a
+                href="https://aistudio.google.com/apikey"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-mono text-[8px] text-vi-400 underline"
+              >
+                {">>"} Get Gemini API key (free)
               </a>
             </div>
           </div>

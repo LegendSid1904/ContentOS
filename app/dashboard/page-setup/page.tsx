@@ -8,6 +8,7 @@ import { generatePageSetup, savePageSetup } from "@/lib/actions-page-setup";
 import { getContentDefaults, getBrandKit } from "@/lib/actions";
 import { useAuthGate } from "@/lib/use-auth-gate";
 import { SignInModal } from "@/components/auth/sign-in-modal";
+import { StreamingLoader } from "@/components/streaming-loader";
 
 type Step = "input" | "results";
 
@@ -23,31 +24,6 @@ interface PageSetupData {
   keywords: { keywords: string[]; hashtags: string[] };
   highlights: { name: string; description: string; content_to_include: string }[];
   audit: { keyword_optimization: number; bio_clarity: number; brand_consistency: number; cta_effectiveness: number; suggestions: string[] };
-}
-
-function BootLoader() {
-  const steps = ["GENERATING BIO VARIANTS", "ANALYZING KEYWORDS", "BUILDING OPTIMIZATION REPORT"];
-  return (
-    <div className="boot-loader">
-      {steps.map((s, i) => (
-        <div key={i} className="boot-loader-line" style={{ animationDelay: `${0.1 + i * 0.2}s` }}>
-          <span className="boot-loader-arrow">{">>"}</span>
-          <span className="boot-loader-text">{s}</span>
-          <span className="boot-loader-ok">
-            {i < 2 ? (
-              <span className="flex gap-0.5 items-center">
-                <span className="w-1 h-1 rounded-full bg-te-400 animate-pulse" style={{ animationDelay: "0s" }} />
-                <span className="w-1 h-1 rounded-full bg-te-400 animate-pulse" style={{ animationDelay: "0.15s" }} />
-                <span className="w-1 h-1 rounded-full bg-te-400 animate-pulse" style={{ animationDelay: "0.3s" }} />
-              </span>
-            ) : (
-              <span className="text-te-400/80 tracking-wider">LOADING</span>
-            )}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
 }
 
 function ScoreMeter({ value, label }: { value: number; label: string }) {
@@ -183,7 +159,7 @@ export default function PageSetupPage() {
         </div>
 
         <div className="crt-monitor-content p-6 space-y-6">
-          {loading && <BootLoader />}
+          {loading && <StreamingLoader steps={["GENERATING BIO VARIANTS", "ANALYZING KEYWORDS", "BUILDING OPTIMIZATION REPORT"]} />}
 
           {error && (
             <div className="font-mono text-[14px] text-err bg-err/10 border border-err/20 rounded-r3 p-3">

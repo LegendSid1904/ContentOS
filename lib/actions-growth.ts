@@ -40,6 +40,8 @@ interface GrowthStrategyData {
 }
 
 export async function generateGrowthStrategy(niche: string, followers: number, platform: string, goals: string) {
+  const { userId } = await auth();
+  if (!userId) return { ok: false as const, error: "You need to sign in first" };
   try {
     const result = await generateJSON<GrowthStrategyData>({
       systemPrompt: `You are a content growth strategist. Generate a complete growth strategy. Return as JSON with:
@@ -56,6 +58,8 @@ export async function generateGrowthStrategy(niche: string, followers: number, p
 }
 
 export async function generateAudiencePersona(niche: string, platform: string) {
+  const { userId } = await auth();
+  if (!userId) return { ok: false as const, error: "You need to sign in first" };
   try {
     const result = await generateJSON<{ persona: { name: string; demographics: string; psychographics: string[]; pain_points: string[]; content_preferences: string[]; best_time_to_post: string; language_tone: string; platforms_frequent: string[]; influencers_they_follow: string[] } }>({
       systemPrompt: `You are an audience researcher. Create a detailed ideal audience persona for the given niche and platform. The persona must include: name (string), demographics (string), psychographics (string[] — values, interests, lifestyle), pain_points (string[]), content_preferences (string[]), best_time_to_post (string), language_tone (string), platforms_frequent (string[]), influencers_they_follow (string[]). Return as JSON with a "persona" field.`,
@@ -69,6 +73,8 @@ export async function generateAudiencePersona(niche: string, platform: string) {
 }
 
 export async function generateEngagementPrompts(niche: string, platform: string, goals: string) {
+  const { userId } = await auth();
+  if (!userId) return { ok: false as const, error: "You need to sign in first" };
   try {
     const result = await generateJSON<{ dm_scripts: { scenario: string; script: string }[]; comment_templates: { type: string; template: string }[]; cta_frameworks: { name: string; framework: string }[] }>({
       systemPrompt: `You are a community engagement strategist. Generate engagement prompts for the given niche and platform. Include: dm_scripts (array of {scenario, script} — 3 DM outreach scripts), comment_templates (array of {type, template} — 5 comment templates for different post types), cta_frameworks (array of {name, framework} — 4 CTA frameworks). Return as JSON.`,

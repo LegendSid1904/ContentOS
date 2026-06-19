@@ -6,6 +6,7 @@ import { useAuth } from "@clerk/nextjs";
 import { analyzeCompetitor, saveCompetitorIntel } from "@/lib/actions-competitor";
 import { useAuthGate } from "@/lib/use-auth-gate";
 import { SignInModal } from "@/components/auth/sign-in-modal";
+import { StreamingLoader } from "@/components/streaming-loader";
 
 type Step = "input" | "results";
 
@@ -28,31 +29,6 @@ interface Analysis {
   profile: CompetitorProfile;
   gaps: ContentGap[];
   competitorName?: string;
-}
-
-function BootLoader() {
-  const steps = ["ANALYZING COMPETITOR PROFILE", "IDENTIFYING CONTENT PATTERNS", "MAPPING GAP OPPORTUNITIES"];
-  return (
-    <div className="boot-loader">
-      {steps.map((s, i) => (
-        <div key={i} className="boot-loader-line" style={{ animationDelay: `${0.1 + i * 0.2}s` }}>
-          <span className="boot-loader-arrow">{">>"}</span>
-          <span className="boot-loader-text">{s}</span>
-          <span className="boot-loader-ok">
-            {i < 2 ? (
-              <span className="flex gap-0.5 items-center">
-                <span className="w-1 h-1 rounded-full bg-te-400 animate-pulse" style={{ animationDelay: "0s" }} />
-                <span className="w-1 h-1 rounded-full bg-te-400 animate-pulse" style={{ animationDelay: "0.15s" }} />
-                <span className="w-1 h-1 rounded-full bg-te-400 animate-pulse" style={{ animationDelay: "0.3s" }} />
-              </span>
-            ) : (
-              <span className="text-te-400/80 tracking-wider">LOADING</span>
-            )}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
 }
 
 function ScoreGauge({ value, label }: { value: number; label: string }) {
@@ -180,7 +156,7 @@ export default function CompetitorIntelPage() {
         </div>
 
         <div className="crt-monitor-content p-6 space-y-6">
-          {loading && <BootLoader />}
+          {loading && <StreamingLoader steps={["ANALYZING COMPETITOR PROFILE", "IDENTIFYING CONTENT PATTERNS", "MAPPING GAP OPPORTUNITIES"]} />}
 
           {error && (
             <div className="font-mono text-[14px] text-err bg-err/10 border border-err/20 rounded-r3 p-3">
