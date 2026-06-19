@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
 import { PLATFORMS } from "@/lib/constants";
 import { generateThumbnails, generateCanvaThumbnailPrompts, generateABTestPlan, saveThumbnailBrief } from "@/lib/actions-thumbnail";
-import { getContentDefaults, getBrandKit, getCanvaStatus } from "@/lib/actions";
+import { getContentDefaults, getBrandKit, getBBStatus } from "@/lib/actions";
 import { useAuthGate } from "@/lib/use-auth-gate";
 import { SignInModal } from "@/components/auth/sign-in-modal";
 
@@ -143,9 +143,9 @@ export default function ThumbnailMakerPage() {
   const [concepts, setConcepts] = useState<ThumbnailConcept[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [canvaPrompts, setCanvaPrompts] = useState<{ concept: string; canva_prompt: string; template_type: string }[]>([]);
-  const [canvaConnected, setCanvaConnected] = useState(false);
-  const [canvaBrandTemplateId, setCanvaBrandTemplateId] = useState("");
-  const [canvaDesignUrl, setCanvaDesignUrl] = useState("");
+  const [bbConnected, setBbConnected] = useState(false);
+  const [bbTemplateId, setBbTemplateId] = useState("");
+  const [bbImages, setBbImages] = useState<{ concept_name: string; pngUrl: string }[]>([]);
   const [abTestPlan, setAbTestPlan] = useState<{ variant_a: string; variant_b: string; hypothesis: string; metric: string; duration_days: number }[]>([]);
   const [brandColors, setBrandColors] = useState<string[]>([]);
   const [error, setError] = useState("");
@@ -174,9 +174,9 @@ export default function ThumbnailMakerPage() {
         setBrandColors(kit.colors);
       }
     });
-    getCanvaStatus().then((status) => {
-      setCanvaConnected(status.connected);
-      if (status.brandTemplateId) setCanvaBrandTemplateId(status.brandTemplateId);
+    getBBStatus().then((status) => {
+      setBbConnected(status.connected);
+      if (status.templateId) setBbTemplateId(status.templateId);
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSignedIn]);
@@ -252,36 +252,31 @@ export default function ThumbnailMakerPage() {
       setLoading(true);
       setError("");
       try {
-        if (canvaConnected && concepts.length > 0) {
-          const slides = concepts.map((c, i) => ({
-            slide_number: i + 1,
-            headline: c.headline_text,
-            copy: `Visual: ${c.visual_description}. Background: ${c.background_suggestion}. Colors: ${c.color_palette.join(", ")}. Props: ${c.props.join(", ")}. Expression: ${c.facial_expression_hint}.`,
-            visual_direction: c.visual_description,
-          }));
-          const res = await fetch("/api/canva/design", {
+        if (bbConnected && bbTemplateId && concepts.length > 0) {
+          const res = await fetch("/api/bannerbear/generate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              title: `Thumbnails: ${topic}`,
-              designType: "custom",
-              slides,
-              brandTemplateId: canvaBrandTemplateId || undefined,
+              type: "thumbnail",
+              concepts: concepts.map((c) => ({
+                concept_name: c.concept_name,
+                headline_text: c.headline_text,
+                visual_description: c.visual_description,
+              })),
+              templateId: bbTemplateId,
             }),
           });
           const data = await res.json();
-          if (data.ok) {
-            setCanvaDesignUrl(data.editUrl);
-            window.open(data.editUrl, "_blank");
-            setLoading(false);
-            return;
-          }
+          if (!data.ok) { setError(data.error); setLoading(false); return; }
+          setBbImages(data.images);
+          setLoading(false);
+          return;
         }
         const result = await generateCanvaThumbnailPrompts(concepts);
         if (!result.ok) { setError(result.error); setLoading(false); return; }
         setCanvaPrompts(result.data);
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Canva prompt generation failed");
+        setError(e instanceof Error ? e.message : "Bannerbear generation failed");
       }
       setLoading(false);
     });
@@ -419,8 +414,8 @@ export default function ThumbnailMakerPage() {
                 <label className="term-label text-[11px] mb-0">THUMBNAIL_CONCEPTS</label>
                 <div className="flex items-center gap-2">
                   {isSignedIn && (
-                    <span className={`font-mono text-[8px] tracking-wider ${canvaConnected ? "text-ok" : "text-tx-4"}`}>
-                      {canvaConnected ? "[CANVA:ON]" : "[CANVA:OFF]"}
+                    <span className={`font-mono text-[8px] tracking-wider ${bbConnected ? "text-ok" : "text-tx-4"}`}>
+                      {bbConnected ? "[BB:ON]" : "[BB:OFF]"}
                     </span>
                   )}
                   <button onClick={exportPDF} className="btn-terminal text-[9px]">{"[PDF]"}</button>
@@ -495,30 +490,38 @@ export default function ThumbnailMakerPage() {
                 ))}
               </div>
 
-              {isSignedIn && !canvaConnected && (
+              {isSignedIn && !bbConnected && (
                 <div className="reveal d3">
-                  <a
-                    href="/api/canva"
-                    className="btn-terminal text-[10px] inline-block"
-                  >
-                    {"[CONNECT CANVA]"}
-                  </a>
-                  <span className="font-mono text-[9px] text-tx-4 ml-2">— auto-create designs in Canva</span>
+                  <span className="font-mono text-[9px] text-tx-4">Set Bannerbear template in </span>
+                  <Link href="/dashboard/settings" className="font-mono text-[9px] text-te-400 underline">
+                    Dashboard Settings
+                  </Link>
                 </div>
               )}
 
-              {canvaDesignUrl && (
-                <div className="crt-monitor relative crt-brackets" style={{ background: "rgba(0,0,0,0.15)" }}>
-                  <div className="crt-monitor-content p-3 space-y-2">
-                    <div className="font-mono text-[10px] text-ok tracking-wider">DESIGN_READY</div>
-                    <a
-                      href={canvaDesignUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-mono text-[11px] text-te-400 underline underline-offset-2"
-                    >
-                      {">>"} Open in Canva
-                    </a>
+              {bbImages.length > 0 && (
+                <div className="reveal d3 space-y-3">
+                  <label className="term-label text-[11px]">BANNERBEAR_IMAGES</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {bbImages.map((img) => (
+                      <div key={img.concept_name} className="crt-monitor relative crt-brackets" style={{ background: "rgba(0,0,0,0.15)" }}>
+                        <div className="crt-monitor-content p-2 space-y-2">
+                          <div className="font-mono text-[9px] text-te-400/60">{img.concept_name}</div>
+                          {img.pngUrl && (
+                            <img src={img.pngUrl} alt={img.concept_name} className="w-full rounded-sm" />
+                          )}
+                          <a
+                            href={img.pngUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            download
+                            className="btn-terminal text-[8px] inline-block"
+                          >
+                            {"[DOWNLOAD]"}
+                          </a>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}

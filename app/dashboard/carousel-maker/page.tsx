@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
 import { PLATFORMS } from "@/lib/constants";
 import { generateCarouselOutline, generateCoverHeadlines, generateCarouselCTA, generateCanvaPrompt, saveCarousel } from "@/lib/actions-carousel";
-import { getContentDefaults, getCanvaStatus } from "@/lib/actions";
+import { getContentDefaults, getBBStatus } from "@/lib/actions";
 import { useAuthGate } from "@/lib/use-auth-gate";
 import { SignInModal } from "@/components/auth/sign-in-modal";
 
@@ -83,9 +83,9 @@ export default function CarouselMakerPage() {
   const [ctaOptions, setCtaOptions] = useState<CTAOption[]>([]);
   const [selectedCtas, setSelectedCtas] = useState<{ slide2: string; final: string }>({ slide2: "", final: "" });
   const [canvaTemplates, setCanvaTemplates] = useState<CanvaTemplate[]>([]);
-  const [canvaConnected, setCanvaConnected] = useState(false);
-  const [canvaBrandTemplateId, setCanvaBrandTemplateId] = useState("");
-  const [canvaDesignUrl, setCanvaDesignUrl] = useState("");
+  const [bbConnected, setBbConnected] = useState(false);
+  const [bbTemplateId, setBbTemplateId] = useState("");
+  const [bbImages, setBbImages] = useState<{ slide_number: number; pngUrl: string }[]>([]);
   const [generatingHeadlines, setGeneratingHeadlines] = useState(false);
   const outputRef = useRef<HTMLDivElement>(null);
   const { isSignedIn } = useAuth();
@@ -111,9 +111,9 @@ export default function CarouselMakerPage() {
       if (!defaults) return;
       if (defaults.defaultPlatform && !platform) setPlatform(defaults.defaultPlatform);
     });
-    getCanvaStatus().then((status) => {
-      setCanvaConnected(status.connected);
-      if (status.brandTemplateId) setCanvaBrandTemplateId(status.brandTemplateId);
+    getBBStatus().then((status) => {
+      setBbConnected(status.connected);
+      if (status.templateId) setBbTemplateId(status.templateId);
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSignedIn]);
@@ -202,30 +202,27 @@ export default function CarouselMakerPage() {
       setLoading(true);
       setError("");
       try {
-        if (canvaConnected && slides.length > 0) {
-          const res = await fetch("/api/canva/design", {
+        if (bbConnected && bbTemplateId && slides.length > 0) {
+          const res = await fetch("/api/bannerbear/generate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              title: `Carousel: ${topic}`,
-              designType: "custom",
-              slides,
-              brandTemplateId: canvaBrandTemplateId || undefined,
+              type: "carousel",
+              slides: slides.map((s) => ({ headline: s.headline, copy: s.copy, slide_number: s.slide_number })),
+              templateId: bbTemplateId,
             }),
           });
           const data = await res.json();
-          if (data.ok) {
-            setCanvaDesignUrl(data.editUrl);
-            window.open(data.editUrl, "_blank");
-            setLoading(false);
-            return;
-          }
+          if (!data.ok) { setError(data.error); setLoading(false); return; }
+          setBbImages(data.images);
+          setLoading(false);
+          return;
         }
         const result = await generateCanvaPrompt(topic);
         if (!result.ok) { setError(result.error); setLoading(false); return; }
         setCanvaTemplates(result.data);
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Canva prompt generation failed");
+        setError(e instanceof Error ? e.message : "Bannerbear generation failed");
       }
       setLoading(false);
     });
@@ -510,8 +507,8 @@ export default function CarouselMakerPage() {
                 <label className="term-label mb-0 text-[12px]">GENERATED_SLIDES</label>
                 <div className="flex items-center gap-2">
                   {isSignedIn && (
-                    <span className={`font-mono text-[8px] tracking-wider ${canvaConnected ? "text-ok" : "text-tx-4"}`}>
-                      {canvaConnected ? "[CANVA:ON]" : "[CANVA:OFF]"}
+                    <span className={`font-mono text-[8px] tracking-wider ${bbConnected ? "text-ok" : "text-tx-4"}`}>
+                      {bbConnected ? "[BB:ON]" : "[BB:OFF]"}
                     </span>
                   )}
                   <button onClick={handleGenerateCTA} className="btn-terminal text-[9px]">
@@ -594,30 +591,38 @@ export default function CarouselMakerPage() {
                 );
               })}
 
-              {isSignedIn && !canvaConnected && (
+              {isSignedIn && !bbConnected && (
                 <div className="reveal d1 pt-2">
-                  <a
-                    href="/api/canva"
-                    className="btn-terminal text-[10px] inline-block"
-                  >
-                    {"[CONNECT CANVA]"}
-                  </a>
-                  <span className="font-mono text-[9px] text-tx-4 ml-2">— create designs directly in Canva</span>
+                  <span className="font-mono text-[9px] text-tx-4">Set Bannerbear template in </span>
+                  <Link href="/dashboard/settings" className="font-mono text-[9px] text-te-400 underline">
+                    Dashboard Settings
+                  </Link>
                 </div>
               )}
 
-              {canvaDesignUrl && (
-                <div className="crt-monitor relative crt-brackets" style={{ background: "rgba(0,0,0,0.15)" }}>
-                  <div className="crt-monitor-content p-3 space-y-2">
-                    <div className="font-mono text-[10px] text-ok tracking-wider">DESIGN_READY</div>
-                    <a
-                      href={canvaDesignUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-mono text-[11px] text-te-400 underline underline-offset-2"
-                    >
-                      {">>"} Open in Canva
-                    </a>
+              {bbImages.length > 0 && (
+                <div className="reveal d1 space-y-3">
+                  <label className="term-label text-[11px]">BANNERBEAR_IMAGES</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {bbImages.map((img) => (
+                      <div key={img.slide_number} className="crt-monitor relative crt-brackets" style={{ background: "rgba(0,0,0,0.15)" }}>
+                        <div className="crt-monitor-content p-2 space-y-2">
+                          <div className="font-mono text-[9px] text-te-400/60">slide_{img.slide_number}</div>
+                          {img.pngUrl && (
+                            <img src={img.pngUrl} alt={`Slide ${img.slide_number}`} className="w-full rounded-sm" />
+                          )}
+                          <a
+                            href={img.pngUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            download
+                            className="btn-terminal text-[8px] inline-block"
+                          >
+                            {"[DOWNLOAD]"}
+                          </a>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}

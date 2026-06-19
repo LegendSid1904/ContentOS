@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { PLATFORMS, TONES } from "@/lib/constants";
-import { updateProfile, getProfile } from "@/lib/actions";
+import { updateProfile, getProfile, saveBBSettings } from "@/lib/actions";
 
 const EXPERIENCE_LEVELS = [
   { value: "beginner", label: "BEGINNER", desc: "New to content creation" },
@@ -45,6 +45,9 @@ export default function SettingsPage() {
   const [defaultPlatform, setDefaultPlatform] = useState("");
   const [defaultTone, setDefaultTone] = useState("");
   const [defaultFormat, setDefaultFormat] = useState("");
+  const [bbApiKey, setBbApiKey] = useState("");
+  const [bbTemplateId, setBbTemplateId] = useState("");
+  const [bbSaved, setBbSaved] = useState(false);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -58,11 +61,13 @@ export default function SettingsPage() {
         setExperienceLevel(p.experienceLevel || "intermediate");
         setPostingSchedule(p.postingSchedule || "3x_week");
         setSocialLinks((p.socialLinks as Record<string, string>) || {});
-        const cd = p.contentDefaults as { defaultPlatform: string; defaultTone: string; defaultFormat: string } | null;
+        const cd = p.contentDefaults as Record<string, unknown> | null;
         if (cd) {
-          setDefaultPlatform(cd.defaultPlatform || "");
-          setDefaultTone(cd.defaultTone || "");
-          setDefaultFormat(cd.defaultFormat || "");
+          setDefaultPlatform((cd.defaultPlatform as string) || "");
+          setDefaultTone((cd.defaultTone as string) || "");
+          setDefaultFormat((cd.defaultFormat as string) || "");
+          setBbApiKey((cd.bbApiKey as string) || "");
+          setBbTemplateId((cd.bbTemplateId as string) || "");
         }
       }
       setLoading(false);
@@ -308,6 +313,72 @@ export default function SettingsPage() {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* === BANNERBEAR SUBSECTION === */}
+          <div className="border-t border-white/[0.04]">
+            <div className="px-6 pt-5 pb-1">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-te-400/60" />
+                <span className="font-mono text-[9px] tracking-[0.15em] uppercase text-tx-2">Bannerbear</span>
+              </div>
+              <p className="font-mono text-[8px] text-tx-4 tracking-wider mb-4">
+                generate actual slide images from templates &mdash; <a href="https://www.bannerbear.com" target="_blank" rel="noopener noreferrer" className="text-te-400 underline">free tier</a>
+              </p>
+            </div>
+            <div className="px-6 pb-6 space-y-4">
+              <div>
+                <label className="term-label mb-2">BB_API_KEY</label>
+                <input
+                  value={bbApiKey}
+                  onChange={(e) => setBbApiKey(e.target.value)}
+                  placeholder="Paste your Bannerbear API key"
+                  className="term-field"
+                />
+                <p className="font-mono text-[8px] text-tx-4 mt-1 tracking-wider">
+                  get this from your project settings at bannerbear.com
+                </p>
+              </div>
+              <div>
+                <label className="term-label mb-2">BB_TEMPLATE_ID</label>
+                <input
+                  value={bbTemplateId}
+                  onChange={(e) => setBbTemplateId(e.target.value)}
+                  placeholder="Paste your Bannerbear template ID"
+                  className="term-field"
+                />
+                <p className="font-mono text-[8px] text-tx-4 mt-1 tracking-wider">
+                  create a template in bannerbear with text layers named: headline, copy, slide_number
+                </p>
+              </div>
+              <div className="flex items-center gap-3 pt-1">
+                <button
+                  type="button"
+                  disabled={!bbApiKey || !bbTemplateId}
+                  onClick={async () => {
+                    await saveBBSettings(bbApiKey, bbTemplateId);
+                    setBbSaved(true);
+                    setTimeout(() => setBbSaved(false), 3000);
+                  }}
+                  className="btn-terminal text-[10px] disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  {"[SAVE BB CONFIG]"}
+                </button>
+                {bbSaved && (
+                  <span className="font-mono text-[8px] text-ok tracking-wider animate-pulse">
+                    [BB CONFIG SAVED]
+                  </span>
+                )}
+              </div>
+              <a
+                href="https://www.bannerbear.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-mono text-[8px] text-vi-400 underline"
+              >
+                {">>"} Create Bannerbear account (free)
+              </a>
             </div>
           </div>
 

@@ -209,6 +209,37 @@ export async function getCanvaStatus() {
   };
 }
 
+export async function getBBStatus() {
+  const sess = await auth();
+  const authId = sess.userId;
+  if (!authId) return { connected: false, templateId: null };
+
+  const user = await ensureUser(authId);
+  const profile = await db.select().from(profiles).where(eq(profiles.userId, user.id)).then((r) => r[0]);
+  const defaults = profile?.contentDefaults as Record<string, unknown> | null;
+  const apiKey = defaults?.bbApiKey as string | undefined;
+  const templateId = defaults?.bbTemplateId as string | undefined;
+
+  return { connected: !!(apiKey && templateId), templateId: templateId ?? null };
+}
+
+export async function saveBBSettings(apiKey: string, templateId: string) {
+  const sess = await auth();
+  const authId = sess.userId;
+  if (!authId) throw new Error("Unauthorized");
+
+  const user = await ensureUser(authId);
+  const profile = await db.select().from(profiles).where(eq(profiles.userId, user.id)).then((r) => r[0]);
+  const existing = (profile?.contentDefaults ?? {}) as Record<string, unknown>;
+
+  await db.update(profiles).set({
+    contentDefaults: { ...existing, bbApiKey: apiKey, bbTemplateId: templateId },
+  }).where(eq(profiles.userId, user.id));
+
+  revalidatePath("/dashboard/carousel-maker");
+  revalidatePath("/dashboard/thumbnail-maker");
+}
+
 export async function saveCanvaTemplateId(templateId: string) {
   const sess = await auth();
   const authId = sess.userId;
