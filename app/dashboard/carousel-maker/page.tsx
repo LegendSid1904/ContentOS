@@ -3,12 +3,13 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
-import { PLATFORMS } from "@/lib/constants";
+import { PLATFORMS, APP_PLATFORM_MAP } from "@/lib/constants";
 import { generateCarouselOutline, generateCoverHeadlines, generateCarouselCTA, generateCanvaPrompt, saveCarousel } from "@/lib/actions-carousel";
 import { getContentDefaults, getBBStatus } from "@/lib/actions";
 import { useAuthGate } from "@/lib/use-auth-gate";
 import { SignInModal } from "@/components/auth/sign-in-modal";
 import { StreamingLoader } from "@/components/streaming-loader";
+import { ErrorBoundary } from "@/components/error-boundary";
 
 type Step = "input" | "headlines" | "slides" | "cta";
 
@@ -79,6 +80,16 @@ export default function CarouselMakerPage() {
       setCanvaTemplates(saved.canvaTemplates ?? []);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const appId = params.get("app");
+    if (appId && APP_PLATFORM_MAP[appId as keyof typeof APP_PLATFORM_MAP]) {
+      const platforms = APP_PLATFORM_MAP[appId as keyof typeof APP_PLATFORM_MAP];
+      if (platforms.length > 0 && !platform) setPlatform(platforms[0]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -254,6 +265,7 @@ export default function CarouselMakerPage() {
   const isCTAStep = step === "cta" && !loading;
 
   return (
+    <ErrorBoundary>
     <div className="max-w-3xl space-y-6 relative z-10">
       <div>
         <p className="sec-eyebrow">
@@ -273,22 +285,22 @@ export default function CarouselMakerPage() {
         <div className="crt-sweep" />
 
         <div className="crt-micro-tl">
-          <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-te-400/60">sys</span>
+          <span className="font-mono text-[12px] tracking-[0.18em] uppercase text-te-400/60">sys</span>
           <span className="text-tx-3">|</span>
-          <span className="font-mono text-[10px] tracking-[0.18em] uppercase">carousel_maker</span>
+          <span className="font-mono text-[12px] tracking-[0.18em] uppercase">carousel_maker</span>
         </div>
         <div className="crt-micro-tr">
-          <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-tx-3">v1.0.0</span>
+          <span className="font-mono text-[12px] tracking-[0.18em] uppercase text-tx-3">v1.0.0</span>
           <span className="text-tx-3">|</span>
-          <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-tx-3">id: {isSignedIn ? "active" : "preview"}</span>
+          <span className="font-mono text-[12px] tracking-[0.18em] uppercase text-tx-3">id: {isSignedIn ? "active" : "preview"}</span>
         </div>
 
         <div className="crt-monitor-header">
-          <span className="font-mono text-[10px] tracking-[0.24em] uppercase text-tx-3">MODULE</span>
-          <span className="font-mono text-[9px] text-tx-3">|</span>
-          <span className="font-mono text-[10px] tracking-[0.24em] uppercase text-te-400/70">CAROUSEL MAKER</span>
+          <span className="font-mono text-[12px] tracking-[0.24em] uppercase text-tx-3">MODULE</span>
+          <span className="font-mono text-[11px] text-tx-3">|</span>
+          <span className="font-mono text-[12px] tracking-[0.24em] uppercase text-te-400/70">CAROUSEL MAKER</span>
           <div className="flex-1" />
-          <span className="font-mono text-[10px] tracking-[0.1em] text-tx-3">{"\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"}</span>
+          <span className="font-mono text-[12px] tracking-[0.1em] text-tx-3">{"\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"}</span>
         </div>
 
         <div className="crt-monitor-content p-6 space-y-6">
@@ -356,7 +368,7 @@ export default function CarouselMakerPage() {
                   onChange={(e) => setSlideCount(Number(e.target.value))}
                   className="w-full accent-vi-500"
                 />
-                <div className="flex justify-between font-mono text-[10px] text-tx-3 mt-1">
+                <div className="flex justify-between font-mono text-[12px] text-tx-3 mt-1">
                   <span>3</span>
                   <span>10</span>
                 </div>
@@ -371,7 +383,7 @@ export default function CarouselMakerPage() {
                   {">>"} GENERATE CAROUSEL
                 </button>
                 {!valid && (
-                  <span className="font-mono text-[11px] text-tx-3 tracking-wider">AWAITING INPUT</span>
+                  <span className="font-mono text-[13px] text-tx-3 tracking-wider">AWAITING INPUT</span>
                 )}
               </div>
             </>
@@ -425,7 +437,7 @@ export default function CarouselMakerPage() {
 
               <div className="space-y-3">
                 <div>
-                  <label className="font-mono text-[9px] text-tx-4 tracking-wider uppercase mb-2 block">Slide 2 CTA (engagement)</label>
+                  <label className="font-mono text-[11px] text-tx-4 tracking-wider uppercase mb-2 block">Slide 2 CTA (engagement)</label>
                   <div className="space-y-1">
                     {ctaOptions.filter((c) => c.slide === 2 || c.slide.toString() === "2").map((c, i) => (
                       <button
@@ -435,8 +447,8 @@ export default function CarouselMakerPage() {
                       >
                         <span className="boot-option-arrow">{selectedCtas.slide2 === c.text ? "\u25B6" : `0${i + 1}`}</span>
                         <span className="boot-option-label flex flex-col gap-0.5">
-                          <span className="text-[10px] text-tx-1">{c.text}</span>
-                          <span className="text-[8px] text-tx-4 tracking-wider uppercase">style: {c.style}</span>
+                          <span className="text-[12px] text-tx-1">{c.text}</span>
+                          <span className="text-[10px] text-tx-4 tracking-wider uppercase">style: {c.style}</span>
                         </span>
                         <span className={`diag-badge ${selectedCtas.slide2 === c.text ? "diag-ok" : "diag-idle"}`}>
                           {selectedCtas.slide2 === c.text ? "[SELECTED]" : "[IDLE]"}
@@ -447,7 +459,7 @@ export default function CarouselMakerPage() {
                 </div>
 
                 <div>
-                  <label className="font-mono text-[9px] text-tx-4 tracking-wider uppercase mb-2 block">Final Slide CTA (conversion)</label>
+                  <label className="font-mono text-[11px] text-tx-4 tracking-wider uppercase mb-2 block">Final Slide CTA (conversion)</label>
                   <div className="space-y-1">
                     {ctaOptions.filter((c) => c.slide.toString() === "final" || c.slide === slides.length).map((c, i) => (
                       <button
@@ -457,8 +469,8 @@ export default function CarouselMakerPage() {
                       >
                         <span className="boot-option-arrow">{selectedCtas.final === c.text ? "\u25B6" : `0${i + 1}`}</span>
                         <span className="boot-option-label flex flex-col gap-0.5">
-                          <span className="text-[10px] text-tx-1">{c.text}</span>
-                          <span className="text-[8px] text-tx-4 tracking-wider uppercase">style: {c.style}</span>
+                          <span className="text-[12px] text-tx-1">{c.text}</span>
+                          <span className="text-[10px] text-tx-4 tracking-wider uppercase">style: {c.style}</span>
                         </span>
                         <span className={`diag-badge ${selectedCtas.final === c.text ? "diag-ok" : "diag-idle"}`}>
                           {selectedCtas.final === c.text ? "[SELECTED]" : "[IDLE]"}
@@ -483,20 +495,20 @@ export default function CarouselMakerPage() {
                 <label className="term-label mb-0 text-[12px]">GENERATED_SLIDES</label>
                 <div className="flex items-center gap-2">
                   {isSignedIn && (
-                    <span className={`font-mono text-[8px] tracking-wider ${bbConnected ? "text-ok" : "text-tx-4"}`}>
+                    <span className={`font-mono text-[10px] tracking-wider ${bbConnected ? "text-ok" : "text-tx-4"}`}>
                       {bbConnected ? "[BB:ON]" : "[BB:OFF]"}
                     </span>
                   )}
-                  <button onClick={handleGenerateCTA} className="btn-terminal text-[9px]">
+                  <button onClick={handleGenerateCTA} className="btn-terminal text-[11px]">
                     {"[CTA]"}
                   </button>
-                  <button onClick={handleGenerateCanvaPrompts} className="btn-terminal text-[9px]">
+                  <button onClick={handleGenerateCanvaPrompts} className="btn-terminal text-[11px]">
                     {"[CANVA]"}
                   </button>
-                  <button onClick={handleSave} className="btn-terminal text-[9px]">
+                  <button onClick={handleSave} className="btn-terminal text-[11px]">
                     {"[SAVE]"}
                   </button>
-                  <button onClick={handleRegenerate} className="btn-terminal text-[9px]">
+                  <button onClick={handleRegenerate} className="btn-terminal text-[11px]">
                     {"[REGEN]"}
                   </button>
                 </div>
@@ -515,12 +527,12 @@ export default function CarouselMakerPage() {
                     <div className="crt-vignette" />
                     <div className="crt-sweep" />
                     <div className="crt-micro-tl">
-                      <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-te-400/60">slide</span>
+                      <span className="font-mono text-[12px] tracking-[0.18em] uppercase text-te-400/60">slide</span>
                       <span className="text-tx-3">|</span>
-                      <span className="font-mono text-[10px] tracking-[0.18em] uppercase">{slide.slide_number}/{slides.length}</span>
+                      <span className="font-mono text-[12px] tracking-[0.18em] uppercase">{slide.slide_number}/{slides.length}</span>
                     </div>
                     <div className="crt-micro-tr">
-                      <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-tx-3">{slide.visual_direction}</span>
+                      <span className="font-mono text-[12px] tracking-[0.18em] uppercase text-tx-3">{slide.visual_direction}</span>
                     </div>
                     <div className="crt-monitor-header">
                       <span className="w-2 h-2 rounded-full" style={{ backgroundColor: colors.accent }} />
@@ -528,7 +540,7 @@ export default function CarouselMakerPage() {
                       <div className="flex-1" />
                       <button
                         onClick={() => exportSlideAsPNG(document.querySelector(`[data-slide="${slide.slide_number}"]`) as HTMLElement, `slide-${slide.slide_number}.png`)}
-                        className="btn-terminal text-[8px]"
+                        className="btn-terminal text-[10px]"
                       >
                         {"[PNG]"}
                       </button>
@@ -554,14 +566,14 @@ export default function CarouselMakerPage() {
                           {slide.copy}
                         </p>
                         <div className="mt-auto pt-4">
-                          <span className="font-mono text-[11px] text-white/50 italic">
+                          <span className="font-mono text-[13px] text-white/50 italic">
                             {"\u25B6"} {slide.visual_direction}
                           </span>
                         </div>
                       </div>
                     </div>
                     <div className="crt-micro-bl">
-                      <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-ok">SLIDE READY</span>
+                      <span className="font-mono text-[12px] tracking-[0.18em] uppercase text-ok">SLIDE READY</span>
                     </div>
                   </div>
                 );
@@ -569,8 +581,8 @@ export default function CarouselMakerPage() {
 
               {isSignedIn && !bbConnected && (
                 <div className="reveal d1 pt-2">
-                  <span className="font-mono text-[9px] text-tx-4">Set Bannerbear template in </span>
-                  <Link href="/dashboard/settings" className="font-mono text-[9px] text-te-400 underline">
+                  <span className="font-mono text-[11px] text-tx-4">Set Bannerbear template in </span>
+                  <Link href="/dashboard/settings" className="font-mono text-[11px] text-te-400 underline">
                     Dashboard Settings
                   </Link>
                 </div>
@@ -578,12 +590,12 @@ export default function CarouselMakerPage() {
 
               {bbImages.length > 0 && (
                 <div className="reveal d1 space-y-3">
-                  <label className="term-label text-[11px]">BANNERBEAR_IMAGES</label>
+                  <label className="term-label text-[13px]">BANNERBEAR_IMAGES</label>
                   <div className="grid grid-cols-2 gap-2">
                     {bbImages.map((img) => (
                       <div key={img.slide_number} className="crt-monitor relative crt-brackets" style={{ background: "rgba(0,0,0,0.15)" }}>
                         <div className="crt-monitor-content p-2 space-y-2">
-                          <div className="font-mono text-[9px] text-te-400/60">slide_{img.slide_number}</div>
+                          <div className="font-mono text-[11px] text-te-400/60">slide_{img.slide_number}</div>
                           {img.pngUrl && (
                             <img src={img.pngUrl} alt={`Slide ${img.slide_number}`} className="w-full rounded-sm" />
                           )}
@@ -592,7 +604,7 @@ export default function CarouselMakerPage() {
                             target="_blank"
                             rel="noopener noreferrer"
                             download
-                            className="btn-terminal text-[8px] inline-block"
+                            className="btn-terminal text-[10px] inline-block"
                           >
                             {"[DOWNLOAD]"}
                           </a>
@@ -609,16 +621,16 @@ export default function CarouselMakerPage() {
                   {canvaTemplates.map((t, i) => (
                     <div key={i} className="crt-monitor relative crt-brackets" style={{ background: "rgba(0,0,0,0.2)" }}>
                       <div className="crt-monitor-content p-3 space-y-2">
-                        <div className="font-mono text-[11px] text-te-400/80 tracking-wider uppercase">{t.name}</div>
-                        <div className="font-mono text-[10px] text-tx-2 leading-relaxed">{t.prompt}</div>
+                        <div className="font-mono text-[13px] text-te-400/80 tracking-wider uppercase">{t.name}</div>
+                        <div className="font-mono text-[12px] text-tx-2 leading-relaxed">{t.prompt}</div>
                         <div className="flex gap-2 flex-wrap">
                           {t.colors.map((c, j) => (
-                            <span key={j} className="font-mono text-[8px] text-tx-4 tracking-wider">{c}</span>
+                            <span key={j} className="font-mono text-[10px] text-tx-4 tracking-wider">{c}</span>
                           ))}
                         </div>
                         <button
                           onClick={() => navigator.clipboard.writeText(t.prompt)}
-                          className="btn-terminal text-[8px]"
+                          className="btn-terminal text-[10px]"
                         >
                           {"[COPY PROMPT]"}
                         </button>
@@ -641,23 +653,23 @@ export default function CarouselMakerPage() {
         </div>
 
         <div className="crt-micro-bl">
-          <span className="font-mono text-[10px] tracking-[0.18em] uppercase"
+          <span className="font-mono text-[12px] tracking-[0.18em] uppercase"
             style={{ color: step === "slides" ? "rgba(34,197,94,0.6)" : "rgba(86,86,128,0.6)" }}
           >
             {step === "input" ? "AWAITING INPUT" : step === "headlines" ? "HEADLINES READY" : step === "cta" ? "CTA READY" : "SLIDES READY"}
           </span>
         </div>
         <div className="crt-micro-br">
-          <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-tx-3">
+          <span className="font-mono text-[12px] tracking-[0.18em] uppercase text-tx-3">
             {loading ? "GENERATING..." : "STANDBY"}
           </span>
         </div>
 
         <div className="crt-monitor-footer">
-          <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-tx-3">
+          <span className="font-mono text-[12px] tracking-[0.2em] uppercase text-tx-3">
             {step === "input" ? "INPUT" : step === "headlines" ? "HEADLINES" : step === "cta" ? "CTA" : "SLIDES"}
           </span>
-          <span className="font-mono text-[9px] text-center">
+          <span className="font-mono text-[11px] text-center">
             {!isSignedIn ? (
               <span className="text-vi-400/60">
                 {freeActionsLeft > 0 ? `FREE: ${freeActionsLeft} gen` : "FREE: 0 "}
@@ -671,13 +683,13 @@ export default function CarouselMakerPage() {
               <span className="text-tx-3">[system ready]</span>
             )}
           </span>
-          <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-tx-3">
+          <span className="font-mono text-[12px] tracking-[0.2em] uppercase text-tx-3">
             {loading ? "BUSY" : "STANDBY"}
           </span>
         </div>
       </div>
 
       <SignInModal open={showModal} onClose={closeModal} context="generate carousel" />
-    </div>
+    </div></ErrorBoundary>
   );
 }

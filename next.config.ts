@@ -8,6 +8,14 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "10mb",
     },
   },
+  async rewrites() {
+    return [
+      {
+        source: "/dashboard/app/:app/:module",
+        destination: "/dashboard/:module?app=:app",
+      },
+    ];
+  },
 };
 
 export default withSentryConfig(nextConfig, {

@@ -286,14 +286,14 @@ body {
 }
 
 .lg-head-label {
-  font-size: 7px;
+  font-size: 9px;
   letter-spacing: 0.24em;
   text-transform: uppercase;
   color: var(--color-tx-4);
 }
 
 .lg-head-divider {
-  font-size: 6px;
+  font-size: 9px;
   color: rgba(139, 92, 246, 0.15);
 }
 
@@ -302,7 +302,7 @@ body {
 }
 
 .lg-head-pixel {
-  font-size: 7px;
+  font-size: 9px;
   letter-spacing: 0.1em;
   color: rgba(139, 92, 246, 0.1);
 }
@@ -324,7 +324,7 @@ body {
 }
 
 .lg-foot-label {
-  font-size: 7px;
+  font-size: 9px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--color-tx-4);
@@ -452,13 +452,13 @@ body {
 }
 
 .logo-divider-dot {
-  font-size: 6px;
+  font-size: 9px;
   color: rgba(139, 92, 246, 0.2);
 }
 
 .logo-sub {
   font-family: var(--font-display);
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 0.3em;
   text-transform: uppercase;
   color: var(--color-tx-3);
@@ -468,7 +468,7 @@ body {
 
 .logo-build {
   font-family: var(--font-mono);
-  font-size: 7px;
+  font-size: 9px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--color-tx-4);
@@ -497,7 +497,7 @@ body {
   height: 14px;
   font-size: 10px;
   opacity: 0;
-  transition: all 0.3s ease;
+  transition: opacity 0.3s var(--ease-default);
 }
 
 .boot-line.visible {
@@ -549,7 +549,7 @@ body {
   align-items: center;
   gap: 5px;
   justify-content: center;
-  font-size: 7px;
+  font-size: 9px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -600,7 +600,7 @@ body {
   background: linear-gradient(90deg, var(--color-te-400), var(--color-vi-500), var(--color-te-400));
   background-size: 200% 100%;
   animation: progressShift 2s linear infinite;
-  transition: width 0.15s ease-out;
+  transition: width 0.15s var(--ease-default);
   box-shadow: 0 0 10px rgba(0, 219, 231, 0.25);
 }
 
@@ -612,7 +612,7 @@ body {
 .progress-row.completed .progress-fill,
 .progress-row.completed .progress-pct {
   opacity: 0.4;
-  transition: opacity 0.6s ease;
+  transition: opacity 0.6s var(--ease-default);
 }
 
 .progress-pct {
@@ -784,7 +784,7 @@ body {
   align-items: center;
   gap: 6px;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--color-tx-3);
@@ -855,16 +855,16 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-  height: 36px;
+  min-height: 40px;
   padding: 0 12px;
   border-radius: 2px;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-tx-3);
   text-decoration: none;
-  transition: all 0.15s ease;
+  transition: color 0.15s var(--ease-default), background 0.15s var(--ease-default), border-color 0.15s var(--ease-default);
   border: 1px solid transparent;
   position: relative;
 }
@@ -894,7 +894,7 @@ body {
 
 .sidebar-link svg {
   opacity: 0.5;
-  transition: opacity 0.15s ease;
+  transition: opacity 0.15s var(--ease-default);
 }
 
 .sidebar-link:hover svg,
@@ -1071,16 +1071,16 @@ body {
   display: flex;
   align-items: center;
   gap: 4px;
-  height: 36px;
+  min-height: 40px;
   padding: 0 12px;
   border-radius: 2px;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--color-tx-2);
   text-decoration: none;
-  transition: all 0.15s ease;
+  transition: color 0.15s var(--ease-default), background 0.15s var(--ease-default), border-color 0.15s var(--ease-default);
   border: 1px solid transparent;
 }
 
@@ -1094,16 +1094,16 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  height: 40px;
+  min-height: 44px;
   padding: 0 20px;
   border-radius: 2px;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--color-tx-2);
   text-decoration: none;
-  transition: all 0.15s ease;
+  transition: color 0.15s var(--ease-default), background 0.15s var(--ease-default), border-color 0.15s var(--ease-default), box-shadow 0.15s var(--ease-default);
   border: 1px solid rgba(255,255,255,0.06);
   background: transparent;
   cursor: pointer;
@@ -1123,10 +1123,9 @@ body {
 }
 
 .btn-terminal-primary:hover {
-  color: var(--color-vi-200);
-  background: rgba(139,92,246,0.12);
-  border-color: rgba(139,92,246,0.3);
-  box-shadow: 0 0 30px rgba(139,92,246,0.1);
+  color: #fff;
+  background: rgba(139,92,246,0.2);
+  border-color: rgba(139,92,246,0.5);
 }
 
 .tag-terminal {
@@ -1137,7 +1136,7 @@ body {
   padding: 0 10px;
   border-radius: 2px;
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-tx-3);
@@ -1147,7 +1146,7 @@ body {
 
 .field-label {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--color-tx-3);
@@ -1188,7 +1187,7 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.04);
   border-radius: 2px;
   padding: var(--spacing-s5);
-  transition: all 0.3s ease;
+  transition: border-color 0.3s var(--ease-default), background 0.3s var(--ease-default), box-shadow 0.3s var(--ease-default);
   position: relative;
   display: block;
   text-decoration: none;
@@ -1221,15 +1220,103 @@ body {
 }
 
 .module-card-2a:hover {
-  border-color: rgba(139,92,246,0.15);
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(255, 255, 255, 0.04);
 }
+
+.module-card-2a.platform-youtube:hover {
+  border-color: rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.08);
+}
+.module-card-2a.platform-youtube:hover .mod-desc { color: rgba(239, 68, 68, 0.7); }
+.platform-youtube .mod-badge {
+  color: rgba(239, 68, 68, 0.4);
+  border-color: rgba(239, 68, 68, 0.08);
+}
+
+.module-card-2a.platform-instagram:hover {
+  border-color: rgba(236, 72, 153, 0.3);
+  background: rgba(236, 72, 153, 0.08);
+}
+.module-card-2a.platform-instagram:hover .mod-desc { color: rgba(236, 72, 153, 0.7); }
+.platform-instagram .mod-badge {
+  color: rgba(236, 72, 153, 0.4);
+  border-color: rgba(236, 72, 153, 0.08);
+}
+
+.module-card-2a.platform-tiktok:hover {
+  border-color: rgba(34, 211, 238, 0.3);
+  background: rgba(34, 211, 238, 0.08);
+}
+.module-card-2a.platform-tiktok:hover .mod-desc { color: rgba(34, 211, 238, 0.7); }
+.platform-tiktok .mod-badge {
+  color: rgba(34, 211, 238, 0.4);
+  border-color: rgba(34, 211, 238, 0.08);
+}
+
+.module-card-2a.platform-linkedin:hover {
+  border-color: rgba(96, 165, 250, 0.3);
+  background: rgba(96, 165, 250, 0.08);
+}
+.module-card-2a.platform-linkedin:hover .mod-desc { color: rgba(96, 165, 250, 0.7); }
+.platform-linkedin .mod-badge {
+  color: rgba(96, 165, 250, 0.4);
+  border-color: rgba(96, 165, 250, 0.08);
+}
+
+/* Platform CRT accent colors */
+.crt-accent-youtube {
+  --crt-accent-h: 0;
+  --crt-accent-s: 84%;
+  --crt-accent-l: 60%;
+  --crt-accent-r: 239;
+  --crt-accent-g: 68;
+  --crt-accent-b: 68;
+}
+
+.crt-accent-instagram {
+  --crt-accent-h: 330;
+  --crt-accent-s: 83%;
+  --crt-accent-l: 60%;
+  --crt-accent-r: 236;
+  --crt-accent-g: 72;
+  --crt-accent-b: 153;
+}
+
+.crt-accent-tiktok {
+  --crt-accent-h: 184;
+  --crt-accent-s: 80%;
+  --crt-accent-l: 53%;
+  --crt-accent-r: 34;
+  --crt-accent-g: 211;
+  --crt-accent-b: 238;
+}
+
+.crt-accent-linkedin {
+  --crt-accent-h: 214;
+  --crt-accent-s: 93%;
+  --crt-accent-l: 69%;
+  --crt-accent-r: 96;
+  --crt-accent-g: 165;
+  --crt-accent-b: 250;
+}
+
+.crt-accent-youtube .sec-eyebrow-dot { background: #ef4444; }
+.crt-accent-youtube .tag-terminal .text-vi-400 { color: #ef4444; }
+
+.crt-accent-instagram .sec-eyebrow-dot { background: #ec4899; }
+.crt-accent-instagram .tag-terminal .text-vi-400 { color: #ec4899; }
+
+.crt-accent-tiktok .sec-eyebrow-dot { background: #22d3ee; }
+.crt-accent-tiktok .tag-terminal .text-vi-400 { color: #22d3ee; }
+
+.crt-accent-linkedin .sec-eyebrow-dot { background: #60a5fa; }
+.crt-accent-linkedin .tag-terminal .text-vi-400 { color: #60a5fa; }
 
 .mod-badge {
   display: inline-flex;
   align-items: center;
   font-family: var(--font-mono);
-  font-size: 7px;
+  font-size: 9px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: rgba(139,92,246,0.35);
@@ -1255,7 +1342,7 @@ body {
 
 .mod-name {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -1265,7 +1352,7 @@ body {
 
 .mod-desc {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 11px;
   color: var(--color-tx-3);
   line-height: 1.4;
 }
@@ -1283,7 +1370,7 @@ body {
   border: 1px solid rgba(34, 211, 238, 0.06);
   border-radius: 4px;
   padding: var(--spacing-s3) var(--spacing-s3);
-  transition: border-color 0.2s ease;
+  transition: border-color 0.2s var(--ease-default);
 }
 
 .usage-card:hover {
@@ -1302,7 +1389,7 @@ body {
   height: 100%;
   background: linear-gradient(90deg, rgba(34, 211, 238, 0.5), rgba(139, 92, 246, 0.5));
   border-radius: 2px;
-  transition: width 0.6s ease;
+  transition: width 0.6s var(--ease-default);
 }
 
 /* ==============================
@@ -1446,7 +1533,7 @@ body {
   caret-color: var(--color-te-400);
   width: 100%;
   outline: none;
-  transition: border-color 0.2s ease;
+  transition: border-color 0.2s var(--ease-default);
 }
 
 .term-field:focus {
@@ -1464,7 +1551,7 @@ body {
   display: inline-flex;
   align-items: center;
   font-family: var(--font-mono);
-  font-size: 7px;
+  font-size: 9px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   padding: 1px 6px;
@@ -1505,7 +1592,7 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.06);
   position: relative;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: border-color 0.2s var(--ease-default), box-shadow 0.2s var(--ease-default);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1557,7 +1644,7 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.04);
   background: rgba(0, 0, 0, 0.15);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: border-color 0.15s var(--ease-default), background 0.15s var(--ease-default), color 0.15s var(--ease-default);
   text-align: left;
   font-family: var(--font-mono);
   font-size: 12px;
@@ -1583,7 +1670,7 @@ body {
   width: 14px;
   flex-shrink: 0;
   text-align: center;
-  transition: opacity 0.15s ease;
+  transition: opacity 0.15s var(--ease-default);
 }
 
 .boot-option.active .boot-option-arrow {
@@ -1653,7 +1740,7 @@ body {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 7px;
+  font-size: 9px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   pointer-events: none;
@@ -1672,7 +1759,7 @@ body {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 7px;
+  font-size: 9px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   pointer-events: none;
@@ -1691,7 +1778,7 @@ body {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 7px;
+  font-size: 9px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   pointer-events: none;
@@ -1706,7 +1793,7 @@ body {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 7px;
+  font-size: 9px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   pointer-events: none;

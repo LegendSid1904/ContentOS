@@ -27,10 +27,10 @@ export function StreamingLoader({
             <span className="boot-loader-text">{s.label}</span>
             <span className="boot-loader-ok">
               {s.status === "done" && (
-                <span className="text-ok tracking-wider text-[9px]">DONE</span>
+                <span className="text-ok tracking-wider text-[11px]">DONE</span>
               )}
               {s.status === "error" && (
-                <span className="text-err tracking-wider text-[9px]">FAIL</span>
+                <span className="text-err tracking-wider text-[11px]">FAIL</span>
               )}
               {isActive && isLast && (
                 <span className="text-te-400/80 tracking-wider">LOADING</span>

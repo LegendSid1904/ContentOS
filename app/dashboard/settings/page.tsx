@@ -5,6 +5,7 @@ import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { PLATFORMS, TONES } from "@/lib/constants";
 import { updateProfile, getProfile, saveBBSettings, saveGeminiSettings } from "@/lib/actions";
+import { ErrorBoundary } from "@/components/error-boundary";
 
 const EXPERIENCE_LEVELS = [
   { value: "beginner", label: "BEGINNER", desc: "New to content creation" },
@@ -50,6 +51,7 @@ export default function SettingsPage() {
   const [bbSaved, setBbSaved] = useState(false);
   const [geminiApiKey, setGeminiApiKey] = useState("");
   const [geminiSaved, setGeminiSaved] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -99,6 +101,7 @@ export default function SettingsPage() {
       await updateProfile(fd);
       setSaving(false);
       setSaved(true);
+      setLastSaved(new Date());
       setTimeout(() => setSaved(false), 3000);
     } catch {
       setSaving(false);
@@ -128,6 +131,7 @@ export default function SettingsPage() {
   }
 
   return (
+    <ErrorBoundary>
     <div className="max-w-2xl space-y-6 relative z-10">
       <div>
         <p className="sec-eyebrow">
@@ -146,22 +150,22 @@ export default function SettingsPage() {
         <div className="crt-sweep" />
 
         <div className="crt-micro-tl">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-te-400/60">sys</span>
+          <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-te-400/60">sys</span>
           <span className="text-tx-4">|</span>
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase">profile</span>
+          <span className="font-mono text-[9px] tracking-[0.18em] uppercase">profile</span>
         </div>
         <div className="crt-micro-tr">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">v1.0.4</span>
+          <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-tx-4">v1.0.4</span>
           <span className="text-tx-4">|</span>
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-te-400/60">online</span>
+          <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-te-400/60">online</span>
         </div>
 
         <div className="crt-monitor-header">
-          <span className="font-mono text-[7px] tracking-[0.24em] uppercase text-tx-4">SYS</span>
-          <span className="font-mono text-[6px] text-tx-4">|</span>
-          <span className="font-mono text-[7px] tracking-[0.24em] uppercase text-te-400/70">CREATOR PROFILE</span>
+          <span className="font-mono text-[9px] tracking-[0.24em] uppercase text-tx-4">SYS</span>
+          <span className="font-mono text-[9px] text-tx-4">|</span>
+          <span className="font-mono text-[9px] tracking-[0.24em] uppercase text-te-400/70">CREATOR PROFILE</span>
           <div className="flex-1" />
-          <span className="font-mono text-[7px] tracking-[0.1em] text-tx-4">{"\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"}</span>
+          <span className="font-mono text-[9px] tracking-[0.1em] text-tx-4">{"\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"}</span>
         </div>
 
         <form onSubmit={handleSave} autoComplete="off">
@@ -182,11 +186,11 @@ export default function SettingsPage() {
                 <div className="font-medium text-[15px]">
                   {user?.firstName} {user?.lastName}
                 </div>
-                <div className="font-mono text-[11px] text-tx-2 mt-0.5 flex items-center gap-2">
+                <div className="font-mono text-[13px] text-tx-2 mt-0.5 flex items-center gap-2">
                   <span>{user?.emailAddresses[0]?.emailAddress}</span>
                   <span className="diag-badge diag-info">VERIFIED</span>
                 </div>
-                <span className="font-mono text-[8px] text-tx-4 tracking-wider uppercase">
+                <span className="font-mono text-[10px] text-tx-4 tracking-wider uppercase">
                   avatar via google
                 </span>
               </div>
@@ -204,7 +208,7 @@ export default function SettingsPage() {
                 data-form-type="other"
                 className="term-field"
               />
-              <p className="font-mono text-[8px] text-tx-4 mt-1 tracking-wider">
+              <p className="font-mono text-[10px] text-tx-4 mt-1 tracking-wider">
                 your public handle across the platform
               </p>
             </div>
@@ -219,7 +223,7 @@ export default function SettingsPage() {
                 rows={3}
                 className="term-field resize-none"
               />
-              <p className="font-mono text-[8px] text-tx-4 mt-1 tracking-wider">
+              <p className="font-mono text-[10px] text-tx-4 mt-1 tracking-wider">
                 brief about section &mdash; displayed on your creator profile
               </p>
             </div>
@@ -239,8 +243,8 @@ export default function SettingsPage() {
                       {experienceLevel === el.value ? "\u25B6" : ">>"}
                     </span>
                     <span className="boot-option-label flex flex-col gap-0.5">
-                      <span className="text-[9px] tracking-[0.15em] uppercase">{el.label}</span>
-                      <span className="font-mono text-[8px] text-tx-4">{el.desc}</span>
+                      <span className="text-[11px] tracking-[0.15em] uppercase">{el.label}</span>
+                      <span className="font-mono text-[10px] text-tx-4">{el.desc}</span>
                     </span>
                     <span className={`diag-badge ${experienceLevel === el.value ? "diag-ok" : "diag-idle"}`}>
                       {experienceLevel === el.value ? "[ACTIVE]" : "[IDLE]"}
@@ -248,7 +252,7 @@ export default function SettingsPage() {
                   </button>
                 ))}
               </div>
-              <p className="font-mono text-[8px] text-tx-4 mt-1 tracking-wider">
+              <p className="font-mono text-[10px] text-tx-4 mt-1 tracking-wider">
                 affects AI output complexity and suggestions
               </p>
             </div>
@@ -268,8 +272,8 @@ export default function SettingsPage() {
                       {postingSchedule === s.value ? "\u25B6" : ">>"}
                     </span>
                     <span className="boot-option-label flex flex-col gap-0.5">
-                      <span className="text-[9px] tracking-[0.15em] uppercase">{s.label}</span>
-                      <span className="font-mono text-[8px] text-tx-4">{s.desc}</span>
+                      <span className="text-[11px] tracking-[0.15em] uppercase">{s.label}</span>
+                      <span className="font-mono text-[10px] text-tx-4">{s.desc}</span>
                     </span>
                     <span className={`diag-badge ${postingSchedule === s.value ? "diag-ok" : "diag-idle"}`}>
                       {postingSchedule === s.value ? "[ACTIVE]" : "[IDLE]"}
@@ -277,7 +281,7 @@ export default function SettingsPage() {
                   </button>
                 ))}
               </div>
-              <p className="font-mono text-[8px] text-tx-4 mt-1 tracking-wider">
+              <p className="font-mono text-[10px] text-tx-4 mt-1 tracking-wider">
                 used by calendar generator to distribute content
               </p>
             </div>
@@ -288,20 +292,20 @@ export default function SettingsPage() {
             <div className="px-6 pt-5 pb-1">
               <div className="flex items-center gap-2 mb-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-te-400/60" />
-                <span className="font-mono text-[9px] tracking-[0.15em] uppercase text-tx-2">Social Links</span>
+                <span className="font-mono text-[11px] tracking-[0.15em] uppercase text-tx-2">Social Links</span>
               </div>
-              <p className="font-mono text-[8px] text-tx-4 tracking-wider mb-4">
+              <p className="font-mono text-[10px] text-tx-4 tracking-wider mb-4">
                 connect your creator channels for AI-powered cross-platform suggestions
               </p>
             </div>
             <div className="px-6 pb-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
               {SOCIAL_FIELDS.map((sf) => (
                 <div key={sf.key}>
-                  <label className="font-mono text-[8px] text-tx-3 tracking-[0.2em] uppercase mb-1 block">
+                  <label className="font-mono text-[10px] text-tx-3 tracking-[0.2em] uppercase mb-1 block">
                     {sf.label}
                   </label>
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-[8px] text-vi-400 w-7 flex-shrink-0">[{sf.icon}]</span>
+                    <span className="font-mono text-[10px] text-vi-400 w-7 flex-shrink-0">[{sf.icon}]</span>
                     <input
                       value={socialLinks[sf.key] || ""}
                       onChange={(e) => setSocialLinks((prev) => ({ ...prev, [sf.key]: e.target.value }))}
@@ -311,7 +315,7 @@ export default function SettingsPage() {
                         sf.key === "youtube" ? "https://youtube.com/@..." :
                         `https://${sf.key}.com/@...`
                       }
-                      className="term-field text-[10px]"
+                      className="term-field text-[12px]"
                     />
                   </div>
                 </div>
@@ -324,9 +328,9 @@ export default function SettingsPage() {
             <div className="px-6 pt-5 pb-1">
               <div className="flex items-center gap-2 mb-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-te-400/60" />
-                <span className="font-mono text-[9px] tracking-[0.15em] uppercase text-tx-2">Bannerbear</span>
+                <span className="font-mono text-[11px] tracking-[0.15em] uppercase text-tx-2">Bannerbear</span>
               </div>
-              <p className="font-mono text-[8px] text-tx-4 tracking-wider mb-4">
+              <p className="font-mono text-[10px] text-tx-4 tracking-wider mb-4">
                 generate actual slide images from templates &mdash; <a href="https://www.bannerbear.com" target="_blank" rel="noopener noreferrer" className="text-te-400 underline">free tier</a>
               </p>
             </div>
@@ -339,7 +343,7 @@ export default function SettingsPage() {
                   placeholder="Paste your Bannerbear API key"
                   className="term-field"
                 />
-                <p className="font-mono text-[8px] text-tx-4 mt-1 tracking-wider">
+                <p className="font-mono text-[10px] text-tx-4 mt-1 tracking-wider">
                   get this from your project settings at bannerbear.com
                 </p>
               </div>
@@ -351,7 +355,7 @@ export default function SettingsPage() {
                   placeholder="Paste your Bannerbear template ID"
                   className="term-field"
                 />
-                <p className="font-mono text-[8px] text-tx-4 mt-1 tracking-wider">
+                <p className="font-mono text-[10px] text-tx-4 mt-1 tracking-wider">
                   create a template in bannerbear with text layers named: headline, copy, slide_number
                 </p>
               </div>
@@ -364,12 +368,12 @@ export default function SettingsPage() {
                     setBbSaved(true);
                     setTimeout(() => setBbSaved(false), 3000);
                   }}
-                  className="btn-terminal text-[10px] disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="btn-terminal text-[12px] disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   {"[SAVE BB CONFIG]"}
                 </button>
                 {bbSaved && (
-                  <span className="font-mono text-[8px] text-ok tracking-wider animate-pulse">
+                  <span className="font-mono text-[10px] text-ok tracking-wider animate-pulse">
                     [BB CONFIG SAVED]
                   </span>
                 )}
@@ -378,7 +382,7 @@ export default function SettingsPage() {
                 href="https://www.bannerbear.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-mono text-[8px] text-vi-400 underline"
+                className="font-mono text-[10px] text-vi-400 underline"
               >
                 {">>"} Create Bannerbear account (free)
               </a>
@@ -390,9 +394,9 @@ export default function SettingsPage() {
             <div className="px-6 pt-5 pb-1">
               <div className="flex items-center gap-2 mb-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-te-400/60" />
-                <span className="font-mono text-[9px] tracking-[0.15em] uppercase text-tx-2">Gemini Imagen</span>
+                <span className="font-mono text-[11px] tracking-[0.15em] uppercase text-tx-2">Gemini Imagen</span>
               </div>
-              <p className="font-mono text-[8px] text-tx-4 tracking-wider mb-4">
+              <p className="font-mono text-[10px] text-tx-4 tracking-wider mb-4">
                 generate images via Google Imagen 3 &mdash; <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" className="text-te-400 underline">free API key</a>
               </p>
             </div>
@@ -405,7 +409,7 @@ export default function SettingsPage() {
                   placeholder="Paste your Gemini API key"
                   className="term-field"
                 />
-                <p className="font-mono text-[8px] text-tx-4 mt-1 tracking-wider">
+                <p className="font-mono text-[10px] text-tx-4 mt-1 tracking-wider">
                   get this from aistudio.google.com &mdash; free tier includes Imagen 3
                 </p>
               </div>
@@ -418,12 +422,12 @@ export default function SettingsPage() {
                     setGeminiSaved(true);
                     setTimeout(() => setGeminiSaved(false), 3000);
                   }}
-                  className="btn-terminal text-[10px] disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="btn-terminal text-[12px] disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   {"[SAVE GEMINI KEY]"}
                 </button>
                 {geminiSaved && (
-                  <span className="font-mono text-[8px] text-ok tracking-wider animate-pulse">
+                  <span className="font-mono text-[10px] text-ok tracking-wider animate-pulse">
                     [GEMINI KEY SAVED]
                   </span>
                 )}
@@ -432,7 +436,7 @@ export default function SettingsPage() {
                 href="https://aistudio.google.com/apikey"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-mono text-[8px] text-vi-400 underline"
+                className="font-mono text-[10px] text-vi-400 underline"
               >
                 {">>"} Get Gemini API key (free)
               </a>
@@ -444,9 +448,9 @@ export default function SettingsPage() {
             <div className="px-6 pt-5 pb-1">
               <div className="flex items-center gap-2 mb-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-fu-400/60" />
-                <span className="font-mono text-[9px] tracking-[0.15em] uppercase text-tx-2">Content Defaults</span>
+                <span className="font-mono text-[11px] tracking-[0.15em] uppercase text-tx-2">Content Defaults</span>
               </div>
-              <p className="font-mono text-[8px] text-tx-4 tracking-wider mb-4">
+              <p className="font-mono text-[10px] text-tx-4 tracking-wider mb-4">
                 auto-fills input forms when you open a module
               </p>
             </div>
@@ -460,7 +464,7 @@ export default function SettingsPage() {
                       key={p}
                       type="button"
                       onClick={() => setDefaultPlatform(p === "None" ? "" : p)}
-                      className={`px-2.5 h-7 font-mono text-[9px] tracking-wider uppercase border rounded-sm transition-all duration-150 ${
+                      className={`px-2.5 h-7 font-mono text-[11px] tracking-wider uppercase border rounded-sm transition-colors duration-150 ${
                         defaultPlatform === p || (p === "None" && !defaultPlatform)
                           ? "bg-te-400/10 border-te-400/30 text-te-400"
                           : "bg-black/20 border-white/[0.06] text-tx-3 hover:border-white/[0.12]"
@@ -481,7 +485,7 @@ export default function SettingsPage() {
                       key={t}
                       type="button"
                       onClick={() => setDefaultTone(t === "None" ? "" : t)}
-                      className={`px-2.5 h-7 font-mono text-[9px] tracking-wider uppercase border rounded-sm transition-all duration-150 ${
+                      className={`px-2.5 h-7 font-mono text-[11px] tracking-wider uppercase border rounded-sm transition-colors duration-150 ${
                         defaultTone === t || (t === "None" && !defaultTone)
                           ? "bg-vi-400/10 border-vi-400/30 text-vi-400"
                           : "bg-black/20 border-white/[0.06] text-tx-3 hover:border-white/[0.12]"
@@ -502,7 +506,7 @@ export default function SettingsPage() {
                       key={f}
                       type="button"
                       onClick={() => setDefaultFormat(f === "None" ? "" : f)}
-                      className={`px-2.5 h-7 font-mono text-[9px] tracking-wider uppercase border rounded-sm transition-all duration-150 ${
+                      className={`px-2.5 h-7 font-mono text-[11px] tracking-wider uppercase border rounded-sm transition-colors duration-150 ${
                         defaultFormat === f || (f === "None" && !defaultFormat)
                           ? "bg-fu-400/10 border-fu-400/30 text-fu-400"
                           : "bg-black/20 border-white/[0.06] text-tx-3 hover:border-white/[0.12]"
@@ -526,7 +530,7 @@ export default function SettingsPage() {
               {saving ? "SAVING..." : "EXECUTE :: SAVE_PROFILE"}
             </button>
             {saved && (
-              <span className="font-mono text-[9px] text-ok tracking-wider animate-pulse">
+              <span className="font-mono text-[11px] text-ok tracking-wider animate-pulse">
                 [PROFILE SAVED]
               </span>
             )}
@@ -534,19 +538,21 @@ export default function SettingsPage() {
         </form>
 
         <div className="crt-micro-bl">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">profile</span>
+          <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-tx-4">profile</span>
         </div>
         <div className="crt-micro-br">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">editable</span>
+          <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-tx-4">editable</span>
         </div>
 
         <div className="crt-monitor-footer">
-          <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">
+          <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-tx-4">
             {user?.firstName || "USER"}
           </span>
-          <span className="font-mono text-[6px] text-center text-tx-4">[system ready]</span>
-          <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">
-            EDITING
+          <span className="font-mono text-[9px] text-center text-tx-4">
+            {lastSaved ? `[saved: ${lastSaved.toLocaleTimeString()}]` : "[new profile]"}
+          </span>
+          <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-tx-4">
+            {lastSaved ? "SAVED" : "NEW"}
           </span>
         </div>
       </div>
@@ -559,38 +565,38 @@ export default function SettingsPage() {
         <div className="crt-sweep" />
 
         <div className="crt-micro-tl">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-te-400/60">sys</span>
+          <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-te-400/60">sys</span>
           <span className="text-tx-4">|</span>
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase">billing</span>
+          <span className="font-mono text-[9px] tracking-[0.18em] uppercase">billing</span>
         </div>
         <div className="crt-micro-tr">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">plan</span>
+          <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-tx-4">plan</span>
           <span className="text-tx-4">|</span>
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-warn">
+          <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-warn">
             FREE
           </span>
         </div>
 
         <div className="crt-monitor-header">
-          <span className="font-mono text-[7px] tracking-[0.24em] uppercase text-tx-4">SYS</span>
-          <span className="font-mono text-[6px] text-tx-4">|</span>
-          <span className="font-mono text-[7px] tracking-[0.24em] uppercase text-te-400/70">PLAN STATUS</span>
+          <span className="font-mono text-[9px] tracking-[0.24em] uppercase text-tx-4">SYS</span>
+          <span className="font-mono text-[9px] text-tx-4">|</span>
+          <span className="font-mono text-[9px] tracking-[0.24em] uppercase text-te-400/70">PLAN STATUS</span>
           <div className="flex-1" />
-          <span className="font-mono text-[7px] tracking-[0.1em] text-tx-4">{"\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"}</span>
+          <span className="font-mono text-[9px] tracking-[0.1em] text-tx-4">{"\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"}</span>
         </div>
 
         <div className="crt-monitor-content p-6 space-y-4">
           <div className="space-y-2">
-            <div className="flex items-center gap-2 font-mono text-[10px]">
+            <div className="flex items-center gap-2 font-mono text-[12px]">
               <span className="text-te-400/60">{'\u203A\u203A'}</span>
-              <span className="text-tx-3 tracking-wider uppercase text-[9px]">current_plan</span>
+              <span className="text-tx-3 tracking-wider uppercase text-[11px]">current_plan</span>
             </div>
             <div className="flex items-center justify-between py-3 px-4 bg-black/30 border border-white/[0.04] rounded-[2px]">
               <div className="flex items-center gap-3">
                 <div className="w-2 h-2 rounded-full bg-warn animate-beat-pulse" />
                 <div>
                   <div className="font-mono text-[13px] text-tx-1 font-medium">Free</div>
-                  <div className="font-mono text-[9px] text-tx-3 mt-0.5">
+                  <div className="font-mono text-[11px] text-tx-3 mt-0.5">
                     5 scripts/month &middot; basic access
                   </div>
                 </div>
@@ -600,22 +606,22 @@ export default function SettingsPage() {
           </div>
 
           <div className="space-y-2">
-            <div className="flex items-center gap-2 font-mono text-[10px]">
+            <div className="flex items-center gap-2 font-mono text-[12px]">
               <span className="text-te-400/60">{'\u203A\u203A'}</span>
-              <span className="text-tx-3 tracking-wider uppercase text-[9px]">usage</span>
+              <span className="text-tx-3 tracking-wider uppercase text-[11px]">usage</span>
             </div>
             <div className="flex items-center justify-between py-3 px-4 bg-black/30 border border-white/[0.04] rounded-[2px]">
-              <div className="flex items-center gap-2 font-mono text-[11px] text-tx-2">
+              <div className="flex items-center gap-2 font-mono text-[13px] text-tx-2">
                 <span className="text-te-400/60">{"\u25B6"}</span>
                 Scripts this month
               </div>
-              <span className="font-mono text-[11px] text-tx-1">0 / 5</span>
+              <span className="font-mono text-[13px] text-tx-1">0 / 5</span>
             </div>
           </div>
 
           <div className="pt-2 border-t border-white/[0.04]">
             <button
-              className="btn-terminal btn-terminal-primary w-full justify-center text-[10px]"
+              className="btn-terminal btn-terminal-primary w-full justify-center text-[12px]"
               style={{
                 background: "linear-gradient(135deg, rgba(139,92,246,0.12), rgba(34,211,238,0.08))",
                 borderColor: "rgba(139,92,246,0.2)",
@@ -623,25 +629,25 @@ export default function SettingsPage() {
             >
               {"EXEC_UPGRADE >> CREATOR :: \u20B91,999/mo"}
             </button>
-            <p className="font-mono text-[8px] text-tx-4 text-center mt-2 tracking-wider">
+            <p className="font-mono text-[10px] text-tx-4 text-center mt-2 tracking-wider">
               unlimited scripts &middot; priority support &middot; full module access
             </p>
           </div>
         </div>
 
         <div className="crt-micro-bl">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">billing</span>
+          <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-tx-4">billing</span>
         </div>
         <div className="crt-micro-br">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">active</span>
+          <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-tx-4">active</span>
         </div>
 
         <div className="crt-monitor-footer">
-          <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">FREE PLAN</span>
-          <span className="font-mono text-[6px] text-center text-tx-4">[billing ready]</span>
-          <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">ACTIVE</span>
+          <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-tx-4">FREE PLAN</span>
+          <span className="font-mono text-[9px] text-center text-tx-4">[billing ready]</span>
+          <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-tx-4">ACTIVE</span>
         </div>
       </div>
-    </div>
+    </div></ErrorBoundary>
   );
 }

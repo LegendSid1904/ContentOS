@@ -39,12 +39,28 @@ interface GrowthStrategyData {
   algorithm_tips: string[];
 }
 
-export async function generateGrowthStrategy(niche: string, followers: number, platform: string, goals: string) {
+function getGrowthStrategyPrompt(appId: string | undefined, platform: string): string {
+  switch (appId) {
+    case "youtube":
+      return `You are a YouTube growth strategist. Generate a complete growth strategy for a YouTube creator. Focus on: SEO optimization (titles, tags, descriptions), thumbnail strategy, community tab engagement, consistency schedule for long-form + Shorts, and YouTube Partner Program monetization.`;
+    case "instagram":
+      return `You are an Instagram growth strategist. Generate a complete growth strategy for an Instagram creator. Focus on: Reels-first strategy, carousel engagement tactics, hashtag optimization, Story-to-post cross-pollination, collaboration loops, and Instagram monetization (bonuses, subscriptions, affiliate).`;
+    case "tiktok":
+      return `You are a TikTok growth strategist. Generate a complete growth strategy for a TikTok creator. Focus on: FYP algorithm hacks, sound/music trends, duet/stitch strategies, posting time optimization, hashtag clusters, and TikTok Creator Fund / brand deal transition.`;
+    case "linkedin":
+      return `You are a LinkedIn growth strategist. Generate a complete growth strategy for a LinkedIn thought leader. Focus on: long-form post vs carousel strategy, comment engagement loops, LinkedIn newsletter building, SEO for profile/headline, and monetization through consulting, leads, and LinkedIn Live.`;
+    default:
+      return `You are a content growth strategist. Generate a complete growth strategy for a ${platform} creator.`;
+  }
+}
+
+export async function generateGrowthStrategy(niche: string, followers: number, platform: string, goals: string, appId?: string) {
   const { userId } = await auth();
   if (!userId) return { ok: false as const, error: "You need to sign in first" };
   try {
+    const appInstr = getGrowthStrategyPrompt(appId, platform);
     const result = await generateJSON<GrowthStrategyData>({
-      systemPrompt: `You are a content growth strategist. Generate a complete growth strategy. Return as JSON with:
+      systemPrompt: `${appInstr} Return as JSON with:
         audit: {content_quality (1-10), posting_consistency (1-10), seo_optimization (1-10), engagement_rate (1-10), strengths (string[]), weaknesses (string[]), growth_levers (string[])}
         plan: array of 12 week plans, each with {week_number, theme, content_focus (string[3-5]), growth_tactic, milestone}
         monetization: array of 3 phase objects with {phase, timeframe, tactics (string[]), revenue_target}

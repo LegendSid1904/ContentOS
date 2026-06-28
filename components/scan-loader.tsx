@@ -20,7 +20,7 @@ export function ScanLoader({
       <div className="scan-line" />
       <div className="flex items-center gap-3 mb-4">
         <div className="w-2 h-2 rounded-full bg-vi-400 animate-beat-pulse" />
-        <span className="font-mono text-[11px] text-vi-300 uppercase tracking-widest">
+        <span className="font-mono text-[13px] text-vi-300 uppercase tracking-widest">
           {title}
         </span>
       </div>
@@ -30,7 +30,7 @@ export function ScanLoader({
           <div
             key={i}
             className={cn(
-              "flex items-center gap-3 text-[13px] transition-all duration-300",
+              "flex items-center gap-3 text-[13px] transition-colors duration-300",
               i === currentStep
                 ? "text-tx-1"
                 : i < currentStep

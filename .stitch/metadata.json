@@ -24,6 +24,26 @@
       "route": "/dashboard",
       "description": "Terminal-welcome dashboard with module grid and status indicators"
     },
+    "app-youtube": {
+      "title": "YouTube Workspace",
+      "route": "/dashboard/app/youtube",
+      "description": "YouTube app workspace with 7 filtered modules — scripts, thumbnails, video briefs"
+    },
+    "app-instagram": {
+      "title": "Instagram Workspace",
+      "route": "/dashboard/app/instagram",
+      "description": "Instagram app workspace with 6 modules — reels scripts, carousels, growth"
+    },
+    "app-tiktok": {
+      "title": "TikTok Workspace",
+      "route": "/dashboard/app/tiktok",
+      "description": "TikTok app workspace with 5 modules — short-form scripts, trends, optimization"
+    },
+    "app-linkedin": {
+      "title": "LinkedIn Workspace",
+      "route": "/dashboard/app/linkedin",
+      "description": "LinkedIn app workspace with 6 modules — thought leadership, carousels, growth"
+    },
     "brand-kit": {
       "title": "Brand Kit",
       "route": "/dashboard/brand-kit",

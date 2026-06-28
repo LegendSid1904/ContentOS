@@ -66,3 +66,4 @@ service-account*.json
 optimization.md
 competitive-roadmap.md
 possible_improvements.md
+.gstack/

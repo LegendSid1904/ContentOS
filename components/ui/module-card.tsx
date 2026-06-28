@@ -1,7 +1,9 @@
-import { cn } from "@/lib/utils";
-import type { MODULES } from "@/lib/constants";
+"use client";
 
-type Module = (typeof MODULES)[number];
+import { cn } from "@/lib/utils";
+import type { AppModuleDef } from "@/lib/constants";
+
+type Module = AppModuleDef;
 
 interface ModuleCardProps {
   module: Module;
@@ -12,7 +14,7 @@ interface ModuleCardProps {
 function ModuleCard({ module, onClick, className }: ModuleCardProps) {
   return (
     <div
-      className={cn("group relative bg-[#0f1011] border border-[#23252a] rounded-r2 p-4 transition-all duration-200 hover:bg-[#141516] hover:border-[#34343a] cursor-pointer", className)}
+      className={cn("ascii-box rounded-r2 p-4 transition-colors duration-200 hover:bg-white/[0.03] cursor-pointer", className)}
       onClick={onClick}
       role="button"
       tabIndex={0}
@@ -20,10 +22,10 @@ function ModuleCard({ module, onClick, className }: ModuleCardProps) {
         if (e.key === "Enter" && onClick) onClick();
       }}
     >
-      <span className="font-mono text-[7px] text-vi-400/60 tracking-[0.18em] uppercase mb-3 block">✦ AI Module</span>
+      <span className="font-mono text-[9px] text-vi-400/60 tracking-[0.18em] uppercase mb-3 block">✦ AI Module</span>
       <div className="font-mono text-[22px] leading-none mb-2 text-tx-2">{module.icon}</div>
-      <div className="font-mono text-[11px] font-semibold tracking-[0.05em] uppercase text-tx-1 mb-1.5">{module.name}</div>
-      <div className="font-mono text-[9px] text-tx-3 leading-relaxed">{module.desc}</div>
+      <div className="font-mono text-[13px] font-semibold tracking-[0.05em] uppercase text-tx-1 mb-1.5">{module.name}</div>
+      <div className="font-display text-[13px] text-tx-3 leading-relaxed">{module.desc}</div>
     </div>
   );
 }
@@ -50,9 +52,9 @@ function UsageCard({
   const barPct = Math.min((count / Math.max(count, 5)) * 100, 100);
 
   return (
-    <div className="bg-[#0f1011] border border-[#23252a] rounded-r2 p-3 transition-all duration-200 hover:border-[#34343a] reveal d1">
+    <div className="ascii-box rounded-r2 p-3 transition-colors duration-200 hover:bg-white/[0.03] reveal d1">
       <div className="flex items-center justify-between mb-1">
-        <span className="font-mono text-[11px] text-tx-1 uppercase tracking-wider">
+        <span className="font-mono text-[13px] text-tx-1 uppercase tracking-wider">
           {module.icon} {module.name}
         </span>
         <span className="font-mono text-[18px] font-bold text-te-400">
@@ -68,7 +70,7 @@ function UsageCard({
           }}
         />
       </div>
-      <span className="font-mono text-[8px] text-tx-4 tracking-wider mt-1 block">
+      <span className="font-mono text-[10px] text-tx-4 tracking-wider mt-1 block">
         {count === 0 ? "no activity" : `${count} project${count === 1 ? "" : "s"}`}
       </span>
     </div>

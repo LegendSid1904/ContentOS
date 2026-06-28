@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useAuth } from "@clerk/nextjs";
 
 const STORAGE_KEY = "preview_free_actions";
+const SESSION_CACHE_KEY = "cos_session_active";
 
 function getFreeActionsUsed(): number {
   if (typeof window === "undefined") return 0;
@@ -26,17 +27,28 @@ interface PreviewState {
 }
 
 export function useAuthGate(context?: string) {
-  const { isSignedIn } = useAuth();
+  const { isSignedIn, isLoaded } = useAuth();
   const [showModal, setShowModal] = useState(false);
-  const [freeCount, setFreeCount] = useState(getFreeActionsUsed());
+  const [freeCount, setFreeCount] = useState(
+    () => getFreeActionsUsed() || (typeof window !== "undefined" && sessionStorage.getItem(SESSION_CACHE_KEY) ? 99 : 0)
+  );
   const [previewState, setPreviewState] = useState<PreviewState | null>(null);
+  const [ready, setReady] = useState(
+    () => typeof window !== "undefined" && !!sessionStorage.getItem(SESSION_CACHE_KEY)
+  );
 
   useEffect(() => {
+    if (!isLoaded) return;
     if (isSignedIn) {
       setFreeCount(99);
       setFreeActionsUsed(99);
+      try { sessionStorage.setItem(SESSION_CACHE_KEY, "1"); } catch {}
+      setReady(true);
+    } else {
+      try { sessionStorage.removeItem(SESSION_CACHE_KEY); } catch {}
+      setReady(true);
     }
-  }, [isSignedIn]);
+  }, [isSignedIn, isLoaded]);
 
   const gate = useCallback(
     (action: () => void) => {
@@ -91,5 +103,6 @@ export function useAuthGate(context?: string) {
     context,
     savePreviewState,
     restorePreviewState,
+    ready,
   };
 }

@@ -2,8 +2,8 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/drizzle";
-import { users, brandKits, profiles, projects } from "@/db/schema";
-import { eq, sql, and } from "drizzle-orm";
+import { users, brandKits, profiles, projects, contentOutputs } from "@/db/schema";
+import { eq, sql, and, desc } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { ensureUser } from "@/lib/ensure-user";
 
@@ -328,5 +328,61 @@ export async function getContentDefaults() {
       colors: kit.colors ?? [],
       platforms: kit.platforms ?? [],
     } : null,
+  };
+}
+
+export async function getRecentProjects(limit = 10) {
+  const { userId } = await auth();
+  if (!userId) return [];
+
+  const user = await ensureUser(userId);
+
+  const rows = await db
+    .select({
+      id: projects.id,
+      module: projects.module,
+      title: projects.title,
+      status: projects.status,
+      createdAt: projects.createdAt,
+      outputId: contentOutputs.id,
+      outputType: contentOutputs.type,
+    })
+    .from(projects)
+    .leftJoin(contentOutputs, eq(contentOutputs.projectId, projects.id))
+    .where(and(eq(projects.userId, user.id), sql`${projects.status} != 'archived'`))
+    .orderBy(desc(projects.createdAt))
+    .limit(limit);
+
+  const seen = new Set<string>();
+  return rows.filter((r) => {
+    if (seen.has(r.id)) return false;
+    seen.add(r.id);
+    return true;
+  });
+}
+
+export async function getDashboardStats() {
+  const { userId } = await auth();
+  if (!userId) return null;
+
+  const user = await ensureUser(userId);
+
+  const allProjects = await db
+    .select({
+      id: projects.id,
+      module: projects.module,
+      createdAt: projects.createdAt,
+    })
+    .from(projects)
+    .where(and(eq(projects.userId, user.id), sql`${projects.status} != 'archived'`));
+
+  const moduleSet = new Set(allProjects.map((p) => p.module));
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const recentCount = allProjects.filter((p) => p.createdAt && new Date(p.createdAt) >= sevenDaysAgo).length;
+
+  return {
+    totalProjects: allProjects.length,
+    modulesUsed: moduleSet.size,
+    recentCount,
   };
 }

@@ -22,9 +22,9 @@ export default function DashboardError({
       <div className="crt-sweep" />
 
       <div className="crt-micro-tl">
-        <span className="font-mono text-[9px] tracking-wider text-err/80">err</span>
+        <span className="font-mono text-[11px] tracking-wider text-err/80">err</span>
         <span className="text-tx-4">|</span>
-        <span className="font-mono text-[9px] tracking-wider">fatal</span>
+        <span className="font-mono text-[11px] tracking-wider">fatal</span>
       </div>
 
       <div className="crt-monitor-header">
@@ -38,7 +38,7 @@ export default function DashboardError({
         </div>
 
         {error.digest && (
-          <div className="font-mono text-[8px] text-tx-4 tracking-wider">
+          <div className="font-mono text-[10px] text-tx-4 tracking-wider">
             digest: {error.digest}
           </div>
         )}
@@ -54,10 +54,10 @@ export default function DashboardError({
       </div>
 
       <div className="crt-micro-bl">
-        <span className="font-mono text-[9px] tracking-wider text-err/60">system_error</span>
+        <span className="font-mono text-[11px] tracking-wider text-err/60">system_error</span>
       </div>
       <div className="crt-micro-br">
-        <span className="font-mono text-[9px] tracking-wider text-tx-4">recoverable</span>
+        <span className="font-mono text-[11px] tracking-wider text-tx-4">recoverable</span>
       </div>
     </div>
   );

@@ -8,6 +8,7 @@ import { saveBrandKit, getBrandKit, deleteBrandKit } from "@/lib/actions";
 import { useAuthGate } from "@/lib/use-auth-gate";
 import { SignInModal } from "@/components/auth/sign-in-modal";
 import { StreamingLoader } from "@/components/streaming-loader";
+import { ErrorBoundary } from "@/components/error-boundary";
 
 const PRESET_COLORS = ["#7C3AED", "#06B6D4", "#D946EF", "#6366F1", "#22C55E", "#F59E0B"];
 
@@ -71,6 +72,7 @@ export default function BrandKitPage() {
   }
 
   return (
+    <ErrorBoundary>
     <div className="max-w-2xl space-y-6 relative z-10">
       <div>
         <p className="sec-eyebrow">
@@ -90,22 +92,22 @@ export default function BrandKitPage() {
         <div className="crt-sweep" />
 
         <div className="crt-micro-tl">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-te-400/60">sys</span>
+          <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-te-400/60">sys</span>
           <span className="text-tx-4">|</span>
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase">brand_kit</span>
+          <span className="font-mono text-[9px] tracking-[0.18em] uppercase">brand_kit</span>
         </div>
         <div className="crt-micro-tr">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">v1.0.4</span>
+          <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-tx-4">v1.0.4</span>
           <span className="text-tx-4">|</span>
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">id: {isSignedIn ? "active" : "preview"}</span>
+          <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-tx-4">id: {isSignedIn ? "active" : "preview"}</span>
         </div>
 
         <div className="crt-monitor-header">
-          <span className="font-mono text-[7px] tracking-[0.24em] uppercase text-tx-4">MODULE</span>
-          <span className="font-mono text-[6px] text-tx-4">|</span>
-          <span className="font-mono text-[7px] tracking-[0.24em] uppercase text-te-400/70">BRAND KIT</span>
+          <span className="font-mono text-[9px] tracking-[0.24em] uppercase text-tx-4">MODULE</span>
+          <span className="font-mono text-[9px] text-tx-4">|</span>
+          <span className="font-mono text-[9px] tracking-[0.24em] uppercase text-te-400/70">BRAND KIT</span>
           <div className="flex-1" />
-          <span className="font-mono text-[7px] tracking-[0.1em] text-tx-4">{"\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"}</span>
+          <span className="font-mono text-[9px] tracking-[0.1em] text-tx-4">{"\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"}</span>
         </div>
 
         {loading ? (
@@ -114,6 +116,11 @@ export default function BrandKitPage() {
           </div>
         ) : (
           <div className="crt-monitor-content p-6 space-y-6">
+            {isSignedIn && !hasKit && !loading && (
+              <div className="reveal d1 font-mono text-[11px] text-vi-400/70 border border-vi-500/15 bg-vi-500/5 rounded-r3 p-3 text-center tracking-wider leading-relaxed">
+                <span className="text-vi-400/90">[WELCOME]</span> no brand kit found. configure your niche, colors, tone, and platform below to get started.
+              </div>
+            )}
             <div className="reveal d1">
               <label className="term-label mb-2">NICHE</label>
               <input
@@ -143,7 +150,7 @@ export default function BrandKitPage() {
               </div>
               <div className="flex gap-2 mt-1.5">
                 {PRESET_COLORS.map((color) => (
-                  <span key={color} className="font-mono text-[8px] text-tx-4 tracking-wider text-center" style={{ width: 40 }}>
+                  <span key={color} className="font-mono text-[10px] text-tx-4 tracking-wider text-center" style={{ width: 40 }}>
                     {selectedColors.includes(color) ? (
                       <span className="text-te-400/80">ACTIVE</span>
                     ) : (
@@ -199,7 +206,7 @@ export default function BrandKitPage() {
             </div>
 
             {!isSignedIn && (
-              <div className="reveal d5 font-mono text-[9px] text-vi-400/70 border border-vi-500/15 bg-vi-500/5 rounded-r3 p-2.5 text-center tracking-wider">
+              <div className="reveal d5 font-mono text-[11px] text-vi-400/70 border border-vi-500/15 bg-vi-500/5 rounded-r3 p-2.5 text-center tracking-wider">
                 * PREVIEW — sign in to save your brand kit
               </div>
             )}
@@ -239,28 +246,28 @@ export default function BrandKitPage() {
         )}
 
         <div className="crt-micro-bl">
-          <span className={`font-mono text-[7px] tracking-[0.18em] uppercase ${hasKit ? "text-ok" : "text-tx-4"}`}>
+          <span className={`font-mono text-[9px] tracking-[0.18em] uppercase ${hasKit ? "text-ok" : "text-tx-4"}`}>
             {hasKit ? "KIT ACTIVE" : "NO KIT"}
           </span>
         </div>
         <div className="crt-micro-br">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">
+          <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-tx-4">
             {saving ? "WRITING..." : "STANDBY"}
           </span>
         </div>
 
         <div className="crt-monitor-footer">
-          <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">
+          <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-tx-4">
             {hasKit ? "KIT ACTIVE" : "NO KIT"}
           </span>
-          <span className="font-mono text-[6px] text-center text-tx-4">[system ready]</span>
-          <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">
+          <span className="font-mono text-[9px] text-center text-tx-4">[system ready]</span>
+          <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-tx-4">
             {saving ? "WRITING" : "STANDBY"}
           </span>
         </div>
       </div>
 
       <SignInModal open={showModal} onClose={closeModal} context="save your brand kit" />
-    </div>
+    </div></ErrorBoundary>
   );
 }

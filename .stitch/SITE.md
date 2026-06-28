@@ -26,8 +26,23 @@ ContentOS is a terminal-inspired AI content operations platform. The entire UX i
 ### Dashboard (`/dashboard`)
 - Terminal welcome with `❯` prompt
 - `[OK]`/`[INFO]` status badges
-- Module grid (Content Vault, Remix Studio, Trend Surf, Brand Kit, etc.)
-- Glass sidebar with `[Modules]`/`[System]` section headers
+- App grid (YouTube, Instagram, TikTok, LinkedIn) — each card shows app name, description, module count
+- Glass sidebar with `[Apps]`/`[System]` collapsible sections
+
+### YouTube Workspace (`/dashboard/app/youtube`)
+- App header with "app :: youtube" badge, angle-bracket title, and filtered module tags
+- Module grid showing 7 YouTube-compatible tools (Script Writer, Content Ideas, Competitor Intel, Video Brief, Thumbnail Maker, Page Setup, Growth Strategy)
+- Each module card links to `/dashboard/app/youtube/{moduleId}`
+- Sidebar YouTube section auto-expanded, module links nested underneath
+
+### Instagram Workspace (`/dashboard/app/instagram`)
+- Same structure, 6 modules (Script Writer, Content Ideas, Carousel Maker, Competitor Intel, Page Setup, Growth Strategy)
+
+### TikTok Workspace (`/dashboard/app/tiktok`)
+- Same structure, 5 modules (Script Writer, Content Ideas, Competitor Intel, Page Setup, Growth Strategy)
+
+### LinkedIn Workspace (`/dashboard/app/linkedin`)
+- Same structure, 6 modules (Script Writer, Content Ideas, Carousel Maker, Competitor Intel, Page Setup, Growth Strategy)
 
 ### Brand Kit (`/dashboard/brand-kit`)
 - Brand identity CRUD management

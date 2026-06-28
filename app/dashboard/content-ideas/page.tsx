@@ -1,13 +1,16 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
+import { APP_MODULES } from "@/lib/constants";
 import { generateIdeas, generateAngles, generateCalendar, generateRepurposingMap, saveIdeas, type Idea } from "@/lib/actions-content-ideas";
 import { getContentDefaults } from "@/lib/actions";
 import { useAuthGate } from "@/lib/use-auth-gate";
 import { SignInModal } from "@/components/auth/sign-in-modal";
 import { StreamingLoader } from "@/components/streaming-loader";
+import { ErrorBoundary } from "@/components/error-boundary";
 
 type Step = "input" | "ideas" | "angles" | "calendar" | "repurpose";
 
@@ -31,7 +34,7 @@ function EffortBadge({ effort }: { effort: string }) {
     High: "text-err border-err/20 bg-err/5",
   };
   return (
-    <span className={`font-mono text-[7px] tracking-wider uppercase px-1.5 py-0.5 border rounded-sm ${colors[effort] || colors.Low}`}>
+    <span className={`font-mono text-[9px] tracking-wider uppercase px-1.5 py-0.5 border rounded-sm ${colors[effort] || colors.Low}`}>
       {effort}
     </span>
   );
@@ -44,7 +47,7 @@ function FormatBadge({ format }: { format: string }) {
     carousel: "text-fu-400 border-fu-400/20 bg-fu-400/5",
   };
   return (
-    <span className={`font-mono text-[7px] tracking-wider uppercase px-1.5 py-0.5 border rounded-sm ${colors[format] || colors.post}`}>
+    <span className={`font-mono text-[9px] tracking-wider uppercase px-1.5 py-0.5 border rounded-sm ${colors[format] || colors.post}`}>
       {format}
     </span>
   );
@@ -53,10 +56,10 @@ function FormatBadge({ format }: { format: string }) {
 function ScoreBar({ value, label }: { value: number; label: string }) {
   return (
     <div className="flex items-center gap-2 min-w-0">
-      <span className="font-mono text-[7px] text-tx-4 uppercase tracking-wider flex-shrink-0">{label}</span>
+      <span className="font-mono text-[9px] text-tx-4 uppercase tracking-wider flex-shrink-0">{label}</span>
       <div className="flex-1 h-1 bg-white/[0.03] rounded-sm overflow-hidden min-w-[40px]">
         <div
-          className="h-full rounded-sm transition-all duration-500"
+          className="h-full rounded-sm transition-colors duration-500"
           style={{
             width: `${value * 10}%`,
             background: value >= 8
@@ -67,7 +70,7 @@ function ScoreBar({ value, label }: { value: number; label: string }) {
           }}
         />
       </div>
-      <span className="font-mono text-[8px] text-tx-3 w-4 text-right">{value}</span>
+      <span className="font-mono text-[10px] text-tx-3 w-4 text-right">{value}</span>
     </div>
   );
 }
@@ -79,8 +82,8 @@ function PillarSection({ name, ideas, onRepurpose }: { name: string; ideas: Idea
     <div className="space-y-1">
       <div className="flex items-center gap-2 py-1.5 border-b border-white/[0.03]">
         <span className="w-1.5 h-1.5 rounded-full bg-vi-400/60" />
-        <span className="font-mono text-[9px] tracking-[0.15em] uppercase text-tx-2">{name}</span>
-        <span className="font-mono text-[7px] text-tx-4">({ideas.length})</span>
+        <span className="font-mono text-[11px] tracking-[0.15em] uppercase text-tx-2">{name}</span>
+        <span className="font-mono text-[9px] text-tx-4">({ideas.length})</span>
       </div>
       {ideas.map((idea) => (
         <div key={idea.id}>
@@ -92,11 +95,11 @@ function PillarSection({ name, ideas, onRepurpose }: { name: string; ideas: Idea
               {expanded === idea.id ? "\u25BC" : "\u25B6"}
             </span>
             <span className="boot-option-label flex flex-col gap-1 min-w-0">
-              <span className="text-[11px] text-tx-1 leading-relaxed">{idea.title}</span>
+              <span className="text-[13px] text-tx-1 leading-relaxed">{idea.title}</span>
               <span className="flex items-center gap-2 flex-wrap">
                 <FormatBadge format={idea.format} />
                 <EffortBadge effort={idea.effort} />
-                <span className="font-mono text-[7px] text-tx-4 italic truncate">{idea.viral_angle}</span>
+                <span className="font-mono text-[9px] text-tx-4 italic truncate">{idea.viral_angle}</span>
               </span>
             </span>
           </button>
@@ -106,7 +109,7 @@ function PillarSection({ name, ideas, onRepurpose }: { name: string; ideas: Idea
               <ScoreBar value={idea.seo_value} label="seo" />
               <button
                 onClick={(e) => { e.stopPropagation(); onRepurpose(idea); }}
-                className="btn-terminal text-[8px] mt-1"
+                className="btn-terminal text-[10px] mt-1"
               >
                 {"[REPURPOSE]"} 6 formats
               </button>
@@ -130,7 +133,7 @@ function CalendarGrid({ days }: { days: { day: number; title: string; format: st
     <div className="space-y-3">
       {weekDays.map((week, wi) => (
         <div key={wi}>
-          <div className="font-mono text-[8px] text-tx-4 tracking-wider uppercase mb-1.5">
+          <div className="font-mono text-[10px] text-tx-4 tracking-wider uppercase mb-1.5">
             Week {wi + 1}
           </div>
           <div className="grid grid-cols-7 gap-1">
@@ -139,11 +142,11 @@ function CalendarGrid({ days }: { days: { day: number; title: string; format: st
                 key={day.day}
                 className="border border-white/[0.04] bg-black/20 rounded-sm p-1.5 min-h-[60px]"
               >
-                <span className="font-mono text-[7px] text-tx-4 block mb-0.5">D{day.day}</span>
-                <span className="font-mono text-[7px] text-tx-1 leading-tight block line-clamp-2">{day.title}</span>
+                <span className="font-mono text-[9px] text-tx-4 block mb-0.5">D{day.day}</span>
+                <span className="font-mono text-[9px] text-tx-1 leading-tight block line-clamp-2">{day.title}</span>
                 <div className="flex gap-0.5 mt-1 flex-wrap">
                   <FormatBadge format={day.format} />
-                  <span className="font-mono text-[6px] text-tx-4 uppercase tracking-wider">{day.platform}</span>
+                  <span className="font-mono text-[9px] text-tx-4 uppercase tracking-wider">{day.platform}</span>
                 </div>
               </div>
             ))}
@@ -154,7 +157,28 @@ function CalendarGrid({ days }: { days: { day: number; title: string; format: st
   );
 }
 
-export default function ContentIdeasPage() {
+function ContentFallback() {
+  return (
+    <div className="font-mono text-[11px] text-tx-4 p-6 flex items-center gap-2">
+      <span className="w-1.5 h-1.5 rounded-full bg-vi-400 animate-pulse" />
+      loading session...
+    </div>
+  );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export default function ContentIdeasPage({ appId: _appId }: any = {}) {
+  return (
+    <Suspense fallback={<ContentFallback />}>
+      <ContentIdeasContent appId={_appId} />
+    </Suspense>
+  );
+}
+
+function ContentIdeasContent({ appId: propAppId }: { appId?: string | null }) {
+  const searchParams = useSearchParams();
+  const appId = propAppId ?? searchParams?.get("app") ?? null;
+
   const [step, setStep] = useState<Step>("input");
   const [loading, setLoading] = useState(false);
   const [loadingType, setLoadingType] = useState<string>("ideas");
@@ -171,6 +195,9 @@ export default function ContentIdeasPage() {
   const outputRef = useRef<HTMLDivElement>(null);
   const { isSignedIn } = useAuth();
   const { showModal, gate, closeModal, freeActionsLeft, savePreviewState, restorePreviewState } = useAuthGate("generate ideas");
+
+  const appModule = appId ? APP_MODULES[appId]?.find((m) => m.id === "content-ideas") : null;
+  const appModuleName = appModule?.name ?? "CONTENT IDEAS";
 
   useEffect(() => {
     const saved = restorePreviewState<{ ideas: Idea[]; pillars: string[]; angles: string[]; calendar: typeof calendar; step: Step; selectedIdea: Idea | null; repurposeMap: RepurposeMap | null }>();
@@ -309,6 +336,7 @@ export default function ContentIdeasPage() {
   const isCalendarStep = step === "calendar" && !loading;
 
   return (
+    <ErrorBoundary>
     <div className="max-w-3xl space-y-6 relative z-10">
       <div>
         <p className="sec-eyebrow">
@@ -328,29 +356,29 @@ export default function ContentIdeasPage() {
         <div className="crt-sweep" />
 
         <div className="crt-micro-tl">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-te-400/60">sys</span>
+          <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-te-400/60">sys</span>
           <span className="text-tx-4">|</span>
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase">content_ideas</span>
+          <span className="font-mono text-[9px] tracking-[0.18em] uppercase">{appModuleName.toLowerCase().replace(/\s+/g, "_")}</span>
         </div>
         <div className="crt-micro-tr">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">v1.0.0</span>
+          <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-tx-4">v1.0.0</span>
           <span className="text-tx-4">|</span>
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">id: {isSignedIn ? "active" : "preview"}</span>
+          <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-tx-4">id: {isSignedIn ? "active" : "preview"}</span>
         </div>
 
         <div className="crt-monitor-header">
-          <span className="font-mono text-[7px] tracking-[0.24em] uppercase text-tx-4">MODULE</span>
-          <span className="font-mono text-[6px] text-tx-4">|</span>
-          <span className="font-mono text-[7px] tracking-[0.24em] uppercase text-te-400/70">CONTENT IDEAS</span>
+          <span className="font-mono text-[9px] tracking-[0.24em] uppercase text-tx-4">MODULE</span>
+          <span className="font-mono text-[9px] text-tx-4">|</span>
+          <span className="font-mono text-[9px] tracking-[0.24em] uppercase text-te-400/70">{appModuleName}</span>
           <div className="flex-1" />
-          <span className="font-mono text-[7px] tracking-[0.1em] text-tx-4">{"\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"}</span>
+          <span className="font-mono text-[9px] tracking-[0.1em] text-tx-4">{"\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"}</span>
         </div>
 
         <div className="crt-monitor-content p-6 space-y-6">
           {loading && <StreamingLoader steps={loadingType === "ideas" ? ["ANALYZING NICHE", "GENERATING 30 IDEAS", "ORGANIZING BY PILLAR"] : loadingType === "angles" ? ["DECONSTRUCTING TOPIC", "GENERATING VIRAL ANGLES", "RANKING BY IMPACT"] : ["MAPPING CONTENT MIX", "ASSIGNING PLATFORMS", "BUILDING CALENDAR"]} />}
 
           {error && (
-            <div className="font-mono text-[11px] text-err bg-err/10 border border-err/20 rounded-r3 p-3">
+            <div className="font-mono text-[13px] text-err bg-err/10 border border-err/20 rounded-r3 p-3">
               <span className="text-err">[ERROR]</span> {error}
               <button onClick={() => setError("")} className="ml-2 text-err/60 hover:text-err underline">dismiss</button>
             </div>
@@ -358,6 +386,9 @@ export default function ContentIdeasPage() {
 
           {isInputStep && (
             <>
+              <div className="font-mono text-[11px] text-vi-400/70 border border-vi-500/15 bg-vi-500/5 rounded-r3 p-3 text-center tracking-wider leading-relaxed">
+                <span className="text-vi-400/90">[READY]</span> {appModule ? appModule.desc : "enter a niche and target audience to generate 30 content ideas with viral angles, repurpose maps, and a full calendar."}
+              </div>
               <div className="reveal d1">
                 <label className="term-label mb-2">NICHE</label>
                 <input
@@ -390,7 +421,7 @@ export default function ContentIdeasPage() {
                   </span>
                   <span className="boot-option-label">
                     Enable trend surfing
-                    <span className="block font-mono text-[8px] text-tx-4 mt-0.5">
+                    <span className="block font-mono text-[10px] text-tx-4 mt-0.5">
                       Scans current trending topics in your niche for maximum relevance
                     </span>
                   </span>
@@ -409,7 +440,7 @@ export default function ContentIdeasPage() {
                   {">>"} GENERATE 30 IDEAS
                 </button>
                 {!valid && (
-                  <span className="font-mono text-[8px] text-tx-4 tracking-wider">AWAITING INPUT</span>
+                  <span className="font-mono text-[10px] text-tx-4 tracking-wider">AWAITING INPUT</span>
                 )}
               </div>
             </>
@@ -420,19 +451,19 @@ export default function ContentIdeasPage() {
               <div className="flex items-center justify-between reveal d1">
                 <label className="term-label mb-0">IDEAS_BY_PILLAR</label>
                 <div className="flex items-center gap-2">
-                  <button onClick={handleGenerateCalendar} className="btn-terminal text-[9px]">
+                  <button onClick={handleGenerateCalendar} className="btn-terminal text-[11px]">
                     {"[CALENDAR]"}
                   </button>
-                  <button onClick={handleSave} className="btn-terminal text-[9px]">
+                  <button onClick={handleSave} className="btn-terminal text-[11px]">
                     {"[SAVE]"}
                   </button>
-                  <button onClick={handleGenerateIdeas} className="btn-terminal text-[9px]">
+                  <button onClick={handleGenerateIdeas} className="btn-terminal text-[11px]">
                     {"[REGEN]"}
                   </button>
                 </div>
               </div>
 
-              <p className="font-mono text-[10px] text-tx-3 reveal d2">
+              <p className="font-mono text-[12px] text-tx-3 reveal d2">
                 &gt; {ideas.length} ideas across {pillars.length} pillars. Click an idea to expand scores.
               </p>
 
@@ -453,11 +484,11 @@ export default function ContentIdeasPage() {
                     const firstIdea = ideas[0];
                     if (firstIdea) handleSelectIdea(firstIdea);
                   }}
-                  className="btn-terminal btn-terminal-primary text-[9px]"
+                  className="btn-terminal btn-terminal-primary text-[11px]"
                 >
                   {">>"} VIRAL ANGLES
                 </button>
-                <button onClick={handleReset} className="btn-terminal text-[9px]">
+                <button onClick={handleReset} className="btn-terminal text-[11px]">
                   {"^C"} BACK
                 </button>
               </div>
@@ -469,7 +500,7 @@ export default function ContentIdeasPage() {
               <div className="flex items-center justify-between reveal d1">
                 <label className="term-label mb-0">VIRAL_ANGLES</label>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => handleSelectIdea(selectedIdea)} className="btn-terminal text-[9px]">
+                  <button onClick={() => handleSelectIdea(selectedIdea)} className="btn-terminal text-[11px]">
                     {"[REGEN]"}
                   </button>
                 </div>
@@ -477,14 +508,14 @@ export default function ContentIdeasPage() {
 
               <div className="crt-monitor relative crt-brackets reveal d2" style={{ background: "rgba(0,0,0,0.25)" }}>
                 <div className="crt-micro-tl">
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-te-400/60">topic</span>
+                  <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-te-400/60">topic</span>
                   <span className="text-tx-4">|</span>
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase">selected</span>
+                  <span className="font-mono text-[9px] tracking-[0.18em] uppercase">selected</span>
                 </div>
 
                 <div className="crt-monitor-header">
                   <span className="w-2 h-2 rounded-full bg-fu-400/60" />
-                  <span className="font-mono text-[10px] font-semibold text-tx-1 tracking-tight ml-2">{selectedIdea.title}</span>
+                  <span className="font-mono text-[12px] font-semibold text-tx-1 tracking-tight ml-2">{selectedIdea.title}</span>
                   <div className="flex-1" />
                   <FormatBadge format={selectedIdea.format} />
                 </div>
@@ -492,20 +523,20 @@ export default function ContentIdeasPage() {
                 <div className="crt-monitor-content p-4 space-y-1">
                   {angles.map((angle, i) => (
                     <div key={i} className="flex items-start gap-2 py-1.5 border-b border-white/[0.02] last:border-0">
-                      <span className="font-mono text-[8px] text-te-400/60 tracking-wider flex-shrink-0 w-5">
+                      <span className="font-mono text-[10px] text-te-400/60 tracking-wider flex-shrink-0 w-5">
                         {String(i + 1).padStart(2, "0")}
                       </span>
-                      <span className="font-mono text-[11px] text-tx-1 leading-relaxed">{angle}</span>
+                      <span className="font-mono text-[13px] text-tx-1 leading-relaxed">{angle}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
               <div className="flex items-center gap-3 pt-2 border-t border-white/[0.04]">
-                <button onClick={handleBackToIdeas} className="btn-terminal text-[9px]">
+                <button onClick={handleBackToIdeas} className="btn-terminal text-[11px]">
                   {">>"} BACK TO IDEAS
                 </button>
-                <button onClick={handleReset} className="btn-terminal text-[9px]" style={{ color: "rgba(239,68,68,0.5)", borderColor: "rgba(239,68,68,0.1)" }}>
+                <button onClick={handleReset} className="btn-terminal text-[11px]" style={{ color: "rgba(239,68,68,0.5)", borderColor: "rgba(239,68,68,0.1)" }}>
                   {"^C"} RESET
                 </button>
               </div>
@@ -516,12 +547,12 @@ export default function ContentIdeasPage() {
             <div ref={outputRef} className="space-y-4">
               <div className="flex items-center justify-between reveal d1">
                 <label className="term-label mb-0">REPURPOSE_MAP</label>
-                <button onClick={() => handleSelectIdea(selectedIdea!)} className="btn-terminal text-[9px]">
+                <button onClick={() => handleSelectIdea(selectedIdea!)} className="btn-terminal text-[11px]">
                   {"[REGEN]"}
                 </button>
               </div>
 
-              <p className="font-mono text-[10px] text-tx-3 reveal d2">
+              <p className="font-mono text-[12px] text-tx-3 reveal d2">
                 &gt; 6 formats for &ldquo;{repurposeMap.original}&rdquo;
               </p>
 
@@ -529,20 +560,20 @@ export default function ContentIdeasPage() {
                 {repurposeMap.formats.map((f, i) => (
                   <div key={i} className="crt-monitor relative crt-brackets" style={{ background: "rgba(0,0,0,0.25)" }}>
                     <div className="crt-micro-tl">
-                      <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-te-400/60">fmt</span>
+                      <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-te-400/60">fmt</span>
                       <span className="text-tx-4">|</span>
-                      <span className="font-mono text-[7px] tracking-[0.18em] uppercase">{f.format.toUpperCase().replace(/\s+/g, "_")}</span>
+                      <span className="font-mono text-[9px] tracking-[0.18em] uppercase">{f.format.toUpperCase().replace(/\s+/g, "_")}</span>
                     </div>
                     <div className="crt-micro-tr">
-                      <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">{f.platform}</span>
+                      <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-tx-4">{f.platform}</span>
                     </div>
 
                     <div className="crt-monitor-content p-3 space-y-2">
-                      <div className="font-mono text-[11px] text-tx-1 font-semibold">{f.title}</div>
-                      <div className="font-mono text-[9px] text-te-400/70 italic">&gt; {f.hook}</div>
+                      <div className="font-mono text-[13px] text-tx-1 font-semibold">{f.title}</div>
+                      <div className="font-mono text-[11px] text-te-400/70 italic">&gt; {f.hook}</div>
                       <ul className="space-y-0.5">
                         {f.key_points.map((kp, j) => (
-                          <li key={j} className="font-mono text-[9px] text-tx-3 flex items-start gap-1.5">
+                          <li key={j} className="font-mono text-[11px] text-tx-3 flex items-start gap-1.5">
                             <span className="text-tx-4 mt-0.5">&bull;</span>
                             {kp}
                           </li>
@@ -554,10 +585,10 @@ export default function ContentIdeasPage() {
               </div>
 
               <div className="flex items-center gap-3 pt-2 border-t border-white/[0.04] reveal d4">
-                <button onClick={handleBackToIdeas} className="btn-terminal text-[9px]">
+                <button onClick={handleBackToIdeas} className="btn-terminal text-[11px]">
                   {">>"} BACK TO IDEAS
                 </button>
-                <button onClick={handleReset} className="btn-terminal text-[9px]">
+                <button onClick={handleReset} className="btn-terminal text-[11px]">
                   {"[NEW]"} NEW BATCH
                 </button>
               </div>
@@ -569,7 +600,7 @@ export default function ContentIdeasPage() {
               <div className="flex items-center justify-between reveal d1">
                 <label className="term-label mb-0">30_DAY_CALENDAR</label>
                 <div className="flex items-center gap-2">
-                  <button onClick={handleGenerateCalendar} className="btn-terminal text-[9px]">
+                  <button onClick={handleGenerateCalendar} className="btn-terminal text-[11px]">
                     {"[REGEN]"}
                   </button>
                 </div>
@@ -580,10 +611,10 @@ export default function ContentIdeasPage() {
               </div>
 
               <div className="flex items-center gap-3 pt-2 border-t border-white/[0.04]">
-                <button onClick={handleBackToIdeas} className="btn-terminal text-[9px]">
+                <button onClick={handleBackToIdeas} className="btn-terminal text-[11px]">
                   {">>"} BACK TO IDEAS
                 </button>
-                <button onClick={handleReset} className="btn-terminal text-[9px]">
+                <button onClick={handleReset} className="btn-terminal text-[11px]">
                   {"[NEW]"} NEW BATCH
                 </button>
               </div>
@@ -592,23 +623,23 @@ export default function ContentIdeasPage() {
         </div>
 
         <div className="crt-micro-bl">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase"
+          <span className="font-mono text-[9px] tracking-[0.18em] uppercase"
             style={{ color: step === "calendar" ? "rgba(34,197,94,0.6)" : "rgba(86,86,128,0.6)" }}
           >
             {step === "input" ? "AWAITING INPUT" : step === "ideas" ? "IDEAS READY" : step === "angles" ? "ANGLES READY" : step === "repurpose" ? "REPURPOSE MAP READY" : "CALENDAR READY"}
           </span>
         </div>
         <div className="crt-micro-br">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">
+          <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-tx-4">
             {loading ? "GENERATING..." : "STANDBY"}
           </span>
         </div>
 
         <div className="crt-monitor-footer">
-          <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">
+          <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-tx-4">
             {step === "input" ? "INPUT" : step === "ideas" ? "IDEAS" : step === "angles" ? "ANGLES" : step === "repurpose" ? "REPURPOSE" : "CALENDAR"}
           </span>
-          <span className="font-mono text-[6px] text-center">
+          <span className="font-mono text-[9px] text-center">
             {!isSignedIn ? (
               <span className="text-vi-400/60">
                 {freeActionsLeft > 0 ? `FREE: ${freeActionsLeft} gen` : "FREE: 0 "}
@@ -622,13 +653,13 @@ export default function ContentIdeasPage() {
               <span className="text-tx-4">[system ready]</span>
             )}
           </span>
-          <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">
+          <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-tx-4">
             {loading ? "BUSY" : "STANDBY"}
           </span>
         </div>
       </div>
 
       <SignInModal open={showModal} onClose={closeModal} context="generate ideas" />
-    </div>
+    </div></ErrorBoundary>
   );
 }

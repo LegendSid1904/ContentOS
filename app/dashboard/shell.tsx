@@ -7,13 +7,49 @@ import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { SidebarNav } from "@/components/sidebar-nav";
 import { Icons } from "@/components/icons";
-import { MODULES } from "@/lib/constants";
+import { APPS, MODULES, APP_MODULES } from "@/lib/constants";
 import { getProfile } from "@/lib/actions";
 import { useKeyboardShortcuts } from "@/lib/use-keyboard-shortcuts";
 
+function kebabToLabel(id: string): string {
+  return id
+    .split(/[-_]/)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
+function getSidebarMode(pathname: string): "root" | "app" | "system" {
+  if (pathname === "/dashboard") return "root";
+  if (pathname.startsWith("/dashboard/app/")) return "app";
+  if (pathname === "/dashboard/settings" || pathname === "/dashboard/brand-kit") return "system";
+  const moduleIds = MODULES.map((m) => m.id);
+  const topLevelModule = moduleIds.find((id) => pathname === `/dashboard/${id}` || pathname.startsWith(`/dashboard/${id}/`));
+  if (topLevelModule) return "app";
+  return "root";
+}
+
+function getActiveAppId(pathname: string): string | null {
+  const match = pathname.match(/^\/dashboard\/app\/([^/]+)/);
+  if (match) return match[1];
+  for (const app of APPS) {
+    for (const modId of app.modules) {
+      if (pathname === `/dashboard/${modId}` || pathname.startsWith(`/dashboard/${modId}/`)) {
+        return app.id;
+      }
+    }
+  }
+  return null;
+}
+
 const moduleNames: Record<string, string> = {};
-for (const m of MODULES) {
-  moduleNames[m.id] = m.name;
+const allAppModules = Object.values(APP_MODULES).flat();
+for (const m of allAppModules) {
+  if (!moduleNames[m.id]) moduleNames[m.id] = m.name;
+}
+
+const appNames: Record<string, string> = {};
+for (const a of APPS) {
+  appNames[a.id] = a.name;
 }
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
@@ -23,6 +59,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { isSignedIn } = useAuth();
   const { user } = useUser();
+
+  const sidebarMode = getSidebarMode(pathname);
+  const activeAppId = getActiveAppId(pathname);
 
   const goHome = useCallback(() => router.push("/dashboard"), [router]);
   useKeyboardShortcuts([
@@ -42,13 +81,34 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     });
   }, [isSignedIn]);
 
-  const activeModule = Object.keys(moduleNames).find(
-    (id) => pathname === `/dashboard/${id}` || pathname.startsWith(`/dashboard/${id}/`),
-  );
-  const breadcrumb = activeModule ? moduleNames[activeModule] : "Dashboard";
+  const appMatch = pathname.match(/^\/dashboard\/app\/([^/]+)/);
+  let breadcrumb = "Dashboard";
+  if (sidebarMode === "root") {
+    breadcrumb = "Dashboard";
+  } else if (appMatch) {
+    const appId = appMatch[1];
+    const rest = pathname.replace(`/dashboard/app/${appId}`, "").replace(/^\//, "");
+    const appName = appNames[appId] || kebabToLabel(appId);
+    if (rest && moduleNames[rest]) {
+      breadcrumb = `${appName} :: ${moduleNames[rest]}`;
+    } else if (rest) {
+      breadcrumb = `${appName} :: ${kebabToLabel(rest)}`;
+    } else {
+      breadcrumb = appName;
+    }
+  } else {
+    const activeModule = Object.keys(moduleNames).find(
+      (id) => pathname === `/dashboard/${id}` || pathname.startsWith(`/dashboard/${id}/`),
+    );
+    if (activeModule) breadcrumb = moduleNames[activeModule];
+    else if (pathname.startsWith("/dashboard/")) {
+      const fallback = pathname.replace("/dashboard/", "").split("/")[0];
+      if (fallback) breadcrumb = kebabToLabel(fallback);
+    }
+  }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-bg-void">
+    <div className="flex min-h-dvh overflow-hidden bg-bg-void">
       {/* Animated backgrounds */}
       <div className="cyber-grid">
         <div className="cyber-grid-inner opacity-50" />
@@ -56,12 +116,12 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       <div className="gradient-mesh opacity-60" />
 
       {/* Mobile overlay */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-30 bg-black/70 backdrop-blur-sm md:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+      <div
+        className={`fixed inset-0 z-30 bg-black/70 backdrop-blur-sm md:hidden transition-opacity duration-300 ${
+          sidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={() => setSidebarOpen(false)}
+      />
 
       {/* Sidebar */}
       <aside
@@ -73,7 +133,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         )}
       >
         <div className="px-4 h-[56px] flex items-center flex-shrink-0 border-b border-white/[0.04]">
-          <Link href="/" className="flex items-center gap-2.5 group cursor-pointer">
+          <Link href="/dashboard" className="flex items-center gap-2.5 group cursor-pointer">
             <div className="w-7 h-7 rounded-[7px] bg-gradient-to-br from-vi-500 to-te-400 flex items-center justify-center font-display text-[13px] font-bold text-white shadow-[0_0_16px_rgba(139,92,246,0.3)] group-hover:shadow-[0_0_24px_rgba(139,92,246,0.5)] transition-shadow duration-200">
               C
             </div>
@@ -81,7 +141,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           </Link>
         </div>
 
-        <SidebarNav onNav={() => setSidebarOpen(false)} />
+        <SidebarNav onNav={() => setSidebarOpen(false)} mode={sidebarMode} activeAppId={activeAppId} />
 
         <div className="p-3 border-t border-white/[0.04] flex items-center gap-3 flex-shrink-0">
           {isSignedIn ? (
@@ -90,27 +150,32 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 <UserButton />
               </div>
               <div className="min-w-0 flex-1">
-                <div className="font-mono text-[10px] text-tx-1 truncate leading-tight">
+                <div className="font-mono text-[12px] text-tx-1 truncate leading-tight">
                   {username || user?.firstName || "Creator"}
                 </div>
-                <div className="font-mono text-[7px] text-tx-4 tracking-[0.12em] uppercase truncate">
+                <div className="font-mono text-[9px] text-tx-4 tracking-[0.12em] uppercase truncate">
                   {user?.emailAddresses[0]?.emailAddress || "creator"}
                 </div>
               </div>
               <Link
                 href="/dashboard/settings"
-                className="font-mono text-[7px] text-vi-400/60 hover:text-vi-400 tracking-[0.1em] uppercase flex-shrink-0 transition-colors"
+                className="font-mono text-[9px] text-vi-400/60 hover:text-vi-400 tracking-[0.1em] uppercase flex-shrink-0 transition-colors"
               >
                 [settings]
               </Link>
             </>
           ) : (
-            <Link
-              href="/sign-in"
-              className="font-mono text-[9px] text-vi-400 tracking-[0.12em] uppercase border border-vi-500/20 px-3 py-1.5 rounded-[2px] hover:bg-vi-500/10 transition-all duration-150 w-full text-center"
-            >
-              {">>"} sign in
-            </Link>
+            <div className="space-y-2 w-full">
+              <div className="font-mono text-[10px] text-tx-3 tracking-[0.12em] uppercase text-center py-1 border border-white/[0.06] rounded-[2px]">
+                STATUS: PREVIEW — <Link href="/sign-in" className="text-vi-400/80 hover:text-vi-300 underline">[sign in]</Link>
+              </div>
+              <Link
+                href="/sign-in"
+                className="block font-mono text-[11px] text-vi-400 tracking-[0.12em] uppercase border border-vi-500/20 px-3 py-1.5 rounded-[2px] hover:bg-vi-500/10 transition-colors duration-150 w-full text-center"
+              >
+                {">>"} sign in
+              </Link>
+            </div>
           )}
         </div>
       </aside>
@@ -126,18 +191,18 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             >
               <Icons.menu className="w-[18px] h-[18px]" />
             </button>
-            <span className="font-mono text-[9px] text-tx-3 uppercase tracking-[0.15em] truncate flex items-center gap-2">
+            <span className="font-mono text-[11px] text-tx-3 uppercase tracking-[0.15em] truncate flex items-center gap-2">
               <span className="text-te-400">[</span>
               <span>{breadcrumb}</span>
               <span className="text-te-400">]</span>
             </span>
           </div>
           <div className="flex items-center gap-3 flex-shrink-0">
-            <Link href="/" className="hidden md:flex items-center gap-1.5 group cursor-pointer">
-              <span className="font-display text-[11px] font-bold text-tx-3 tracking-tight group-hover:text-te-400 transition-colors duration-200">ContentOS</span>
-              <span className="font-mono text-[7px] text-tx-4 tracking-[0.15em] uppercase">[home]</span>
+            <Link href="/dashboard" className="hidden md:flex items-center gap-1.5 group cursor-pointer">
+              <span className="font-display text-[13px] font-bold text-tx-3 tracking-tight group-hover:text-te-400 transition-colors duration-200">ContentOS</span>
+              <span className="font-mono text-[9px] text-tx-4 tracking-[0.15em] uppercase">[home]</span>
             </Link>
-            <span className="flex items-center gap-1.5 font-mono text-[9px] text-vi-400 tracking-[0.15em] uppercase border border-vi-500/15 bg-vi-500/10 px-2.5 h-[22px] rounded-full">
+            <span className="flex items-center gap-1.5 font-mono text-[11px] text-vi-400 tracking-[0.15em] uppercase border border-vi-500/15 bg-vi-500/10 px-2.5 h-[22px] rounded-full">
               <span className="w-1.5 h-1.5 rounded-full bg-vi-400 animate-beat-pulse" />
               AI Ready
             </span>

@@ -1,15 +1,18 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { PLATFORMS, TONES, LANGUAGES } from "@/lib/constants";
 import { SERIES_FORMATS } from "@/lib/series-formats";
 import { generateHooks, generateScript, generateSeriesScript, saveScript, getScriptVersions, getScriptVersionByOutputId } from "@/lib/actions-script";
 import { getContentDefaults } from "@/lib/actions";
 import { useAuthGate } from "@/lib/use-auth-gate";
+import { APP_PLATFORM_MAP, APP_MODULES } from "@/lib/constants";
 import { SignInModal } from "@/components/auth/sign-in-modal";
 import { StreamingLoader } from "@/components/streaming-loader";
+import { ErrorBoundary } from "@/components/error-boundary";
 
 type Step = "input" | "hooks" | "script";
 
@@ -31,12 +34,38 @@ interface FullScript {
   cta: string;
 }
 
-export default function ScriptWriterPage() {
+function ScriptFallback() {
+  return (
+    <div className="font-mono text-[11px] text-tx-4 p-6 flex items-center gap-2">
+      <span className="w-1.5 h-1.5 rounded-full bg-vi-400 animate-pulse" />
+      loading session...
+    </div>
+  );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export default function ScriptWriterPage({ appId: _appId }: any = {}) {
+  return (
+    <Suspense fallback={<ScriptFallback />}>
+      <ScriptWriterContent appId={_appId} />
+    </Suspense>
+  );
+}
+
+function ScriptWriterContent({ appId: propAppId }: { appId?: string | null }) {
+  const searchParams = useSearchParams();
+  const appId = propAppId ?? searchParams?.get("app") ?? null;
+
   const [step, setStep] = useState<Step>("input");
   const [loading, setLoading] = useState(false);
+  const [loadingType, setLoadingType] = useState<"hooks" | "script" | "series">("hooks");
   const [topic, setTopic] = useState("");
   const [audience, setAudience] = useState("");
-  const [platform, setPlatform] = useState("");
+  const [platform, setPlatform] = useState(() => {
+    if (!appId) return "";
+    const platforms = APP_PLATFORM_MAP[appId as keyof typeof APP_PLATFORM_MAP];
+    return platforms?.[0] ?? "";
+  });
   const [tone, setTone] = useState("");
   const [language, setLanguage] = useState("English");
   const [context, setContext] = useState("");
@@ -46,7 +75,6 @@ export default function ScriptWriterPage() {
   const [seriesFormat, setSeriesFormat] = useState("");
   const [seriesScript, setSeriesScript] = useState("");
   const [error, setError] = useState("");
-  const [loadingType, setLoadingType] = useState<"hooks" | "script" | "series">("hooks");
   const [teleprompter, setTeleprompter] = useState(false);
   const [prompterSpeed, setPrompterSpeed] = useState(180);
   const [showHistory, setShowHistory] = useState(false);
@@ -80,6 +108,9 @@ export default function ScriptWriterPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSignedIn]);
 
+  const appModule = appId ? APP_MODULES[appId]?.find((m) => m.id === "script-writer") : null;
+  const appModuleName = appModule?.name ?? "SCRIPT WRITER";
+
   const valid = topic.trim() && audience.trim() && platform && tone;
 
   async function handleGenerateHooks() {
@@ -90,7 +121,7 @@ export default function ScriptWriterPage() {
       setLoadingType("hooks");
       setError("");
       try {
-        const result = await generateHooks(topic, audience, platform, tone, language);
+        const result = await generateHooks(topic, audience, platform, tone, language, appId ?? undefined);
         if (!result.ok) { setError(result.error); return; }
         setHooks(result.data);
         setStep("hooks");
@@ -116,7 +147,7 @@ export default function ScriptWriterPage() {
       setLoadingType("script");
       setError("");
       try {
-        const result = await generateScript(topic, audience, platform, tone, hook.hook_text, context, language);
+        const result = await generateScript(topic, audience, platform, tone, hook.hook_text, context, language, appId ?? undefined);
         if (!result.ok) { setError(result.error); return; }
         setScript(result.data);
         setStep("script");
@@ -139,7 +170,7 @@ export default function ScriptWriterPage() {
       setLoadingType("script");
       setError("");
       try {
-        const result = await generateScript(topic, audience, platform, tone, hook.hook_text, context, language);
+        const result = await generateScript(topic, audience, platform, tone, hook.hook_text, context, language, appId ?? undefined);
         if (!result.ok) { setError(result.error); return; }
         setScript(result.data);
         setTimeout(() => outputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
@@ -295,6 +326,7 @@ ${script.sections.map((s) => `<div class="section"><div class="timestamp">[${s.t
   const isScriptStep = step === "script" && !loading;
 
   return (
+    <ErrorBoundary>
     <div className="max-w-3xl space-y-6 relative z-10">
       <div>
         <p className="sec-eyebrow">
@@ -314,29 +346,29 @@ ${script.sections.map((s) => `<div class="section"><div class="timestamp">[${s.t
         <div className="crt-sweep" />
 
         <div className="crt-micro-tl">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-te-400/60">sys</span>
+          <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-te-400/60">sys</span>
           <span className="text-tx-4">|</span>
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase">script_writer</span>
+          <span className="font-mono text-[9px] tracking-[0.18em] uppercase">{appModuleName.toLowerCase().replace(/\s+/g, "_")}</span>
         </div>
         <div className="crt-micro-tr">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">v1.0.0</span>
+          <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-tx-4">v1.0.0</span>
           <span className="text-tx-4">|</span>
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">id: {isSignedIn ? "active" : "preview"}</span>
+          <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-tx-4">id: {isSignedIn ? "active" : "preview"}</span>
         </div>
 
         <div className="crt-monitor-header">
-          <span className="font-mono text-[7px] tracking-[0.24em] uppercase text-tx-4">MODULE</span>
-          <span className="font-mono text-[6px] text-tx-4">|</span>
-          <span className="font-mono text-[7px] tracking-[0.24em] uppercase text-te-400/70">SCRIPT WRITER</span>
+          <span className="font-mono text-[9px] tracking-[0.24em] uppercase text-tx-4">MODULE</span>
+          <span className="font-mono text-[9px] text-tx-4">|</span>
+          <span className="font-mono text-[9px] tracking-[0.24em] uppercase text-te-400/70">{appModuleName}</span>
           <div className="flex-1" />
-          <span className="font-mono text-[7px] tracking-[0.1em] text-tx-4">{"\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"}</span>
+          <span className="font-mono text-[9px] tracking-[0.1em] text-tx-4">{"\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"}</span>
         </div>
 
         <div className="crt-monitor-content p-6 space-y-6">
           {loading && <StreamingLoader steps={loadingType === "hooks" ? ["ANALYZING TOPIC", "GENERATING HOOK VARIANTS", "OPTIMIZING FOR PLATFORM"] : loadingType === "series" ? ["APPLYING SERIES FORMAT", "MAPPING TO TEMPLATES", "GENERATING EPISODE SCRIPT"] : ["COMPOSING SCRIPT STRUCTURE", "WRITING SECTIONS", "FINALIZING OUTPUT"]} />}
 
           {error && (
-            <div className="font-mono text-[11px] text-err bg-err/10 border border-err/20 rounded-r3 p-3">
+            <div className="font-mono text-[13px] text-err bg-err/10 border border-err/20 rounded-r3 p-3">
               <span className="text-err">[ERROR]</span> {error}
               <button onClick={() => setError("")} className="ml-2 text-err/60 hover:text-err underline">dismiss</button>
             </div>
@@ -344,6 +376,9 @@ ${script.sections.map((s) => `<div class="section"><div class="timestamp">[${s.t
 
           {isInputStep && (
             <>
+              <div className="font-mono text-[11px] text-vi-400/70 border border-vi-500/15 bg-vi-500/5 rounded-r3 p-3 text-center tracking-wider leading-relaxed">
+                <span className="text-vi-400/90">[READY]</span> {appModule ? appModule.desc : "describe your script topic below to generate hooks and a full script with sections, b-roll cues, and CTAs."}
+              </div>
               <div className="reveal d1">
                 <label className="term-label mb-2">TOPIC</label>
                 <input
@@ -365,27 +400,36 @@ ${script.sections.map((s) => `<div class="section"><div class="timestamp">[${s.t
                 />
               </div>
 
-              <div className="reveal d3">
-                <label className="term-label mb-2">PLATFORM</label>
-                <div className="space-y-1">
-                  {PLATFORMS.map((p, i) => (
-                    <button
-                      key={p}
-                      onClick={() => setPlatform(p === platform ? "" : p)}
-                      className={`boot-option ${p === platform ? "active" : ""}`}
-                      style={{ animationDelay: `${0.3 + i * 0.08}s` }}
-                    >
-                      <span className="boot-option-arrow">
-                        {p === platform ? "\u25B6" : ">>"}
-                      </span>
-                      <span className="boot-option-label">{p}</span>
-                      <span className={`diag-badge ${p === platform ? "diag-ok" : "diag-idle"}`}>
-                        {p === platform ? "[SELECTED]" : "[IDLE]"}
-                      </span>
-                    </button>
-                  ))}
+              {appId ? (
+                <div className="reveal d3">
+                  <label className="term-label mb-2">PLATFORM</label>
+                  <div className="font-mono text-[11px] text-vi-400/70 border border-vi-500/15 bg-vi-500/5 rounded-r3 p-2 text-center tracking-wider">
+                    [LOCKED] {platform || "auto-detected from app"}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="reveal d3">
+                  <label className="term-label mb-2">PLATFORM</label>
+                  <div className="space-y-1">
+                    {PLATFORMS.map((p, i) => (
+                      <button
+                        key={p}
+                        onClick={() => setPlatform(p === platform ? "" : p)}
+                        className={`boot-option ${p === platform ? "active" : ""}`}
+                        style={{ animationDelay: `${0.3 + i * 0.08}s` }}
+                      >
+                        <span className="boot-option-arrow">
+                          {p === platform ? "\u25B6" : ">>"}
+                        </span>
+                        <span className="boot-option-label">{p}</span>
+                        <span className={`diag-badge ${p === platform ? "diag-ok" : "diag-idle"}`}>
+                          {p === platform ? "[SELECTED]" : "[IDLE]"}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="reveal d4">
                 <label className="term-label mb-2">VOICE_TONE</label>
@@ -440,7 +484,7 @@ ${script.sections.map((s) => `<div class="section"><div class="timestamp">[${s.t
                       <span className="boot-option-arrow">{f.id === seriesFormat ? "\u25B6" : ">>"}</span>
                       <div className="min-w-0 flex-1">
                         <span className="boot-option-label block">{f.name}</span>
-                        <span className="font-mono text-[7px] text-tx-4 tracking-wider block leading-tight">{f.description}</span>
+                        <span className="font-mono text-[9px] text-tx-4 tracking-wider block leading-tight">{f.description}</span>
                       </div>
                       <span className={`diag-badge ${f.id === seriesFormat ? "diag-ok" : "diag-idle"}`}>
                         {f.id === seriesFormat ? "[SELECTED]" : "[OFF]"}
@@ -472,13 +516,13 @@ ${script.sections.map((s) => `<div class="section"><div class="timestamp">[${s.t
                   <button
                     onClick={handleGenerateSeriesScript}
                     disabled={!valid}
-                    className="btn-terminal text-[9px] border-vi-500/30 text-vi-400 hover:bg-vi-500/10 disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="btn-terminal text-[11px] border-vi-500/30 text-vi-400 hover:bg-vi-500/10 disabled:opacity-30 disabled:cursor-not-allowed"
                   >
                     {"[SERIES SCRIPT]"}
                   </button>
                 )}
                 {!valid && (
-                  <span className="font-mono text-[8px] text-tx-4 tracking-wider">AWAITING INPUT</span>
+                  <span className="font-mono text-[10px] text-tx-4 tracking-wider">AWAITING INPUT</span>
                 )}
               </div>
             </>
@@ -488,7 +532,7 @@ ${script.sections.map((s) => `<div class="section"><div class="timestamp">[${s.t
             <>
               <div className="reveal d1">
                 <label className="term-label mb-2">SELECT_HOOK</label>
-                <p className="font-mono text-[10px] text-tx-3 mb-3 leading-relaxed">
+                <p className="font-mono text-[12px] text-tx-3 mb-3 leading-relaxed">
                   &gt; {hooks.length} hooks generated. Pick one to build your script.
                 </p>
               </div>
@@ -505,10 +549,10 @@ ${script.sections.map((s) => `<div class="section"><div class="timestamp">[${s.t
                       {selectedHookId === hook.id ? "\u25B6" : `0${i + 1}`}
                     </span>
                     <span className="boot-option-label flex flex-col gap-0.5">
-                      <span className="text-[9px] tracking-[0.15em] uppercase text-tx-4">
+                      <span className="text-[11px] tracking-[0.15em] uppercase text-tx-4">
                         [{hook.framework}]
                       </span>
-                      <span className="font-mono text-[11px] text-tx-1 leading-relaxed">
+                      <span className="font-mono text-[13px] text-tx-1 leading-relaxed">
                         {hook.hook_text}
                       </span>
                     </span>
@@ -531,7 +575,7 @@ ${script.sections.map((s) => `<div class="section"><div class="timestamp">[${s.t
                   <button
                     onClick={handleGenerateSeriesScript}
                     disabled={!selectedHookId}
-                    className="btn-terminal text-[9px] border-vi-500/30 text-vi-400 hover:bg-vi-500/10 disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="btn-terminal text-[11px] border-vi-500/30 text-vi-400 hover:bg-vi-500/10 disabled:opacity-30 disabled:cursor-not-allowed"
                   >
                     {"[SERIES SCRIPT]"}
                   </button>
@@ -551,22 +595,22 @@ ${script.sections.map((s) => `<div class="section"><div class="timestamp">[${s.t
               <div className="flex items-center justify-between">
                 <label className="term-label">GENERATED_SCRIPT</label>
                 <div className="flex items-center gap-2">
-                  <button onClick={copyToClipboard} className="btn-terminal text-[9px]">
+                  <button onClick={copyToClipboard} className="btn-terminal text-[11px]">
                     {"[COPY]"}
                   </button>
-                  <button onClick={exportPDF} className="btn-terminal text-[9px]">
+                  <button onClick={exportPDF} className="btn-terminal text-[11px]">
                     {"[PDF]"}
                   </button>
-                  <button onClick={() => setTeleprompter(true)} className="btn-terminal text-[9px]">
+                  <button onClick={() => setTeleprompter(true)} className="btn-terminal text-[11px]">
                     {"[PROM]"}
                   </button>
-                  <button onClick={handleOpenHistory} className="btn-terminal text-[9px]">
+                  <button onClick={handleOpenHistory} className="btn-terminal text-[11px]">
                     {"[VERS]"}
                   </button>
-                  <button onClick={handleSave} className="btn-terminal text-[9px]">
+                  <button onClick={handleSave} className="btn-terminal text-[11px]">
                     {"[SAVE]"}
                   </button>
-                  <button onClick={handleRegenerate} className="btn-terminal text-[9px]">
+                  <button onClick={handleRegenerate} className="btn-terminal text-[11px]">
                     {"[REGEN]"}
                   </button>
                 </div>
@@ -574,37 +618,37 @@ ${script.sections.map((s) => `<div class="section"><div class="timestamp">[${s.t
 
               <div className="crt-monitor relative crt-brackets" style={{ background: "rgba(0,0,0,0.25)" }}>
                 <div className="crt-micro-tl">
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-te-400/60">out</span>
+                  <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-te-400/60">out</span>
                   <span className="text-tx-4">|</span>
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase">script</span>
+                  <span className="font-mono text-[9px] tracking-[0.18em] uppercase">script</span>
                 </div>
                 <div className="crt-micro-tr">
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">{script.sections.length} sections</span>
+                  <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-tx-4">{script.sections.length} sections</span>
                 </div>
 
                 <div className="crt-monitor-header">
                   <span className="w-2 h-2 rounded-full bg-vi-400/60" />
-                  <span className="font-mono text-[10px] font-semibold text-tx-1 tracking-tight ml-2">{script.title}</span>
+                  <span className="font-mono text-[12px] font-semibold text-tx-1 tracking-tight ml-2">{script.title}</span>
                   <div className="flex-1" />
-                  <span className="font-mono text-[7px] tracking-[0.1em] text-tx-4">{"\u2022\u2022"}</span>
+                  <span className="font-mono text-[9px] tracking-[0.1em] text-tx-4">{"\u2022\u2022"}</span>
                 </div>
 
                 <div className="crt-monitor-content p-4 space-y-4">
                   {script.sections.map((section, i) => (
                     <div key={i} className="space-y-1.5">
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-[9px] text-te-400/80 tracking-wider bg-te-400/10 px-2 py-0.5 rounded-r2">
+                        <span className="font-mono text-[11px] text-te-400/80 tracking-wider bg-te-400/10 px-2 py-0.5 rounded-r2">
                           {section.timestamp}
                         </span>
                         {i === 0 && (
-                          <span className="font-mono text-[8px] text-fu-400/60 tracking-wider uppercase">[hook]</span>
+                          <span className="font-mono text-[10px] text-fu-400/60 tracking-wider uppercase">[hook]</span>
                         )}
                       </div>
                       <p className="font-mono text-[12px] text-tx-1 leading-[1.7]">
                         {section.content}
                       </p>
                       {section.broll && (
-                        <p className="font-mono text-[9px] text-tx-4 italic leading-relaxed">
+                        <p className="font-mono text-[11px] text-tx-4 italic leading-relaxed">
                           &gt; B-roll: {section.broll}
                         </p>
                       )}
@@ -613,17 +657,17 @@ ${script.sections.map((s) => `<div class="section"><div class="timestamp">[${s.t
                 </div>
 
                 <div className="crt-micro-bl">
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-ok">OUTPUT READY</span>
+                  <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-ok">OUTPUT READY</span>
                 </div>
               </div>
 
               <div className="border border-vi-500/10 bg-vi-500/5 rounded-r3 p-3 flex items-start gap-3">
-                <span className="font-mono text-[9px] text-vi-400/80 font-bold tracking-wider flex-shrink-0 mt-0.5">CTA</span>
-                <span className="font-mono text-[11px] text-tx-1 leading-relaxed">{script.cta}</span>
+                <span className="font-mono text-[11px] text-vi-400/80 font-bold tracking-wider flex-shrink-0 mt-0.5">CTA</span>
+                <span className="font-mono text-[13px] text-tx-1 leading-relaxed">{script.cta}</span>
               </div>
 
               <div className="flex items-center gap-3 pt-2 border-t border-white/[0.04]">
-                <button onClick={handleReset} className="btn-terminal text-[9px]">
+                <button onClick={handleReset} className="btn-terminal text-[11px]">
                   {">>"} NEW SCRIPT
                 </button>
               </div>
@@ -635,16 +679,16 @@ ${script.sections.map((s) => `<div class="section"><div class="timestamp">[${s.t
               <div className="flex items-center justify-between">
                 <label className="term-label">SERIES_SCRIPT</label>
                 <div className="flex items-center gap-2">
-                  <button onClick={copyToClipboard} className="btn-terminal text-[9px]">
+                  <button onClick={copyToClipboard} className="btn-terminal text-[11px]">
                     {"[COPY]"}
                   </button>
-                  <button onClick={exportPDF} className="btn-terminal text-[9px]">
+                  <button onClick={exportPDF} className="btn-terminal text-[11px]">
                     {"[PDF]"}
                   </button>
-                  <button onClick={() => setTeleprompter(true)} className="btn-terminal text-[9px]">
+                  <button onClick={() => setTeleprompter(true)} className="btn-terminal text-[11px]">
                     {"[PROM]"}
                   </button>
-                  <button onClick={() => { setSeriesScript(""); setStep("hooks"); }} className="btn-terminal text-[9px]">
+                  <button onClick={() => { setSeriesScript(""); setStep("hooks"); }} className="btn-terminal text-[11px]">
                     {"[BACK]"}
                   </button>
                 </div>
@@ -652,39 +696,39 @@ ${script.sections.map((s) => `<div class="section"><div class="timestamp">[${s.t
 
               <div className="crt-monitor relative crt-brackets" style={{ background: "rgba(0,0,0,0.25)" }}>
                 <div className="crt-micro-tl">
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-te-400/60">out</span>
+                  <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-te-400/60">out</span>
                   <span className="text-tx-4">|</span>
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase">series_script</span>
+                  <span className="font-mono text-[9px] tracking-[0.18em] uppercase">series_script</span>
                 </div>
                 <div className="crt-micro-tr">
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">{SERIES_FORMATS.find(f => seriesScript.startsWith(`[SERIES FORMAT: ${f.name}`))?.steps ?? 6} steps</span>
+                  <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-tx-4">{SERIES_FORMATS.find(f => seriesScript.startsWith(`[SERIES FORMAT: ${f.name}`))?.steps ?? 6} steps</span>
                 </div>
 
                 <div className="crt-monitor-header">
                   <span className="w-2 h-2 rounded-full bg-vi-400/60" />
-                  <span className="font-mono text-[10px] font-semibold text-tx-1 tracking-tight ml-2">
+                  <span className="font-mono text-[12px] font-semibold text-tx-1 tracking-tight ml-2">
                     {SERIES_FORMATS.find(f => seriesScript.startsWith(`[SERIES FORMAT: ${f.name}`))?.name ?? "Series Script"}
                   </span>
                   <div className="flex-1" />
-                  <span className="font-mono text-[7px] tracking-[0.1em] text-tx-4">{"\u2022\u2022"}</span>
+                  <span className="font-mono text-[9px] tracking-[0.1em] text-tx-4">{"\u2022\u2022"}</span>
                 </div>
 
                 <div className="crt-monitor-content p-4">
-                  <div className="font-mono text-[11px] text-tx-1 leading-[1.7] whitespace-pre-wrap">
+                  <div className="font-mono text-[13px] text-tx-1 leading-[1.7] whitespace-pre-wrap">
                     {seriesScript.replace(/^\[SERIES FORMAT:[^\]]+\]\n\n/, "")}
                   </div>
                 </div>
 
                 <div className="crt-micro-bl">
-                  <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-ok">OUTPUT READY</span>
+                  <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-ok">OUTPUT READY</span>
                 </div>
               </div>
 
               <div className="flex items-center gap-3 pt-2 border-t border-white/[0.04]">
-                <button onClick={() => { setSeriesScript(""); setStep("hooks"); }} className="btn-terminal text-[9px]">
+                <button onClick={() => { setSeriesScript(""); setStep("hooks"); }} className="btn-terminal text-[11px]">
                   {">>"} BACK TO HOOKS
                 </button>
-                <button onClick={handleReset} className="btn-terminal text-[9px]">
+                <button onClick={handleReset} className="btn-terminal text-[11px]">
                   {">>"} NEW SCRIPT
                 </button>
               </div>
@@ -693,23 +737,23 @@ ${script.sections.map((s) => `<div class="section"><div class="timestamp">[${s.t
         </div>
 
         <div className="crt-micro-bl">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase"
+          <span className="font-mono text-[9px] tracking-[0.18em] uppercase"
             style={{ color: step === "script" ? "rgba(34,197,94,0.6)" : "rgba(86,86,128,0.6)" }}
           >
             {step === "input" ? "AWAITING INPUT" : step === "hooks" ? "HOOKS READY" : "SCRIPT READY"}
           </span>
         </div>
         <div className="crt-micro-br">
-          <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">
+          <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-tx-4">
             {loading ? "GENERATING..." : "STANDBY"}
           </span>
         </div>
 
         <div className="crt-monitor-footer">
-          <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">
+          <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-tx-4">
             {step === "input" ? "INPUT" : step === "hooks" ? "HOOKS" : "SCRIPT"}
           </span>
-          <span className="font-mono text-[6px] text-center">
+          <span className="font-mono text-[9px] text-center">
             {!isSignedIn ? (
               <span className="text-vi-400/60">
                 {freeActionsLeft > 0 ? `FREE: ${freeActionsLeft} gen` : "FREE: 0 "}
@@ -723,7 +767,7 @@ ${script.sections.map((s) => `<div class="section"><div class="timestamp">[${s.t
               <span className="text-tx-4">[system ready]</span>
             )}
           </span>
-          <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">
+          <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-tx-4">
             {loading ? "BUSY" : "STANDBY"}
           </span>
         </div>
@@ -732,9 +776,9 @@ ${script.sections.map((s) => `<div class="section"><div class="timestamp">[${s.t
       {teleprompter && (script || seriesScript) && (
         <div className="fixed inset-0 z-50 bg-[#050508] flex flex-col">
           <div className="flex items-center justify-between px-6 py-3 border-b border-white/[0.06] bg-black/50">
-            <span className="font-mono text-[10px] text-te-400/80 tracking-wider uppercase">Teleprompter — {seriesScript ? "Series Script" : script?.title}</span>
+            <span className="font-mono text-[12px] text-te-400/80 tracking-wider uppercase">Teleprompter — {seriesScript ? "Series Script" : script?.title}</span>
             <div className="flex items-center gap-4">
-              <label className="font-mono text-[8px] text-tx-4 tracking-wider uppercase flex items-center gap-2">
+              <label className="font-mono text-[10px] text-tx-4 tracking-wider uppercase flex items-center gap-2">
                 Speed
                 <input
                   type="range"
@@ -746,10 +790,10 @@ ${script.sections.map((s) => `<div class="section"><div class="timestamp">[${s.t
                 />
                 <span className="text-tx-3 w-8">{prompterSpeed} wpm</span>
               </label>
-              <button onClick={scrollPrompter} className="btn-terminal text-[9px] text-ok">
+              <button onClick={scrollPrompter} className="btn-terminal text-[11px] text-ok">
                 {"[PLAY]"}
               </button>
-              <button onClick={() => setTeleprompter(false)} className="btn-terminal text-[9px]">
+              <button onClick={() => setTeleprompter(false)} className="btn-terminal text-[11px]">
                 {"[ESC]"}
               </button>
             </div>
@@ -768,24 +812,24 @@ ${script.sections.map((s) => `<div class="section"><div class="timestamp">[${s.t
                 <>
                   {script.sections.map((section, i) => (
                     <div key={i} className="space-y-3">
-                      <div className="font-mono text-[11px] text-te-400/60 tracking-wider">
+                      <div className="font-mono text-[13px] text-te-400/60 tracking-wider">
                         [{section.timestamp}]
                       </div>
                       <p className="font-mono text-[22px] text-tx-1 leading-[1.7]">
                         {section.content}
                       </p>
                       {section.broll && (
-                        <p className="font-mono text-[10px] text-tx-4 italic">
+                        <p className="font-mono text-[12px] text-tx-4 italic">
                           &gt; B-roll: {section.broll}
                         </p>
                       )}
                       {i === 0 && (
-                        <div className="font-mono text-[10px] text-fu-400/50 uppercase tracking-wider">[hook]</div>
+                        <div className="font-mono text-[12px] text-fu-400/50 uppercase tracking-wider">[hook]</div>
                       )}
                     </div>
                   ))}
                   <div className="border-t border-white/[0.08] pt-6 mt-8">
-                    <div className="font-mono text-[11px] text-tx-4 mb-2">CTA</div>
+                    <div className="font-mono text-[13px] text-tx-4 mb-2">CTA</div>
                     <p className="font-mono text-[22px] text-tx-1 leading-[1.7]">{script.cta}</p>
                   </div>
                 </>
@@ -793,8 +837,8 @@ ${script.sections.map((s) => `<div class="section"><div class="timestamp">[${s.t
             </div>
           </div>
           <div className="border-t border-white/[0.06] px-6 py-2 bg-black/50 flex items-center justify-between">
-            <span className="font-mono text-[7px] text-tx-4 tracking-wider">SPACE = PAUSE/RESUME | SPEED: {prompterSpeed} WPM</span>
-            <span className="font-mono text-[7px] text-tx-4 tracking-wider">ContentOS Teleprompter v1</span>
+            <span className="font-mono text-[9px] text-tx-4 tracking-wider">SPACE = PAUSE/RESUME | SPEED: {prompterSpeed} WPM</span>
+            <span className="font-mono text-[9px] text-tx-4 tracking-wider">ContentOS Teleprompter v1</span>
           </div>
         </div>
       )}
@@ -806,19 +850,19 @@ ${script.sections.map((s) => `<div class="section"><div class="timestamp">[${s.t
             <div className="crt-grain" />
             <div className="crt-vignette" />
             <div className="crt-micro-tl">
-              <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-te-400/60">sys</span>
+              <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-te-400/60">sys</span>
               <span className="text-tx-4">|</span>
-              <span className="font-mono text-[7px] tracking-[0.18em] uppercase">version_history</span>
+              <span className="font-mono text-[9px] tracking-[0.18em] uppercase">version_history</span>
             </div>
             <div className="crt-monitor-header">
               <span className="w-2 h-2 rounded-full bg-vi-400/60" />
-              <span className="font-mono text-[10px] font-semibold text-tx-1 tracking-tight ml-2">VERSION HISTORY</span>
+              <span className="font-mono text-[12px] font-semibold text-tx-1 tracking-tight ml-2">VERSION HISTORY</span>
               <div className="flex-1" />
-              <button onClick={() => setShowHistory(false)} className="btn-terminal text-[8px]">[CLOSE]</button>
+              <button onClick={() => setShowHistory(false)} className="btn-terminal text-[10px]">[CLOSE]</button>
             </div>
             <div className="crt-monitor-content p-4 max-h-[55vh] overflow-y-auto space-y-2">
               {history.length === 0 && (
-                <div className="font-mono text-[10px] text-tx-4 text-center py-8">No saved scripts yet</div>
+                <div className="font-mono text-[12px] text-tx-4 text-center py-8">No saved scripts yet</div>
               )}
               {history.map((v) => (
                 <button
@@ -828,8 +872,8 @@ ${script.sections.map((s) => `<div class="section"><div class="timestamp">[${s.t
                 >
                   <span className="boot-option-arrow">{">>"}</span>
                   <span className="boot-option-label flex flex-col gap-0.5 min-w-0">
-                    <span className="text-[9px] text-tx-1 truncate">{v.projectTitle}</span>
-                    <span className="text-[7px] text-tx-4 tracking-wider">
+                    <span className="text-[11px] text-tx-1 truncate">{v.projectTitle}</span>
+                    <span className="text-[9px] text-tx-4 tracking-wider">
                       v{v.version} — {new Date(v.createdAt).toLocaleDateString()}
                     </span>
                   </span>
@@ -838,13 +882,13 @@ ${script.sections.map((s) => `<div class="section"><div class="timestamp">[${s.t
               ))}
             </div>
             <div className="crt-micro-bl">
-              <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-tx-4">{history.length} VERSIONS</span>
+              <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-tx-4">{history.length} VERSIONS</span>
             </div>
           </div>
         </div>
       )}
 
       <SignInModal open={showModal} onClose={closeModal} context="generate hooks" />
-    </div>
+    </div></ErrorBoundary>
   );
 }

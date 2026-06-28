@@ -60,7 +60,7 @@ export function Modal({
             <h2 className="font-display text-[16px] font-semibold">{title}</h2>
             <button
               onClick={onClose}
-              className="w-8 h-8 flex items-center justify-center rounded-r4 text-tx-2 hover:bg-bg-hover hover:text-tx-1 transition-all"
+              className="w-8 h-8 flex items-center justify-center rounded-r4 text-tx-2 hover:bg-bg-hover hover:text-tx-1 transition-colors"
             >
               <Icons.close className="w-[18px] h-[18px]" />
             </button>

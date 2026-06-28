@@ -17,9 +17,12 @@ export default function OnboardingPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-bg-void flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-6 h-6 border-2 border-vi-400 border-t-transparent rounded-full animate-spin" />
-          <span className="font-mono text-[11px] text-tx-3 tracking-widest uppercase">Loading</span>
+        <div className="flex flex-col items-center gap-3">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-vi-400 animate-beat-pulse" />
+            <span className="font-mono text-[13px] text-tx-3 tracking-widest uppercase">Loading</span>
+            <span className="font-mono text-[13px] text-tx-3 ai-cursor" />
+          </div>
         </div>
       </div>
     }>
@@ -111,12 +114,12 @@ function OnboardingContent() {
       <div className="crt-sweep" />
       <div className="crt-grain" />
 
-      <div className="crt-micro-tl !text-[6px]">
+      <div className="crt-micro-tl !text-[9px]">
         <span className="text-te-400/60">sys</span>
         <span className="text-tx-4">|</span>
         <span className="text-tx-4">onboarding</span>
       </div>
-      <div className="crt-micro-tr !text-[6px]">
+      <div className="crt-micro-tr !text-[9px]">
         <span className="text-tx-4">step</span>
         <span className="text-tx-4">|</span>
         <span className="text-te-400/60">{currentStep}/4</span>
@@ -138,7 +141,7 @@ function OnboardingContent() {
 
         <div className="w-full h-[2px] bg-white/[0.04] rounded-full overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-vi-500 to-te-400 rounded-full transition-all duration-500"
+            className="h-full bg-gradient-to-r from-vi-500 to-te-400 rounded-full transition-colors duration-500"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -149,14 +152,14 @@ function OnboardingContent() {
               <div className={`flex items-center gap-2 transition-all ${
                 i <= stepIndex ? "opacity-100" : "opacity-30"
               }`}>
-                <div className={`w-[18px] h-[18px] rounded-full flex items-center justify-center text-[9px] font-mono font-bold transition-all ${
+                <div className={`w-[18px] h-[18px] rounded-full flex items-center justify-center text-[11px] font-mono font-bold transition-all ${
                   i <= stepIndex
                     ? "bg-vi-500 text-white"
                     : "bg-white/[0.04] text-tx-3"
                 }`}>
                   {s.num}
                 </div>
-                <span className={`font-mono text-[9px] tracking-widest uppercase hidden sm:block ${
+                <span className={`font-mono text-[11px] tracking-widest uppercase hidden sm:block ${
                   i <= stepIndex ? "text-tx-2" : "text-tx-3"
                 }`}>
                   {s.label}
@@ -175,16 +178,16 @@ function OnboardingContent() {
             <div className="crt-grain" />
             <div className="crt-vignette !bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(5,5,10,0.5)_100%)]" />
             <div className="crt-monitor-header">
-              <span className="font-mono text-[7px] tracking-[0.24em] uppercase text-tx-4">STEP</span>
-              <span className="font-mono text-[6px] text-tx-4">|</span>
-              <span className="font-mono text-[7px] tracking-[0.24em] uppercase text-te-400/70">CONFIGURE</span>
+              <span className="font-mono text-[9px] tracking-[0.24em] uppercase text-tx-4">STEP</span>
+              <span className="font-mono text-[9px] text-tx-4">|</span>
+              <span className="font-mono text-[9px] tracking-[0.24em] uppercase text-te-400/70">CONFIGURE</span>
               <div className="flex-1" />
-              <span className="font-mono text-[7px] tracking-[0.1em] text-tx-4">{"\u2022\u2022\u2022\u2022\u2022\u2022"}</span>
+              <span className="font-mono text-[9px] tracking-[0.1em] text-tx-4">{"\u2022\u2022\u2022\u2022\u2022\u2022"}</span>
             </div>
             <div className="crt-monitor-content p-6 space-y-5">
             <div>
               <h2 className="font-display text-[18px] font-semibold text-tx-1 tracking-tight">What&apos;s your niche?</h2>
-              <p className="font-mono text-[11px] text-tx-3 mt-2">
+              <p className="font-mono text-[13px] text-tx-3 mt-2">
                 ❯ Tell us what you create content about
               </p>
             </div>
@@ -207,7 +210,7 @@ function OnboardingContent() {
                   <button
                     key={tone}
                     onClick={() => setSelectedTone(tone === selectedTone ? "" : tone)}
-                    className={`px-4 h-[34px] rounded-full border text-[13px] transition-all font-mono tracking-wide text-[11px] ${
+                    className={`px-4 min-h-[44px] rounded-full border text-[13px] transition-colors font-mono tracking-wide text-[13px] ${
                       tone === selectedTone
                         ? "border-vi-500/50 bg-vi-500/15 text-vi-300"
                         : "border-white/10 bg-black/30 text-tx-2 hover:border-vi-500/30 hover:text-tx-1"
@@ -248,9 +251,9 @@ function OnboardingContent() {
             </button>
           </div>
           <div className="crt-monitor-footer">
-            <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">NICHE</span>
-            <span className="font-mono text-[6px] text-center text-tx-4">[step 1/3]</span>
-            <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">{niche ? "SET" : "PENDING"}</span>
+            <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-tx-4">NICHE</span>
+            <span className="font-mono text-[9px] text-center text-tx-4">[step 1/3]</span>
+            <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-tx-4">{niche ? "SET" : "PENDING"}</span>
           </div>
         </div>
         )}
@@ -261,16 +264,16 @@ function OnboardingContent() {
             <div className="crt-grain" />
             <div className="crt-vignette !bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(5,5,10,0.5)_100%)]" />
             <div className="crt-monitor-header">
-              <span className="font-mono text-[7px] tracking-[0.24em] uppercase text-tx-4">STEP</span>
-              <span className="font-mono text-[6px] text-tx-4">|</span>
-              <span className="font-mono text-[7px] tracking-[0.24em] uppercase text-te-400/70">PLATFORM</span>
+              <span className="font-mono text-[9px] tracking-[0.24em] uppercase text-tx-4">STEP</span>
+              <span className="font-mono text-[9px] text-tx-4">|</span>
+              <span className="font-mono text-[9px] tracking-[0.24em] uppercase text-te-400/70">PLATFORM</span>
               <div className="flex-1" />
-              <span className="font-mono text-[7px] tracking-[0.1em] text-tx-4">{"\u2022\u2022\u2022\u2022\u2022\u2022"}</span>
+              <span className="font-mono text-[9px] tracking-[0.1em] text-tx-4">{"\u2022\u2022\u2022\u2022\u2022\u2022"}</span>
             </div>
             <div className="crt-monitor-content p-6 space-y-5">
             <div>
               <h2 className="font-display text-[18px] font-semibold text-tx-1 tracking-tight">Where do you create?</h2>
-              <p className="font-mono text-[11px] text-tx-3 mt-2">
+              <p className="font-mono text-[13px] text-tx-3 mt-2">
                 ❯ Pick your primary content platform
               </p>
             </div>
@@ -307,9 +310,9 @@ function OnboardingContent() {
             </button>
           </div>
           <div className="crt-monitor-footer">
-            <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">PLATFORM</span>
-            <span className="font-mono text-[6px] text-center text-tx-4">[step 2/3]</span>
-            <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">{selectedPlatform ? "SET" : "PENDING"}</span>
+            <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-tx-4">PLATFORM</span>
+            <span className="font-mono text-[9px] text-center text-tx-4">[step 2/3]</span>
+            <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-tx-4">{selectedPlatform ? "SET" : "PENDING"}</span>
           </div>
         </div>
         )}
@@ -320,11 +323,11 @@ function OnboardingContent() {
             <div className="crt-grain" />
             <div className="crt-vignette !bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(5,5,10,0.5)_100%)]" />
             <div className="crt-monitor-header">
-              <span className="font-mono text-[7px] tracking-[0.24em] uppercase text-tx-4">STEP</span>
-              <span className="font-mono text-[6px] text-tx-4">|</span>
-              <span className="font-mono text-[7px] tracking-[0.24em] uppercase text-te-400/70">COMPLETE</span>
+              <span className="font-mono text-[9px] tracking-[0.24em] uppercase text-tx-4">STEP</span>
+              <span className="font-mono text-[9px] text-tx-4">|</span>
+              <span className="font-mono text-[9px] tracking-[0.24em] uppercase text-te-400/70">COMPLETE</span>
               <div className="flex-1" />
-              <span className="font-mono text-[7px] tracking-[0.1em] text-tx-4">{"\u2022\u2022\u2022\u2022\u2022\u2022"}</span>
+              <span className="font-mono text-[9px] tracking-[0.1em] text-tx-4">{"\u2022\u2022\u2022\u2022\u2022\u2022"}</span>
             </div>
             <div className="crt-monitor-content p-6 space-y-5 text-center">
             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-vi-500 to-te-400 flex items-center justify-center mx-auto shadow-[0_0_30px_rgba(139,92,246,0.25)]">
@@ -333,22 +336,22 @@ function OnboardingContent() {
 
             <div>
               <h2 className="font-display text-[18px] font-semibold text-tx-1 tracking-tight">You&apos;re all set!</h2>
-              <p className="font-mono text-[11px] text-tx-3 mt-2 leading-relaxed">
+              <p className="font-mono text-[13px] text-tx-3 mt-2 leading-relaxed">
                 Your brand kit is ready. Now let&apos;s write your first script — it only takes 60 seconds.
               </p>
-              <p className="font-mono text-[10px] text-tx-3/60 mt-2">
+              <p className="font-mono text-[12px] text-tx-3/60 mt-2">
                 Pick a topic, choose a platform, and let AI handle the rest.
               </p>
             </div>
 
             <div className="bg-black/30 rounded-r6 p-4 text-left space-y-2 border border-white/[0.04]">
-              <div className="flex items-center gap-2 font-mono text-[11px] text-te-300">
+              <div className="flex items-center gap-2 font-mono text-[13px] text-te-300">
                 <span>✓</span> Brand kit saved
               </div>
-              <div className="flex items-center gap-2 font-mono text-[11px] text-te-300">
+              <div className="flex items-center gap-2 font-mono text-[13px] text-te-300">
                 <span>✓</span> Platform configured
               </div>
-              <div className="flex items-center gap-2 font-mono text-[11px] text-tx-3">
+              <div className="flex items-center gap-2 font-mono text-[13px] text-tx-3">
                 <span>→</span> Ready for your first script
               </div>
             </div>
@@ -366,9 +369,9 @@ function OnboardingContent() {
             </button>
           </div>
           <div className="crt-monitor-footer">
-            <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-tx-4">READY</span>
-            <span className="font-mono text-[6px] text-center text-tx-4">[setup complete]</span>
-            <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-ok">DONE</span>
+            <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-tx-4">READY</span>
+            <span className="font-mono text-[9px] text-center text-tx-4">[setup complete]</span>
+            <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-ok">DONE</span>
           </div>
         </div>
         )}

@@ -3,12 +3,13 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
-import { PLATFORMS } from "@/lib/constants";
+import { PLATFORMS, APP_PLATFORM_MAP } from "@/lib/constants";
 import { generateThumbnails, generateCanvaThumbnailPrompts, generateABTestPlan, saveThumbnailBrief } from "@/lib/actions-thumbnail";
 import { getContentDefaults, getBrandKit, getBBStatus } from "@/lib/actions";
 import { useAuthGate } from "@/lib/use-auth-gate";
 import { SignInModal } from "@/components/auth/sign-in-modal";
 import { StreamingLoader } from "@/components/streaming-loader";
+import { ErrorBoundary } from "@/components/error-boundary";
 
 type Step = "input" | "concepts";
 
@@ -59,12 +60,12 @@ function ThumbnailPreview({ concept, size }: { concept: ThumbnailConcept; size: 
       >
         <div className="absolute inset-0 bg-black/20" />
         <div className="relative p-1.5 flex flex-col h-full">
-          <span className="text-[6px] font-bold text-white leading-tight line-clamp-2 drop-shadow-lg">
+          <span className="text-[9px] font-bold text-white leading-tight line-clamp-2 drop-shadow-lg">
             {concept.headline_text}
           </span>
           <div className="flex-1" />
           <div className="flex justify-end">
-            <span className="text-[8px]">{emoji}</span>
+            <span className="text-[10px]">{emoji}</span>
           </div>
         </div>
       </div>
@@ -85,7 +86,7 @@ function ThumbnailPreview({ concept, size }: { concept: ThumbnailConcept; size: 
       <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
       <div className="relative p-4 md:p-6 flex flex-col h-full justify-between">
         <div className="flex items-start justify-between">
-          <span className="text-[10px] md:text-[12px] font-bold text-white/80 uppercase tracking-wider">
+          <span className="text-[12px] md:text-[12px] font-bold text-white/80 uppercase tracking-wider">
             {concept.concept_name}
           </span>
           <span className="text-lg md:text-2xl">{emoji}</span>
@@ -94,7 +95,7 @@ function ThumbnailPreview({ concept, size }: { concept: ThumbnailConcept; size: 
           <h3 className="text-sm md:text-lg font-extrabold text-white leading-tight drop-shadow-lg">
             {concept.headline_text}
           </h3>
-          <p className="text-[9px] md:text-[11px] text-white/60">{concept.background_suggestion}</p>
+          <p className="text-[11px] md:text-[13px] text-white/60">{concept.background_suggestion}</p>
         </div>
       </div>
     </div>
@@ -137,6 +138,16 @@ export default function ThumbnailMakerPage() {
       setSelectedIndex(saved.selectedIndex ?? null);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const appId = params.get("app");
+    if (appId && APP_PLATFORM_MAP[appId as keyof typeof APP_PLATFORM_MAP]) {
+      const platforms = APP_PLATFORM_MAP[appId as keyof typeof APP_PLATFORM_MAP];
+      if (platforms.length > 0 && !platform) setPlatform(platforms[0]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -277,6 +288,7 @@ export default function ThumbnailMakerPage() {
   const isConceptsStep = step === "concepts" && !loading;
 
   return (
+    <ErrorBoundary>
     <div className="max-w-3xl space-y-6 relative z-10">
       <div>
         <p className="sec-eyebrow">
@@ -296,22 +308,22 @@ export default function ThumbnailMakerPage() {
         <div className="crt-sweep" />
 
         <div className="crt-micro-tl">
-          <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-te-400/60">sys</span>
+          <span className="font-mono text-[12px] tracking-[0.18em] uppercase text-te-400/60">sys</span>
           <span className="text-tx-3">|</span>
-          <span className="font-mono text-[10px] tracking-[0.18em] uppercase">thumbnail_maker</span>
+          <span className="font-mono text-[12px] tracking-[0.18em] uppercase">thumbnail_maker</span>
         </div>
         <div className="crt-micro-tr">
-          <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-tx-3">v1.0.0</span>
+          <span className="font-mono text-[12px] tracking-[0.18em] uppercase text-tx-3">v1.0.0</span>
           <span className="text-tx-3">|</span>
-          <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-tx-3">id: {isSignedIn ? "active" : "preview"}</span>
+          <span className="font-mono text-[12px] tracking-[0.18em] uppercase text-tx-3">id: {isSignedIn ? "active" : "preview"}</span>
         </div>
 
         <div className="crt-monitor-header">
-          <span className="font-mono text-[10px] tracking-[0.24em] uppercase text-tx-3">MODULE</span>
-          <span className="font-mono text-[9px] text-tx-3">|</span>
-          <span className="font-mono text-[10px] tracking-[0.24em] uppercase text-te-400/70">THUMBNAIL MAKER</span>
+          <span className="font-mono text-[12px] tracking-[0.24em] uppercase text-tx-3">MODULE</span>
+          <span className="font-mono text-[11px] text-tx-3">|</span>
+          <span className="font-mono text-[12px] tracking-[0.24em] uppercase text-te-400/70">THUMBNAIL MAKER</span>
           <div className="flex-1" />
-          <span className="font-mono text-[10px] tracking-[0.1em] text-tx-3">{"\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"}</span>
+          <span className="font-mono text-[12px] tracking-[0.1em] text-tx-3">{"\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"}</span>
         </div>
 
         <div className="crt-monitor-content p-6 space-y-6">
@@ -327,7 +339,7 @@ export default function ThumbnailMakerPage() {
           {isInputStep && (
             <>
               <div className="reveal d1">
-                <label className="term-label text-[11px] mb-2">VIDEO_TOPIC</label>
+                <label className="term-label text-[13px] mb-2">VIDEO_TOPIC</label>
                 <input
                   value={topic}
                   onChange={(e) => setTopic(e.target.value)}
@@ -338,7 +350,7 @@ export default function ThumbnailMakerPage() {
               </div>
 
               <div className="reveal d2">
-                <label className="term-label text-[11px] mb-2">TARGET_AUDIENCE</label>
+                <label className="term-label text-[13px] mb-2">TARGET_AUDIENCE</label>
                 <input
                   value={audience}
                   onChange={(e) => setAudience(e.target.value)}
@@ -348,7 +360,7 @@ export default function ThumbnailMakerPage() {
               </div>
 
               <div className="reveal d3">
-                <label className="term-label text-[11px] mb-2">PLATFORM</label>
+                <label className="term-label text-[13px] mb-2">PLATFORM</label>
                 <div className="space-y-1">
                   {PLATFORMS.map((p, i) => (
                     <button
@@ -378,7 +390,7 @@ export default function ThumbnailMakerPage() {
                   {">>"} GENERATE CONCEPTS
                 </button>
                 {!valid && (
-                  <span className="font-mono text-[11px] text-tx-3 tracking-wider">AWAITING INPUT</span>
+                  <span className="font-mono text-[13px] text-tx-3 tracking-wider">AWAITING INPUT</span>
                 )}
               </div>
             </>
@@ -387,18 +399,18 @@ export default function ThumbnailMakerPage() {
           {isConceptsStep && (
             <div ref={outputRef} className="space-y-4">
               <div className="flex items-center justify-between reveal d1">
-                <label className="term-label text-[11px] mb-0">THUMBNAIL_CONCEPTS</label>
+                <label className="term-label text-[13px] mb-0">THUMBNAIL_CONCEPTS</label>
                 <div className="flex items-center gap-2">
                   {isSignedIn && (
-                    <span className={`font-mono text-[8px] tracking-wider ${bbConnected ? "text-ok" : "text-tx-4"}`}>
+                    <span className={`font-mono text-[10px] tracking-wider ${bbConnected ? "text-ok" : "text-tx-4"}`}>
                       {bbConnected ? "[BB:ON]" : "[BB:OFF]"}
                     </span>
                   )}
-                  <button onClick={exportPDF} className="btn-terminal text-[9px]">{"[PDF]"}</button>
-                  <button onClick={handleCanvaPrompts} className="btn-terminal text-[9px]">{"[CANVA]"}</button>
-                  <button onClick={handleABTest} className="btn-terminal text-[9px]">{"[A/B]"}</button>
-                  <button onClick={handleSave} className="btn-terminal text-[9px]">{"[SAVE]"}</button>
-                  <button onClick={handleGenerate} className="btn-terminal text-[9px]">{"[REGEN]"}</button>
+                  <button onClick={exportPDF} className="btn-terminal text-[11px]">{"[PDF]"}</button>
+                  <button onClick={handleCanvaPrompts} className="btn-terminal text-[11px]">{"[CANVA]"}</button>
+                  <button onClick={handleABTest} className="btn-terminal text-[11px]">{"[A/B]"}</button>
+                  <button onClick={handleSave} className="btn-terminal text-[11px]">{"[SAVE]"}</button>
+                  <button onClick={handleGenerate} className="btn-terminal text-[11px]">{"[REGEN]"}</button>
                 </div>
               </div>
 
@@ -431,11 +443,11 @@ export default function ThumbnailMakerPage() {
                       <div className="ml-6 pl-4 border-l border-white/[0.04] space-y-3 py-3 reveal d1">
                         <ThumbnailPreview concept={concept} size="lg" />
                         <div>
-                          <span className="font-mono text-[10px] text-tx-3 uppercase tracking-wider">Visual</span>
+                          <span className="font-mono text-[12px] text-tx-3 uppercase tracking-wider">Visual</span>
                           <p className="font-mono text-[12px] text-tx-1 mt-0.5">{concept.visual_description}</p>
                         </div>
                         <div>
-                          <span className="font-mono text-[10px] text-tx-3 uppercase tracking-wider">Colors</span>
+                          <span className="font-mono text-[12px] text-tx-3 uppercase tracking-wider">Colors</span>
                           <div className="flex gap-1 mt-0.5">
                             {concept.color_palette.map((c, j) => (
                               <ColorSwatch key={j} hex={c} />
@@ -443,19 +455,19 @@ export default function ThumbnailMakerPage() {
                           </div>
                         </div>
                         <div>
-                          <span className="font-mono text-[10px] text-tx-3 uppercase tracking-wider">Expression</span>
+                          <span className="font-mono text-[12px] text-tx-3 uppercase tracking-wider">Expression</span>
                           <p className="font-mono text-[12px] text-tx-1 mt-0.5">{concept.facial_expression_hint}</p>
                         </div>
                         <div>
-                          <span className="font-mono text-[10px] text-tx-3 uppercase tracking-wider">Background</span>
+                          <span className="font-mono text-[12px] text-tx-3 uppercase tracking-wider">Background</span>
                           <p className="font-mono text-[12px] text-tx-1 mt-0.5">{concept.background_suggestion}</p>
                         </div>
                         {concept.props.length > 0 && (
                           <div>
-                            <span className="font-mono text-[10px] text-tx-3 uppercase tracking-wider">Props</span>
+                            <span className="font-mono text-[12px] text-tx-3 uppercase tracking-wider">Props</span>
                             <div className="flex flex-wrap gap-1 mt-0.5">
                               {concept.props.map((prop, j) => (
-                                <span key={j} className="font-mono text-[10px] text-fu-400 bg-fu-400/10 px-1.5 py-0.5 rounded-r2">{prop}</span>
+                                <span key={j} className="font-mono text-[12px] text-fu-400 bg-fu-400/10 px-1.5 py-0.5 rounded-r2">{prop}</span>
                               ))}
                             </div>
                           </div>
@@ -468,8 +480,8 @@ export default function ThumbnailMakerPage() {
 
               {isSignedIn && !bbConnected && (
                 <div className="reveal d3">
-                  <span className="font-mono text-[9px] text-tx-4">Set Bannerbear template in </span>
-                  <Link href="/dashboard/settings" className="font-mono text-[9px] text-te-400 underline">
+                  <span className="font-mono text-[11px] text-tx-4">Set Bannerbear template in </span>
+                  <Link href="/dashboard/settings" className="font-mono text-[11px] text-te-400 underline">
                     Dashboard Settings
                   </Link>
                 </div>
@@ -477,12 +489,12 @@ export default function ThumbnailMakerPage() {
 
               {bbImages.length > 0 && (
                 <div className="reveal d3 space-y-3">
-                  <label className="term-label text-[11px]">BANNERBEAR_IMAGES</label>
+                  <label className="term-label text-[13px]">BANNERBEAR_IMAGES</label>
                   <div className="grid grid-cols-2 gap-2">
                     {bbImages.map((img) => (
                       <div key={img.concept_name} className="crt-monitor relative crt-brackets" style={{ background: "rgba(0,0,0,0.15)" }}>
                         <div className="crt-monitor-content p-2 space-y-2">
-                          <div className="font-mono text-[9px] text-te-400/60">{img.concept_name}</div>
+                          <div className="font-mono text-[11px] text-te-400/60">{img.concept_name}</div>
                           {img.pngUrl && (
                             <img src={img.pngUrl} alt={img.concept_name} className="w-full rounded-sm" />
                           )}
@@ -491,7 +503,7 @@ export default function ThumbnailMakerPage() {
                             target="_blank"
                             rel="noopener noreferrer"
                             download
-                            className="btn-terminal text-[8px] inline-block"
+                            className="btn-terminal text-[10px] inline-block"
                           >
                             {"[DOWNLOAD]"}
                           </a>
@@ -504,13 +516,13 @@ export default function ThumbnailMakerPage() {
 
               {canvaPrompts.length > 0 && (
                 <div className="reveal d3 space-y-3">
-                  <label className="term-label text-[11px]">CANVA_PROMPTS</label>
+                  <label className="term-label text-[13px]">CANVA_PROMPTS</label>
                   {canvaPrompts.map((p, i) => (
                     <div key={i} className="crt-monitor relative crt-brackets" style={{ background: "rgba(0,0,0,0.2)" }}>
                       <div className="crt-monitor-content p-3 space-y-2">
-                        <div className="font-mono text-[10px] text-te-400/80 tracking-wider uppercase">{p.concept} — {p.template_type}</div>
-                        <div className="font-mono text-[10px] text-tx-2 leading-relaxed">{p.canva_prompt}</div>
-                        <button onClick={() => navigator.clipboard.writeText(p.canva_prompt)} className="btn-terminal text-[8px]">{"[COPY]"}</button>
+                        <div className="font-mono text-[12px] text-te-400/80 tracking-wider uppercase">{p.concept} — {p.template_type}</div>
+                        <div className="font-mono text-[12px] text-tx-2 leading-relaxed">{p.canva_prompt}</div>
+                        <button onClick={() => navigator.clipboard.writeText(p.canva_prompt)} className="btn-terminal text-[10px]">{"[COPY]"}</button>
                       </div>
                     </div>
                   ))}
@@ -519,17 +531,17 @@ export default function ThumbnailMakerPage() {
 
               {abTestPlan.length > 0 && (
                 <div className="reveal d4 space-y-3">
-                  <label className="term-label text-[11px]">A/B_TEST_PLAN</label>
+                  <label className="term-label text-[13px]">A/B_TEST_PLAN</label>
                   {abTestPlan.map((test, i) => (
                     <div key={i} className="crt-monitor relative crt-brackets" style={{ background: "rgba(0,0,0,0.2)" }}>
                       <div className="crt-monitor-content p-3 space-y-1">
                         <div className="flex items-center gap-3">
-                          <span className="font-mono text-[10px] text-fu-400 bg-fu-400/10 px-1.5 py-0.5 rounded-r2">A: {test.variant_a}</span>
-                          <span className="font-mono text-[8px] text-tx-4">vs</span>
-                          <span className="font-mono text-[10px] text-te-400 bg-te-400/10 px-1.5 py-0.5 rounded-r2">B: {test.variant_b}</span>
+                          <span className="font-mono text-[12px] text-fu-400 bg-fu-400/10 px-1.5 py-0.5 rounded-r2">A: {test.variant_a}</span>
+                          <span className="font-mono text-[10px] text-tx-4">vs</span>
+                          <span className="font-mono text-[12px] text-te-400 bg-te-400/10 px-1.5 py-0.5 rounded-r2">B: {test.variant_b}</span>
                         </div>
-                        <p className="font-mono text-[10px] text-tx-2">{test.hypothesis}</p>
-                        <div className="flex gap-3 font-mono text-[8px] text-tx-4 uppercase tracking-wider">
+                        <p className="font-mono text-[12px] text-tx-2">{test.hypothesis}</p>
+                        <div className="flex gap-3 font-mono text-[10px] text-tx-4 uppercase tracking-wider">
                           <span>Metric: {test.metric}</span>
                           <span>Duration: {test.duration_days}d</span>
                         </div>
@@ -549,23 +561,23 @@ export default function ThumbnailMakerPage() {
         </div>
 
         <div className="crt-micro-bl">
-          <span className="font-mono text-[10px] tracking-[0.18em] uppercase"
+          <span className="font-mono text-[12px] tracking-[0.18em] uppercase"
             style={{ color: step === "concepts" ? "rgba(34,197,94,0.6)" : "rgba(86,86,128,0.6)" }}
           >
             {step === "input" ? "AWAITING INPUT" : "CONCEPTS READY"}
           </span>
         </div>
         <div className="crt-micro-br">
-          <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-tx-3">
+          <span className="font-mono text-[12px] tracking-[0.18em] uppercase text-tx-3">
             {loading ? "GENERATING..." : "STANDBY"}
           </span>
         </div>
 
         <div className="crt-monitor-footer">
-          <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-tx-3">
+          <span className="font-mono text-[12px] tracking-[0.2em] uppercase text-tx-3">
             {step === "input" ? "INPUT" : "CONCEPTS"}
           </span>
-          <span className="font-mono text-[9px] text-center">
+          <span className="font-mono text-[11px] text-center">
             {!isSignedIn ? (
               <span className="text-vi-400/60">
                 {freeActionsLeft > 0 ? `FREE: ${freeActionsLeft} gen` : "FREE: 0 "}
@@ -579,13 +591,13 @@ export default function ThumbnailMakerPage() {
               <span className="text-tx-3">[system ready]</span>
             )}
           </span>
-          <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-tx-3">
+          <span className="font-mono text-[12px] tracking-[0.2em] uppercase text-tx-3">
             {loading ? "BUSY" : "STANDBY"}
           </span>
         </div>
       </div>
 
       <SignInModal open={showModal} onClose={closeModal} context="generate thumbnails" />
-    </div>
+    </div></ErrorBoundary>
   );
 }
