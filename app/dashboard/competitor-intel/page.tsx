@@ -86,7 +86,7 @@ function CompetitorIntelContent({ appId: propAppId }: { appId?: string | null })
   const [error, setError] = useState("");
   const outputRef = useRef<HTMLDivElement>(null);
   const { isSignedIn } = useAuth();
-  const { showModal, gate, closeModal, freeActionsLeft, savePreviewState, restorePreviewState } = useAuthGate("analyze competitor");
+  const { showModal, gate, closeModal, triggerModal, freeActionsLeft, savePreviewState, restorePreviewState } = useAuthGate("analyze competitor");
 
   const appModule = appId ? APP_MODULES[appId]?.find((m) => m.id === "competitor-intel") : null;
   const appModuleName = appModule?.name ?? "COMPETITOR INTEL";
@@ -110,7 +110,7 @@ function CompetitorIntelContent({ appId: propAppId }: { appId?: string | null })
       setError("");
       try {
         const result = await analyzeCompetitor(url, niche, depth);
-        if (!result.ok) { setError(result.error); setLoading(false); return; }
+        if (!result.ok) { if (result.error?.includes("sign in")) { triggerModal(); return; } setError(result.error); setLoading(false); return; }
         setAnalysis(result.data);
         setStep("results");
         setTimeout(() => outputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
@@ -127,7 +127,7 @@ function CompetitorIntelContent({ appId: propAppId }: { appId?: string | null })
     gate(async () => {
       try {
         const result = await saveCompetitorIntel(`Competitor: ${url}`, analysis);
-        if (!result.ok) { setError(result.error); return; }
+        if (!result.ok) { if (result.error?.includes("sign in")) { triggerModal(); return; } setError(result.error); return; }
       } catch (e) {
         setError(e instanceof Error ? e.message : "Save failed");
       }

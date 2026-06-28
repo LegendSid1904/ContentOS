@@ -80,7 +80,7 @@ function PageSetupContent({ appId: propAppId }: { appId?: string | null }) {
   const [error, setError] = useState("");
   const outputRef = useRef<HTMLDivElement>(null);
   const { isSignedIn } = useAuth();
-  const { showModal, gate, closeModal, freeActionsLeft, savePreviewState, restorePreviewState } = useAuthGate("generate page setup");
+  const { showModal, gate, closeModal, triggerModal, freeActionsLeft, savePreviewState, restorePreviewState } = useAuthGate("generate page setup");
 
   const appModule = appId ? APP_MODULES[appId]?.find((m) => m.id === "page-setup") : null;
   const appModuleName = appModule?.name ?? "PAGE SETUP";
@@ -116,7 +116,7 @@ function PageSetupContent({ appId: propAppId }: { appId?: string | null }) {
       setError("");
       try {
         const result = await generatePageSetup(platform, niche, currentBio);
-        if (!result.ok) { setError(result.error); setLoading(false); return; }
+        if (!result.ok) { if (result.error?.includes("sign in")) { triggerModal(); return; } setError(result.error); setLoading(false); return; }
         setData(result.data);
         setStep("results");
         setTimeout(() => outputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
@@ -133,7 +133,7 @@ function PageSetupContent({ appId: propAppId }: { appId?: string | null }) {
     gate(async () => {
       try {
         const result = await savePageSetup(`Page Setup: ${platform}`, data);
-        if (!result.ok) { setError(result.error); return; }
+        if (!result.ok) { if (result.error?.includes("sign in")) { triggerModal(); return; } setError(result.error); return; }
       } catch (e) {
         setError(e instanceof Error ? e.message : "Save failed");
       }

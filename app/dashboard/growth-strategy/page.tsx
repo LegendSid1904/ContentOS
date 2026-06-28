@@ -90,7 +90,7 @@ function GrowthStrategyContent({ appId: propAppId }: { appId?: string | null }) 
   const [error, setError] = useState("");
   const outputRef = useRef<HTMLDivElement>(null);
   const { isSignedIn } = useAuth();
-  const { showModal, gate, closeModal, freeActionsLeft, savePreviewState, restorePreviewState } = useAuthGate("generate strategy");
+  const { showModal, gate, closeModal, triggerModal, freeActionsLeft, savePreviewState, restorePreviewState } = useAuthGate("generate strategy");
 
   const appModule = appId ? APP_MODULES[appId]?.find((m) => m.id === "growth-strategy") : null;
   const appModuleName = appModule?.name ?? "GROWTH STRATEGY";
@@ -127,7 +127,7 @@ function GrowthStrategyContent({ appId: propAppId }: { appId?: string | null }) 
       setError("");
       try {
         const result = await generateGrowthStrategy(niche, Number(followers), platform, goals.join(", "), appId ?? undefined);
-        if (!result.ok) { setError(result.error); setLoading(false); return; }
+        if (!result.ok) { if (result.error?.includes("sign in")) { triggerModal(); return; } setError(result.error); setLoading(false); return; }
         setData(result.data);
         setStep("results");
         setTimeout(() => outputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
@@ -144,7 +144,7 @@ function GrowthStrategyContent({ appId: propAppId }: { appId?: string | null }) 
     gate(async () => {
       try {
         const result = await saveGrowthStrategy(`Growth: ${niche}`, data);
-        if (!result.ok) { setError(result.error); return; }
+        if (!result.ok) { if (result.error?.includes("sign in")) { triggerModal(); return; } setError(result.error); return; }
       } catch (e) {
         setError(e instanceof Error ? e.message : "Save failed");
       }
@@ -157,7 +157,7 @@ function GrowthStrategyContent({ appId: propAppId }: { appId?: string | null }) 
     setError("");
     try {
       const result = await generateAudiencePersona(niche, platform);
-      if (!result.ok) { setError(result.error); setPersonaLoading(false); return; }
+      if (!result.ok) { if (result.error?.includes("sign in")) { triggerModal(); return; } setError(result.error); setPersonaLoading(false); return; }
       setPersona(result.data);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Persona generation failed");
@@ -171,7 +171,7 @@ function GrowthStrategyContent({ appId: propAppId }: { appId?: string | null }) 
     setError("");
     try {
       const result = await generateEngagementPrompts(niche, platform, goals.join(", "));
-      if (!result.ok) { setError(result.error); setEngagementLoading(false); return; }
+      if (!result.ok) { if (result.error?.includes("sign in")) { triggerModal(); return; } setError(result.error); setEngagementLoading(false); return; }
       setEngagement(result.data);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Engagement prompt generation failed");

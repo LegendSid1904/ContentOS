@@ -73,6 +73,10 @@ export function useAuthGate(context?: string) {
     setShowModal(false);
   }, []);
 
+  const triggerModal = useCallback(() => {
+    setShowModal(true);
+  }, []);
+
   const savePreviewState = useCallback((state: PreviewState) => {
     setPreviewState(state);
     try {
@@ -98,6 +102,7 @@ export function useAuthGate(context?: string) {
     showModal,
     gate,
     closeModal,
+    triggerModal,
     isSignedIn,
     freeActionsLeft,
     context,

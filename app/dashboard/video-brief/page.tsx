@@ -78,7 +78,7 @@ function VideoBriefContent({ appId: propAppId }: { appId?: string | null }) {
   const [error, setError] = useState("");
   const outputRef = useRef<HTMLDivElement>(null);
   const { isSignedIn } = useAuth();
-  const { showModal, gate, closeModal, freeActionsLeft, savePreviewState, restorePreviewState } = useAuthGate("analyze transcript");
+  const { showModal, gate, closeModal, triggerModal, freeActionsLeft, savePreviewState, restorePreviewState } = useAuthGate("analyze transcript");
 
   const appModule = appId ? APP_MODULES[appId]?.find((m) => m.id === "video-brief") : null;
   const appModuleName = appModule?.name ?? "VIDEO BRIEF";
@@ -107,7 +107,7 @@ function VideoBriefContent({ appId: propAppId }: { appId?: string | null }) {
       setError("");
       try {
         const result = await analyzeTranscript(transcript, videoLength, style, niche);
-        if (!result.ok) { setError(result.error); setLoading(false); return; }
+        if (!result.ok) { if (result.error?.includes("sign in")) { triggerModal(); return; } setError(result.error); setLoading(false); return; }
         setBrief(result.data);
         setStep("results");
         setTimeout(() => outputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
@@ -124,7 +124,7 @@ function VideoBriefContent({ appId: propAppId }: { appId?: string | null }) {
     gate(async () => {
       try {
         const result = await saveEditingBrief("Editing Brief", brief);
-        if (!result.ok) { setError(result.error); return; }
+        if (!result.ok) { if (result.error?.includes("sign in")) { triggerModal(); return; } setError(result.error); return; }
       } catch (e) {
         setError(e instanceof Error ? e.message : "Save failed");
       }

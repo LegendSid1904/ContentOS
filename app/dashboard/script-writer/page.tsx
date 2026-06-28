@@ -82,7 +82,7 @@ function ScriptWriterContent({ appId: propAppId }: { appId?: string | null }) {
   const outputRef = useRef<HTMLDivElement>(null);
   const prompterRef = useRef<HTMLDivElement>(null);
   const { isSignedIn } = useAuth();
-  const { showModal, gate, closeModal, freeActionsLeft, savePreviewState, restorePreviewState } = useAuthGate("generate hooks");
+  const { showModal, gate, closeModal, triggerModal, freeActionsLeft, savePreviewState, restorePreviewState } = useAuthGate("generate hooks");
 
   useEffect(() => {
     const saved = restorePreviewState<{ hooks: Hook[]; script: FullScript | null; step: Step; selectedHookId: string | null; language?: string }>();
@@ -121,7 +121,7 @@ function ScriptWriterContent({ appId: propAppId }: { appId?: string | null }) {
       setError("");
       try {
         const result = await generateHooks(topic, audience, platform, tone, language, appId ?? undefined);
-        if (!result.ok) { setError(result.error); return; }
+        if (!result.ok) { if (result.error?.includes("sign in")) { triggerModal(); return; } setError(result.error); return; }
         setHooks(result.data);
         setStep("hooks");
       } catch (e) {
@@ -147,7 +147,7 @@ function ScriptWriterContent({ appId: propAppId }: { appId?: string | null }) {
       setError("");
       try {
         const result = await generateScript(topic, audience, platform, tone, hook.hook_text, context, language, appId ?? undefined);
-        if (!result.ok) { setError(result.error); return; }
+        if (!result.ok) { if (result.error?.includes("sign in")) { triggerModal(); return; } setError(result.error); return; }
         setScript(result.data);
         setStep("script");
         setTimeout(() => outputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
@@ -170,7 +170,7 @@ function ScriptWriterContent({ appId: propAppId }: { appId?: string | null }) {
       setError("");
       try {
         const result = await generateScript(topic, audience, platform, tone, hook.hook_text, context, language, appId ?? undefined);
-        if (!result.ok) { setError(result.error); return; }
+        if (!result.ok) { if (result.error?.includes("sign in")) { triggerModal(); return; } setError(result.error); return; }
         setScript(result.data);
         setTimeout(() => outputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
       } catch (e) {
@@ -192,7 +192,7 @@ function ScriptWriterContent({ appId: propAppId }: { appId?: string | null }) {
       setError("");
       try {
         const result = await generateSeriesScript(topic, audience, platform, tone, seriesFormat, hook.hook_text, language);
-        if (!result.ok) { setError(result.error); setLoading(false); return; }
+        if (!result.ok) { if (result.error?.includes("sign in")) { triggerModal(); return; } setError(result.error); setLoading(false); return; }
         let text = result.data.content;
         const format = SERIES_FORMATS.find((f) => f.id === seriesFormat);
         text = `[SERIES FORMAT: ${format?.name ?? seriesFormat}]\n\n${text}`;
@@ -212,7 +212,7 @@ function ScriptWriterContent({ appId: propAppId }: { appId?: string | null }) {
     gate(async () => {
       try {
         const result = await saveScript(script.title, script);
-        if (!result.ok) { setError(result.error); return; }
+        if (!result.ok) { if (result.error?.includes("sign in") || result.error === "Unauthorized") { triggerModal(); return; } setError(result.error); return; }
       } catch (e) {
         setError(e instanceof Error ? e.message : "Save failed");
       }

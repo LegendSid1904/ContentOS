@@ -193,7 +193,7 @@ function ContentIdeasContent({ appId: propAppId }: { appId?: string | null }) {
   const [error, setError] = useState("");
   const outputRef = useRef<HTMLDivElement>(null);
   const { isSignedIn } = useAuth();
-  const { showModal, gate, closeModal, freeActionsLeft, savePreviewState, restorePreviewState } = useAuthGate("generate ideas");
+  const { showModal, gate, closeModal, triggerModal, freeActionsLeft, savePreviewState, restorePreviewState } = useAuthGate("generate ideas");
 
   const appModule = appId ? APP_MODULES[appId]?.find((m) => m.id === "content-ideas") : null;
   const appModuleName = appModule?.name ?? "CONTENT IDEAS";
@@ -230,7 +230,7 @@ function ContentIdeasContent({ appId: propAppId }: { appId?: string | null }) {
       setError("");
       try {
         const result = await generateIdeas(niche, audience, trendMode ? "trending" : undefined);
-        if (!result.ok) { setError(result.error); setLoading(false); return; }
+        if (!result.ok) { if (result.error?.includes("sign in")) { triggerModal(); return; } setError(result.error); setLoading(false); return; }
         setPillars(result.data.pillars);
         setIdeas(result.data.ideas);
         setStep("ideas");
@@ -250,7 +250,7 @@ function ContentIdeasContent({ appId: propAppId }: { appId?: string | null }) {
       setError("");
       try {
         const result = await generateAngles(niche, audience, idea.title);
-        if (!result.ok) { setError(result.error); setLoading(false); return; }
+        if (!result.ok) { if (result.error?.includes("sign in")) { triggerModal(); return; } setError(result.error); setLoading(false); return; }
         setAngles(result.data);
         setStep("angles");
         setTimeout(() => outputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
@@ -270,7 +270,7 @@ function ContentIdeasContent({ appId: propAppId }: { appId?: string | null }) {
       setError("");
       try {
         const result = await generateRepurposingMap(idea.title, niche, audience);
-        if (!result.ok) { setError(result.error); setLoading(false); return; }
+        if (!result.ok) { if (result.error?.includes("sign in")) { triggerModal(); return; } setError(result.error); setLoading(false); return; }
         setRepurposeMap(result.data);
         setStep("repurpose");
         setTimeout(() => outputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
@@ -289,7 +289,7 @@ function ContentIdeasContent({ appId: propAppId }: { appId?: string | null }) {
       setError("");
       try {
         const result = await generateCalendar(ideas.map((i) => ({ title: i.title, format: i.format })));
-        if (!result.ok) { setError(result.error); setLoading(false); return; }
+        if (!result.ok) { if (result.error?.includes("sign in")) { triggerModal(); return; } setError(result.error); setLoading(false); return; }
         setCalendar(result.data);
         setStep("calendar");
         setTimeout(() => outputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
@@ -305,7 +305,7 @@ function ContentIdeasContent({ appId: propAppId }: { appId?: string | null }) {
     gate(async () => {
       try {
         const result = await saveIdeas(`Ideas: ${niche}`, { pillars, ideas });
-        if (!result.ok) { setError(result.error); return; }
+        if (!result.ok) { if (result.error?.includes("sign in")) { triggerModal(); return; } setError(result.error); return; }
       } catch (e) {
         setError(e instanceof Error ? e.message : "Save failed");
       }
