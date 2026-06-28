@@ -7,6 +7,7 @@ node_modules/
 .env.production
 .env.development
 .env.staging
+.env.vercel
 
 # Google OAuth
 credentials.json
@@ -61,6 +62,9 @@ service-account*.json
 .vercel
 
 .vercel
+
+# Planning docs (local only)
+plans/
 
 # Project notes (local only)
 optimization.md
