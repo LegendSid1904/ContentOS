@@ -166,7 +166,6 @@ function ContentFallback() {
   );
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function ContentIdeasPage({ appId: _appId }: any = {}) {
   return (
     <Suspense fallback={<ContentFallback />}>

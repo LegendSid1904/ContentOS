@@ -56,7 +56,6 @@ function VideoBriefFallback() {
   );
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function VideoBriefPage({ appId: _appId }: any = {}) {
   return (
     <Suspense fallback={<VideoBriefFallback />}>

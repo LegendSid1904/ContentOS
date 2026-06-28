@@ -60,7 +60,6 @@ function GrowthFallback() {
   );
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function GrowthStrategyPage({ appId: _appId }: any = {}) {
   return (
     <Suspense fallback={<GrowthFallback />}>
