@@ -19,7 +19,7 @@ function HookCard({ hook, index, selected, onSelect }: HookCardProps) {
   return (
     <div
       className={cn(
-        "group relative cursor-pointer rounded-r8 border p-4 transition-colors duration-300",
+        "group relative cursor-pointer rounded-r2 border p-4 transition-colors duration-300",
         selected
           ? "border-vi-500 bg-vi-500/10 shadow-[0_0_20px_rgba(139,92,246,0.15)]"
           : "border-bd-2 bg-bg-float hover:border-vi-500/50 hover:bg-bg-hover",

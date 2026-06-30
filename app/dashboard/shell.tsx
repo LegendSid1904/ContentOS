@@ -202,7 +202,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               <span className="font-display text-[13px] font-bold text-tx-3 tracking-tight group-hover:text-te-400 transition-colors duration-200">ContentOS</span>
               <span className="font-mono text-[9px] text-tx-4 tracking-[0.15em] uppercase">[home]</span>
             </Link>
-            <span className="flex items-center gap-1.5 font-mono text-[11px] text-vi-400 tracking-[0.15em] uppercase border border-vi-500/15 bg-vi-500/10 px-2.5 h-[22px] rounded-full">
+            <span className="flex items-center gap-1.5 font-mono text-[11px] text-vi-400 tracking-[0.15em] uppercase border border-vi-500/15 bg-vi-500/10 px-2.5 h-[22px] rounded-[2px]">
               <span className="w-1.5 h-1.5 rounded-full bg-vi-400 animate-beat-pulse" />
               AI Ready
             </span>
