@@ -93,7 +93,7 @@ export default async function Home() {
             </h1>
             <div className="angle-line mt-4">
               <span className="angle-bracket">&lt;</span>
-              <span className="angle-text text-[15px] text-tx-2 font-light leading-relaxed max-w-xl font-display block">
+              <span className="angle-text text-[15px] text-tx-2 font-light leading-relaxed max-w-xl font-mono block">
                 {APP_DESC}
               </span>
               <span className="angle-bracket">&gt;</span>
@@ -159,7 +159,7 @@ export default async function Home() {
             <h2 className="font-display text-[28px] font-bold text-tx-1 tracking-tight mb-2">
               Choose your platform
             </h2>
-            <p className="font-display text-[13px] text-tx-3 leading-relaxed max-w-xl">
+            <p className="font-mono text-[13px] text-tx-3 leading-relaxed max-w-xl">
               &gt; pick a platform to see the tools designed for it — scripts, carousels, thumbnails, competitor intel, and growth strategy, all tailored to where you create.
             </p>
           </div>
@@ -190,7 +190,7 @@ export default async function Home() {
               Ready to create?
               <span className="angle-bracket">&gt;</span>
             </h2>
-            <p className="font-display text-[13px] text-tx-3 mb-6">
+            <p className="font-mono text-[13px] text-tx-3 mb-6">
               &gt; your first script is 60 seconds away
             </p>
             {userId ? (

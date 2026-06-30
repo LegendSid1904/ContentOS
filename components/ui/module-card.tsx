@@ -25,7 +25,7 @@ function ModuleCard({ module, onClick, className }: ModuleCardProps) {
       <span className="font-mono text-[9px] text-vi-400/60 tracking-[0.18em] uppercase mb-3 block">✦ AI Module</span>
       <div className="font-mono text-[22px] leading-none mb-2 text-tx-2">{module.icon}</div>
       <div className="font-mono text-[13px] font-semibold tracking-[0.05em] uppercase text-tx-1 mb-1.5">{module.name}</div>
-      <div className="font-display text-[13px] text-tx-3 leading-relaxed">{module.desc}</div>
+      <div className="font-mono text-[13px] text-tx-3 leading-relaxed">{module.desc}</div>
     </div>
   );
 }

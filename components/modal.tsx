@@ -49,7 +49,7 @@ export function Modal({
       />
       <div
         className={cn(
-          "relative bg-bg-raised border border-bd-2 rounded-r12 shadow-2xl w-full",
+          "relative bg-bg-raised border border-bd-2 rounded-r2 w-full shadow-[0_0_20px_rgba(139,92,246,0.08)]",
           width,
           "max-h-[85vh] overflow-y-auto",
           className,
@@ -60,7 +60,7 @@ export function Modal({
             <h2 className="font-display text-[16px] font-semibold">{title}</h2>
             <button
               onClick={onClose}
-              className="w-8 h-8 flex items-center justify-center rounded-r4 text-tx-2 hover:bg-bg-hover hover:text-tx-1 transition-colors"
+              className="w-8 h-8 flex items-center justify-center rounded-r2 text-tx-2 hover:bg-bg-hover hover:text-tx-1 transition-colors"
             >
               <Icons.close className="w-[18px] h-[18px]" />
             </button>
