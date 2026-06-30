@@ -71,3 +71,23 @@ credentials.json, token.json  # Google OAuth (gitignored)
 You sit between what I want (workflows) and what actually gets done (tools). Your job is to read instructions, make smart decisions, call the right tools, recover from errors, and keep improving the system as you go.
 
 Stay pragmatic. Stay reliable. Keep learning.
+
+## gstack Skill Routing
+
+gstack is installed at `C:\Users\Siddhesh\.claude\skills\gstack`. Use the `skill` tool to load its skills. For all web browsing, use the gstack browse binary at `C:\Users\Siddhesh\.claude\skills\gstack\browse\dist\browse.exe` — never use `mcp__claude-in-chrome__*` tools.
+
+Available skills: `/office-hours`, `/plan-ceo-review`, `/plan-eng-review`, `/plan-design-review`, `/design-consultation`, `/design-shotgun`, `/design-html`, `/review`, `/ship`, `/land-and-deploy`, `/canary`, `/benchmark`, `/browse`, `/qa`, `/qa-only`, `/design-review`, `/setup-browser-cookies`, `/setup-deploy`, `/setup-gbrain`, `/retro`, `/investigate`, `/document-release`, `/document-generate`, `/codex`, `/cso`, `/autoplan`, `/plan-devex-review`, `/devex-review`, `/careful`, `/freeze`, `/guard`, `/unfreeze`, `/gstack-upgrade`, `/learn`.
+
+Key routing rules:
+- Product ideas/brainstorming → load `/office-hours`
+- Strategy/scope → load `/plan-ceo-review`
+- Architecture → load `/plan-eng-review`
+- Design system/plan review → load `/design-consultation` or `/plan-design-review`
+- Full review pipeline → load `/autoplan`
+- Bugs/errors → load `/investigate`
+- QA/testing site behavior → load `/qa` or `/qa-only`
+- Code review/diff check → load `/review`
+- Visual polish → load `/design-review`
+- Ship/deploy/PR → load `/ship` or `/land-and-deploy`
+- Save progress → load `/context-save`
+- Resume context → load `/context-restore`
