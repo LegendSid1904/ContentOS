@@ -33,7 +33,7 @@ export default async function AppPage({
           {app.name}
           <span className="angle-bracket">&gt;</span>
         </h1>
-        <p className="font-display text-[13px] text-tx-3 leading-relaxed">
+        <p className="font-mono text-[12px] text-tx-3 leading-relaxed">
           &gt; {app.desc}
         </p>
         <div className="flex flex-wrap gap-1.5 mt-4">

@@ -11,7 +11,7 @@ const BOOT_STEPS = [
   "system ready",
 ];
 
-const BAR_DURATION = 4.2;
+const BAR_DURATION = 3.0;
 
 export default function LoadingGate({ children }: { children: React.ReactNode }) {
   const [phase, setPhase] = useState<"loading" | "glitch" | "done">("loading");
@@ -20,80 +20,11 @@ export default function LoadingGate({ children }: { children: React.ReactNode })
   const [stepIndex, setStepIndex] = useState(-1);
   const bootRef = useRef<HTMLDivElement>(null);
   const activateRef = useRef<() => void>(() => {});
-  const audioCtxRef = useRef<AudioContext | null>(null);
-  const audioMasterRef = useRef<GainNode | null>(null);
   const pctRef = useRef(0);
   pctRef.current = pct;
 
-  const playGlitchSound = useCallback(() => {
-    const ctx = audioCtxRef.current;
-    if (!ctx) return;
-
-    const out = ctx.createGain();
-    out.gain.setValueAtTime(0.55, ctx.currentTime);
-    out.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.5);
-    out.connect(ctx.destination);
-
-    const sweepLen = Math.floor(ctx.sampleRate * 0.35);
-    const sweepBuf = ctx.createBuffer(1, sweepLen, ctx.sampleRate);
-    const sweepData = sweepBuf.getChannelData(0);
-    for (let i = 0; i < sweepLen; i++) {
-      const t = i / ctx.sampleRate;
-      const phase = 2 * Math.PI * (950 * t - 0.5 * 900 * t * t / 0.35);
-      sweepData[i] = Math.sin(phase);
-    }
-    const sweepSrc = ctx.createBufferSource();
-    sweepSrc.buffer = sweepBuf;
-    const ws = ctx.createWaveShaper();
-    const k = 4;
-    ws.curve = new Float32Array(256).map((_, i) => {
-      const x = (i - 128) / 128;
-      return Math.atan(k * x) / Math.atan(k);
-    });
-    sweepSrc.connect(ws).connect(out);
-    sweepSrc.start();
-
-    const popLen = Math.floor(ctx.sampleRate * 0.06);
-    const popBuf = ctx.createBuffer(1, popLen, ctx.sampleRate);
-    const popData = popBuf.getChannelData(0);
-    for (let i = 0; i < popLen; i++) {
-      popData[i] = (Math.random() * 2 - 1) * (1 - i / popLen);
-    }
-    const popSrc = ctx.createBufferSource();
-    popSrc.buffer = popBuf;
-    popSrc.connect(out);
-    popSrc.start();
-
-    const stutLen = Math.floor(ctx.sampleRate * 0.18);
-    const stutBuf = ctx.createBuffer(1, stutLen, ctx.sampleRate);
-    const stutData = stutBuf.getChannelData(0);
-    for (let i = 0; i < stutLen; i++) {
-      const t = i / ctx.sampleRate;
-      stutData[i] = (Math.sin(2 * Math.PI * 28 * t) > 0.3 ? 1 : 0) * (Math.random() * 2 - 1) * (1 - t / 0.18);
-    }
-    const stutSrc = ctx.createBufferSource();
-    stutSrc.buffer = stutBuf;
-    const stutFilt = ctx.createBiquadFilter();
-    stutFilt.type = "bandpass";
-    stutFilt.frequency.value = 1200;
-    stutFilt.Q.value = 0.5;
-    stutSrc.connect(stutFilt).connect(out);
-    stutSrc.start();
-  }, []);
-
-  const stopAudio = useCallback(() => {
-    if (audioMasterRef.current && audioCtxRef.current) {
-      audioMasterRef.current.gain.linearRampToValueAtTime(0, audioCtxRef.current.currentTime + 0.5);
-      setTimeout(() => {
-        if (audioCtxRef.current) audioCtxRef.current.close();
-      }, 600);
-    }
-  }, []);
-
   const handleActivate = useCallback(() => {
     if (phase !== "loading" || pctRef.current < 100) return;
-    playGlitchSound();
-    stopAudio();
     setPhase("glitch");
     let frame = 0;
     const interval = setInterval(() => {
@@ -104,91 +35,13 @@ export default function LoadingGate({ children }: { children: React.ReactNode })
         setPhase("done");
       }
     }, 70);
-  }, [phase, stopAudio, playGlitchSound]);
+  }, [phase]);
 
   activateRef.current = handleActivate;
-
-  const setupAudio = useCallback(() => {
-    if (audioCtxRef.current) return;
-
-    try {
-      const ctx = new AudioContext();
-
-      const master = ctx.createGain();
-      master.gain.value = 0.45;
-      master.connect(ctx.destination);
-
-      const primeLen = Math.floor(ctx.sampleRate * 0.04);
-      const primeBuf = ctx.createBuffer(1, primeLen, ctx.sampleRate);
-      const primeDat = primeBuf.getChannelData(0);
-      for (let i = 0; i < primeLen; i++) {
-        primeDat[i] = Math.sin(2 * Math.PI * 800 * (i / ctx.sampleRate)) * 0.3;
-      }
-      const primeSrc = ctx.createBufferSource();
-      primeSrc.buffer = primeBuf;
-      const primeGain = ctx.createGain();
-      primeGain.gain.setValueAtTime(0.3, ctx.currentTime);
-      primeGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
-      primeSrc.connect(primeGain).connect(master);
-      primeSrc.start();
-
-      const humFilter = ctx.createBiquadFilter();
-      humFilter.type = "lowpass";
-      humFilter.frequency.setValueAtTime(600, ctx.currentTime);
-      humFilter.frequency.linearRampToValueAtTime(1400, ctx.currentTime + BAR_DURATION);
-      humFilter.Q.value = 0.8;
-
-      const hum = ctx.createOscillator();
-      hum.type = "sawtooth";
-      hum.frequency.value = 220;
-      const humGain = ctx.createGain();
-      humGain.gain.value = 0.15;
-      hum.connect(humGain).connect(humFilter).connect(master);
-      hum.start();
-
-      const sub = ctx.createOscillator();
-      sub.type = "triangle";
-      sub.frequency.value = 110;
-      const subGain = ctx.createGain();
-      subGain.gain.value = 0.06;
-      sub.connect(subGain).connect(master);
-      sub.start();
-
-      const nLen = ctx.sampleRate * 2;
-      const nBuf = ctx.createBuffer(1, nLen, ctx.sampleRate);
-      const nDat = nBuf.getChannelData(0);
-      let last = 0;
-      for (let i = 0; i < nLen; i++) {
-        nDat[i] = (last + (Math.random() * 2 - 1) * 0.016) / 1.016;
-        last = nDat[i];
-      }
-      const nSrc = ctx.createBufferSource();
-      nSrc.buffer = nBuf;
-      nSrc.loop = true;
-      const nGain = ctx.createGain();
-      nGain.gain.value = 0.04;
-      const nFilt = ctx.createBiquadFilter();
-      nFilt.type = "lowpass";
-      nFilt.frequency.value = 500;
-      nSrc.connect(nFilt).connect(nGain).connect(master);
-      nSrc.start();
-
-      audioCtxRef.current = ctx;
-      audioMasterRef.current = master;
-    } catch (_) {}
-  }, []);
 
   useEffect(() => {
     const il = document.getElementById("instant-loader");
     if (il) il.classList.add("hidden");
-
-    const onFirstClick = () => {
-      setupAudio();
-      document.removeEventListener("click", onFirstClick);
-      document.removeEventListener("touchstart", onFirstClick);
-    };
-    document.addEventListener("click", onFirstClick);
-    document.addEventListener("touchstart", onFirstClick);
 
     const totalMs = BAR_DURATION * 1000;
     const start = Date.now();
@@ -207,19 +60,15 @@ export default function LoadingGate({ children }: { children: React.ReactNode })
     const raf = requestAnimationFrame(tick);
 
     const onKey = (e: KeyboardEvent) => {
-      if (!audioCtxRef.current) setupAudio();
       if (e.key === "Enter") activateRef.current();
     };
     document.addEventListener("keydown", onKey);
 
     return () => {
       cancelAnimationFrame(raf);
-      document.removeEventListener("click", onFirstClick);
-      document.removeEventListener("touchstart", onFirstClick);
       document.removeEventListener("keydown", onKey);
-      audioCtxRef.current?.close();
     };
-  }, [setupAudio]);
+  }, []);
 
   if (phase === "done") return <>{children}</>;
 
@@ -227,6 +76,8 @@ export default function LoadingGate({ children }: { children: React.ReactNode })
     <div
       className={`loading-gate ${phase === "glitch" ? "glitch-active" : ""}`}
       tabIndex={0}
+      onClick={() => handleActivate()}
+      style={{ cursor: pct >= 100 ? "pointer" : "default" }}
     >
       <div className="lg-vignette" />
       <div className="lg-scanlines" />

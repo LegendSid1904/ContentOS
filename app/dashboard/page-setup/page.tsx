@@ -2,9 +2,9 @@
 
 import { useState, useRef, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
-import { PLATFORMS, APP_PLATFORM_MAP, APP_MODULES } from "@/lib/constants";
+import { APP_PLATFORM_MAP, APP_MODULES } from "@/lib/constants";
 import { generatePageSetup, savePageSetup } from "@/lib/actions-page-setup";
 import { getContentDefaults, getBrandKit } from "@/lib/actions";
 import { useAuthGate } from "@/lib/use-auth-gate";
@@ -65,6 +65,7 @@ export default function PageSetupPage({ appId: _appId }: any = {}) {
 
 function PageSetupContent({ appId: propAppId }: { appId?: string | null }) {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const appId = propAppId ?? searchParams?.get("app") ?? null;
 
   const [step, setStep] = useState<Step>("input");
@@ -91,8 +92,14 @@ function PageSetupContent({ appId: propAppId }: { appId?: string | null }) {
       setData(saved.data ?? null);
       setStep(saved.step ?? "input");
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!appId) {
+      router.push('/dashboard');
+    }
+  }, [appId, router]);
 
   useEffect(() => {
     if (!isSignedIn) return;
@@ -203,38 +210,7 @@ function PageSetupContent({ appId: propAppId }: { appId?: string | null }) {
               <div className="font-mono text-[11px] text-vi-400/70 border border-vi-500/15 bg-vi-500/5 rounded-r3 p-3 text-center tracking-wider leading-relaxed">
                 <span className="text-vi-400/90">[READY]</span> {appModule ? appModule.desc : "select a platform below to generate AI-optimized bio variants, keyword suggestions, highlights, and a full profile audit."}
               </div>
-              {appId ? (
-                <div className="reveal d1">
-                  <label className="term-label text-[13px] mb-2">PLATFORM</label>
-                  <div className="font-mono text-[11px] text-vi-400/70 border border-vi-500/15 bg-vi-500/5 rounded-r3 p-2 text-center tracking-wider">
-                    [LOCKED] {platform || "auto-detected from app"}
-                  </div>
-                </div>
-              ) : (
-                <div className="reveal d1">
-                  <label className="term-label text-[13px] mb-2">PLATFORM</label>
-                  <div className="space-y-1">
-                    {[...PLATFORMS, "Twitter"].map((p, i) => (
-                      <button
-                        key={p}
-                        onClick={() => setPlatform(p === platform ? "" : p)}
-                        className={`boot-option ${p === platform ? "active" : ""}`}
-                        style={{ animationDelay: `${0.1 + i * 0.08}s` }}
-                      >
-                        <span className="boot-option-arrow">
-                          {p === platform ? "\u25B6" : ">>"}
-                        </span>
-                        <span className="boot-option-label">{p}</span>
-                        <span className={`diag-badge ${p === platform ? "diag-ok" : "diag-idle"}`}>
-                          {p === platform ? "[SELECTED]" : "[IDLE]"}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="reveal d2">
+              <div className="reveal d1">
                 <label className="term-label text-[13px] mb-2">NICHE</label>
                 <input
                   value={niche}

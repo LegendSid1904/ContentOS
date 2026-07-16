@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
-import { PLATFORMS, APP_PLATFORM_MAP } from "@/lib/constants";
+import { APP_PLATFORM_MAP } from "@/lib/constants";
 import { generateCarouselOutline, generateCoverHeadlines, generateCarouselCTA, generateCanvaPrompt, saveCarousel } from "@/lib/actions-carousel";
 import { getContentDefaults, getBBStatus } from "@/lib/actions";
 import { useAuthGate } from "@/lib/use-auth-gate";
@@ -46,12 +47,37 @@ const slideColors = [
   { bg: "linear-gradient(135deg, #ec4899, #f9a8d4)", accent: "#f9a8d4" },
 ];
 
-export default function CarouselMakerPage() {
+function CarouselMakerFallback() {
+  return (
+    <div className="font-mono text-[11px] text-tx-4 p-6 flex items-center gap-2">
+      <span className="w-1.5 h-1.5 rounded-full bg-vi-400 animate-pulse" />
+      loading session...
+    </div>
+  );
+}
+
+export default function CarouselMakerPage({ appId: _appId }: any = {}) {
+  return (
+    <Suspense fallback={<CarouselMakerFallback />}>
+      <CarouselMakerContent appId={_appId} />
+    </Suspense>
+  );
+}
+
+function CarouselMakerContent({ appId: propAppId }: { appId?: string | null }) {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const appId = propAppId ?? searchParams?.get("app") ?? null;
+
   const [step, setStep] = useState<Step>("input");
   const [loading, setLoading] = useState(false);
   const [topic, setTopic] = useState("");
   const [audience, setAudience] = useState("");
-  const [platform, setPlatform] = useState("");
+  const [platform, setPlatform] = useState(() => {
+    if (!appId) return "";
+    const platforms = APP_PLATFORM_MAP[appId as keyof typeof APP_PLATFORM_MAP];
+    return platforms?.[0] ?? "";
+  });
   const [slideCount, setSlideCount] = useState(5);
   const [headlines, setHeadlines] = useState<string[]>([]);
   const [selectedHeadline, setSelectedHeadline] = useState<string | null>(null);
@@ -83,14 +109,10 @@ export default function CarouselMakerPage() {
   }, []);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const appId = params.get("app");
-    if (appId && APP_PLATFORM_MAP[appId as keyof typeof APP_PLATFORM_MAP]) {
-      const platforms = APP_PLATFORM_MAP[appId as keyof typeof APP_PLATFORM_MAP];
-      if (platforms.length > 0 && !platform) setPlatform(platforms[0]);
+    if (!appId) {
+      router.push('/dashboard');
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [appId, router]);
 
   useEffect(() => {
     if (!isSignedIn) return;
@@ -337,28 +359,6 @@ export default function CarouselMakerPage() {
               </div>
 
               <div className="reveal d3">
-                <label className="term-label mb-2 text-[12px]">PLATFORM</label>
-                <div className="space-y-1">
-                  {PLATFORMS.map((p, i) => (
-                    <button
-                      key={p}
-                      onClick={() => setPlatform(p === platform ? "" : p)}
-                      className={`boot-option ${p === platform ? "active" : ""}`}
-                      style={{ animationDelay: `${0.3 + i * 0.08}s` }}
-                    >
-                      <span className="boot-option-arrow">
-                        {p === platform ? "\u25B6" : ">>"}
-                      </span>
-                      <span className="boot-option-label">{p}</span>
-                      <span className={`diag-badge ${p === platform ? "diag-ok" : "diag-idle"}`}>
-                        {p === platform ? "[SELECTED]" : "[IDLE]"}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="reveal d4">
                 <label className="term-label mb-2 text-[12px]">SLIDES <span className="text-tx-3">({slideCount})</span></label>
                 <input
                   type="range"

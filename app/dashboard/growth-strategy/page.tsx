@@ -2,9 +2,9 @@
 
 import { useState, useRef, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
-import { PLATFORMS, APP_PLATFORM_MAP, APP_MODULES } from "@/lib/constants";
+import { APP_PLATFORM_MAP, APP_MODULES } from "@/lib/constants";
 import { generateGrowthStrategy, generateAudiencePersona, generateEngagementPrompts, saveGrowthStrategy } from "@/lib/actions-growth";
 import { getContentDefaults } from "@/lib/actions";
 import { useAuthGate } from "@/lib/use-auth-gate";
@@ -70,6 +70,7 @@ export default function GrowthStrategyPage({ appId: _appId }: any = {}) {
 
 function GrowthStrategyContent({ appId: propAppId }: { appId?: string | null }) {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const appId = propAppId ?? searchParams?.get("app") ?? null;
 
   const [step, setStep] = useState<Step>("input");
@@ -101,8 +102,14 @@ function GrowthStrategyContent({ appId: propAppId }: { appId?: string | null }) 
       setData(saved.data ?? null);
       setStep(saved.step ?? "input");
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!appId) {
+      router.push('/dashboard');
+    }
+  }, [appId, router]);
 
   useEffect(() => {
     if (!isSignedIn) return;
@@ -297,38 +304,7 @@ function GrowthStrategyContent({ appId: propAppId }: { appId?: string | null }) 
                 />
               </div>
 
-              {appId ? (
-                <div className="reveal d3">
-                  <label className="term-label mb-2">PRIMARY_PLATFORM</label>
-                  <div className="font-mono text-[11px] text-vi-400/70 border border-vi-500/15 bg-vi-500/5 rounded-r3 p-2 text-center tracking-wider">
-                    [LOCKED] {platform || "auto-detected from app"}
-                  </div>
-                </div>
-              ) : (
-                <div className="reveal d3">
-                  <label className="term-label mb-2">PRIMARY_PLATFORM</label>
-                  <div className="space-y-1">
-                    {PLATFORMS.map((p, i) => (
-                      <button
-                        key={p}
-                        onClick={() => setPlatform(p === platform ? "" : p)}
-                        className={`boot-option ${p === platform ? "active" : ""}`}
-                        style={{ animationDelay: `${0.3 + i * 0.08}s` }}
-                      >
-                        <span className="boot-option-arrow">
-                          {p === platform ? "\u25B6" : ">>"}
-                        </span>
-                        <span className="boot-option-label">{p}</span>
-                        <span className={`diag-badge ${p === platform ? "diag-ok" : "diag-idle"}`}>
-                          {p === platform ? "[SELECTED]" : "[IDLE]"}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="reveal d4">
+              <div className="reveal d3">
                 <label className="term-label mb-2">GOALS <span className="text-tx-4">(select one or more)</span></label>
                 <div className="space-y-1">
                   {GROWTH_GOALS.map((g, i) => (

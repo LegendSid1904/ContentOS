@@ -14,7 +14,7 @@ interface ModuleCardProps {
 function ModuleCard({ module, onClick, className }: ModuleCardProps) {
   return (
     <div
-      className={cn("ascii-box rounded-r2 p-4 transition-colors duration-200 hover:bg-white/[0.03] cursor-pointer", className)}
+      className={cn("p-4 rounded-r6 border border-white/[0.04] bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/[0.08] transition-all duration-200 cursor-pointer", className)}
       onClick={onClick}
       role="button"
       tabIndex={0}
@@ -24,8 +24,8 @@ function ModuleCard({ module, onClick, className }: ModuleCardProps) {
     >
       <span className="font-mono text-[9px] text-vi-400/60 tracking-[0.18em] uppercase mb-3 block">✦ AI Module</span>
       <div className="font-mono text-[22px] leading-none mb-2 text-tx-2">{module.icon}</div>
-      <div className="font-mono text-[13px] font-semibold tracking-[0.05em] uppercase text-tx-1 mb-1.5">{module.name}</div>
-      <div className="font-mono text-[13px] text-tx-3 leading-relaxed">{module.desc}</div>
+      <div className="font-mono text-[13px] font-bold text-tx-1 mb-1.5 tracking-[0.03em]">{module.name}</div>
+      <div className="font-mono text-[12px] text-tx-3 leading-relaxed">{module.desc}</div>
     </div>
   );
 }
@@ -52,12 +52,12 @@ function UsageCard({
   const barPct = Math.min((count / Math.max(count, 5)) * 100, 100);
 
   return (
-    <div className="ascii-box rounded-r2 p-3 transition-colors duration-200 hover:bg-white/[0.03] reveal d1">
+    <div className="p-3 rounded-r6 border border-white/[0.04] bg-white/[0.02] hover:bg-white/[0.04] transition-all duration-200">
       <div className="flex items-center justify-between mb-1">
-        <span className="font-mono text-[13px] text-tx-1 uppercase tracking-wider">
+        <span className="font-mono text-[12px] font-bold text-tx-1 tracking-[0.03em]">
           {module.icon} {module.name}
         </span>
-        <span className="font-mono text-[18px] font-bold text-te-400">
+        <span className="font-mono text-[20px] font-bold text-te-400">
           {count}
         </span>
       </div>
@@ -70,8 +70,8 @@ function UsageCard({
           }}
         />
       </div>
-      <span className="font-mono text-[10px] text-tx-4 tracking-wider mt-1 block">
-        {count === 0 ? "no activity" : `${count} project${count === 1 ? "" : "s"}`}
+      <span className="font-mono text-[10px] text-tx-4 mt-1 block uppercase tracking-[0.06em]">
+        {count === 0 ? "No activity" : `${count} project${count === 1 ? "" : "s"}`}
       </span>
     </div>
   );

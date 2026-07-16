@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { APP_MODULES } from "@/lib/constants";
 import { analyzeCompetitor, saveCompetitorIntel } from "@/lib/actions-competitor";
@@ -75,6 +75,7 @@ export default function CompetitorIntelPage({ appId: _appId }: any = {}) {
 
 function CompetitorIntelContent({ appId: propAppId }: { appId?: string | null }) {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const appId = propAppId ?? searchParams?.get("app") ?? null;
 
   const [step, setStep] = useState<Step>("input");
@@ -99,6 +100,12 @@ function CompetitorIntelContent({ appId: propAppId }: { appId?: string | null })
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!appId) {
+      router.push('/dashboard');
+    }
+  }, [appId, router]);
 
   const valid = url.trim() && niche.trim();
 

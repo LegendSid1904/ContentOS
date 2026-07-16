@@ -18,11 +18,10 @@ export default function OnboardingPage() {
     <Suspense fallback={
       <div className="min-h-screen bg-bg-void flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-vi-400 animate-beat-pulse" />
-            <span className="font-mono text-[13px] text-tx-3 tracking-widest uppercase">Loading</span>
-            <span className="font-mono text-[13px] text-tx-3 ai-cursor" />
+          <div className="w-7 h-7 rounded-[7px] bg-gradient-to-br from-vi-500 to-te-400 flex items-center justify-center font-display text-[13px] font-bold text-white shadow-[0_0_16px_rgba(139,92,246,0.3)] animate-beat-pulse">
+            C
           </div>
+          <span className="font-mono text-[12px] text-tx-3 uppercase tracking-[0.12em]">Loading</span>
         </div>
       </div>
     }>
@@ -96,34 +95,15 @@ function OnboardingContent() {
   }
 
   const stepIndex = STEPS.findIndex((s) => s.num === currentStep);
-  const stepInfo = STEPS[stepIndex];
   const totalSteps = STEPS.length;
   const progress = ((stepIndex + 1) / totalSteps) * 100;
 
   return (
     <div className="min-h-screen bg-bg-void flex flex-col items-center justify-center p-6 relative overflow-hidden">
       <div className="cyber-grid">
-        <div className="cyber-grid-inner opacity-40" />
+        <div className="cyber-grid-inner opacity-30" />
       </div>
-      <div className="gradient-mesh" />
-      <div className="orb orb-1" />
-      <div className="orb orb-2" />
-
-      <div className="crt-scanlines !opacity-[0.04]" />
-      <div className="crt-vignette !bg-[radial-gradient(ellipse_at_center,transparent_30%,rgba(5,5,10,0.5)_100%)]" />
-      <div className="crt-sweep" />
-      <div className="crt-grain" />
-
-      <div className="crt-micro-tl !text-[9px]">
-        <span className="text-te-400/60">sys</span>
-        <span className="text-tx-4">|</span>
-        <span className="text-tx-4">onboarding</span>
-      </div>
-      <div className="crt-micro-tr !text-[9px]">
-        <span className="text-tx-4">step</span>
-        <span className="text-tx-4">|</span>
-        <span className="text-te-400/60">{currentStep}/4</span>
-      </div>
+      <div className="gradient-mesh opacity-50" />
 
       <div className="w-full max-w-lg space-y-8 relative z-10">
         <div className="text-center">
@@ -134,8 +114,8 @@ function OnboardingContent() {
             <span className="font-display text-[16px] font-bold text-tx-1 tracking-tight">ContentOS</span>
           </div>
           <h1 className="font-display text-[28px] font-bold text-tx-1 mt-4 tracking-tight">Welcome to ContentOS</h1>
-          <p className="font-mono text-[12px] text-tx-3 mt-2 tracking-wider">
-            ❯ Let&apos;s set you up in {totalSteps} quick steps
+          <p className="font-mono text-[13px] text-tx-3 mt-2">
+            Set up your profile in {totalSteps} quick steps
           </p>
         </div>
 
@@ -173,44 +153,33 @@ function OnboardingContent() {
         </div>
 
         {currentStep === 1 && (
-          <div className="crt-monitor crt-brackets p-0">
-            <div className="crt-scanlines !opacity-[0.04]" />
-            <div className="crt-grain" />
-            <div className="crt-vignette !bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(5,5,10,0.5)_100%)]" />
-            <div className="crt-monitor-header">
-              <span className="font-mono text-[9px] tracking-[0.24em] uppercase text-tx-4">STEP</span>
-              <span className="font-mono text-[9px] text-tx-4">|</span>
-              <span className="font-mono text-[9px] tracking-[0.24em] uppercase text-te-400/70">CONFIGURE</span>
-              <div className="flex-1" />
-              <span className="font-mono text-[9px] tracking-[0.1em] text-tx-4">{"\u2022\u2022\u2022\u2022\u2022\u2022"}</span>
-            </div>
-            <div className="crt-monitor-content p-6 space-y-5">
+          <div className="p-6 space-y-5 rounded-r8 border border-white/[0.06] bg-white/[0.02]">
             <div>
-              <h2 className="font-display text-[18px] font-semibold text-tx-1 tracking-tight">What&apos;s your niche?</h2>
+              <h2 className="font-display text-[20px] font-semibold text-tx-1 tracking-tight">What&apos;s your niche?</h2>
               <p className="font-mono text-[13px] text-tx-3 mt-2">
-                ❯ Tell us what you create content about
+                Tell us what you create content about
               </p>
             </div>
 
             <div>
-              <label className="terminal-label block mb-2">Your Niche</label>
+              <label className="font-mono text-[12px] font-medium text-tx-2 block mb-2 uppercase tracking-[0.08em]">Your Niche</label>
               <input
                 value={niche}
                 onChange={(e) => setNiche(e.target.value)}
                 placeholder="e.g. Tech, Fitness, Personal Finance, Lifestyle..."
-                className="terminal-input w-full h-[42px] px-3"
+                className="w-full h-[44px] px-3 bg-white/[0.04] border border-white/[0.08] text-tx-1 font-mono text-[13px] placeholder:text-tx-4 focus:outline-none focus:border-vi-400/40 focus:ring-1 focus:ring-vi-400/20 transition-all"
                 autoFocus
               />
             </div>
 
             <div>
-              <label className="terminal-label block mb-2">Your Voice &amp; Tone</label>
+              <label className="font-mono text-[12px] font-medium text-tx-2 block mb-2 uppercase tracking-[0.08em]">Your Voice & Tone</label>
               <div className="flex flex-wrap gap-2">
                 {TONES.map((tone) => (
                   <button
                     key={tone}
                     onClick={() => setSelectedTone(tone === selectedTone ? "" : tone)}
-                    className={`px-4 min-h-[44px] rounded-full border text-[13px] transition-colors font-mono tracking-wide text-[13px] ${
+                    className={`px-4 min-h-[44px] font-mono text-[12px] transition-colors uppercase tracking-[0.08em] border ${
                       tone === selectedTone
                         ? "border-vi-500/50 bg-vi-500/15 text-vi-300"
                         : "border-white/10 bg-black/30 text-tx-2 hover:border-vi-500/30 hover:text-tx-1"
@@ -223,7 +192,7 @@ function OnboardingContent() {
             </div>
 
             <div>
-              <label className="terminal-label block mb-2">Brand Colors</label>
+              <label className="font-mono text-[12px] font-medium text-tx-2 block mb-2 uppercase tracking-[0.08em]">Brand Colors</label>
               <div className="flex gap-3">
                 {PRESET_COLORS.map((color) => (
                   <button
@@ -245,36 +214,19 @@ function OnboardingContent() {
             <button
               onClick={handleStep1Next}
               disabled={!niche.trim() || saving}
-              className="btn-terminal btn-terminal-primary w-full justify-center"
+              className="w-full font-mono text-[13px] font-semibold text-white bg-vi-500 hover:bg-vi-400 disabled:opacity-40 disabled:cursor-not-allowed px-6 py-3 transition-all duration-150 uppercase tracking-[0.1em]"
             >
-              {saving ? "SAVING..." : "CONTINUE >>"}
+              {saving ? "Saving..." : "Continue"}
             </button>
           </div>
-          <div className="crt-monitor-footer">
-            <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-tx-4">NICHE</span>
-            <span className="font-mono text-[9px] text-center text-tx-4">[step 1/3]</span>
-            <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-tx-4">{niche ? "SET" : "PENDING"}</span>
-          </div>
-        </div>
         )}
 
         {currentStep === 3 && (
-          <div className="crt-monitor crt-brackets p-0">
-            <div className="crt-scanlines !opacity-[0.04]" />
-            <div className="crt-grain" />
-            <div className="crt-vignette !bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(5,5,10,0.5)_100%)]" />
-            <div className="crt-monitor-header">
-              <span className="font-mono text-[9px] tracking-[0.24em] uppercase text-tx-4">STEP</span>
-              <span className="font-mono text-[9px] text-tx-4">|</span>
-              <span className="font-mono text-[9px] tracking-[0.24em] uppercase text-te-400/70">PLATFORM</span>
-              <div className="flex-1" />
-              <span className="font-mono text-[9px] tracking-[0.1em] text-tx-4">{"\u2022\u2022\u2022\u2022\u2022\u2022"}</span>
-            </div>
-            <div className="crt-monitor-content p-6 space-y-5">
+          <div className="p-6 space-y-5 border border-white/[0.06] bg-white/[0.02]">
             <div>
-              <h2 className="font-display text-[18px] font-semibold text-tx-1 tracking-tight">Where do you create?</h2>
+              <h2 className="font-display text-[20px] font-semibold text-tx-1 tracking-tight">Where do you create?</h2>
               <p className="font-mono text-[13px] text-tx-3 mt-2">
-                ❯ Pick your primary content platform
+                Pick your primary content platform
               </p>
             </div>
 
@@ -296,7 +248,7 @@ function OnboardingContent() {
                       <div className="w-2.5 h-2.5 rounded-full bg-te-400" />
                     )}
                   </div>
-                  <span className="text-[14px] font-medium text-tx-1 font-mono tracking-tight">{platform}</span>
+                  <span className="font-mono text-[13px] font-medium text-tx-1">{platform}</span>
                 </button>
               ))}
             </div>
@@ -304,76 +256,49 @@ function OnboardingContent() {
             <button
               onClick={handleStep3Next}
               disabled={!selectedPlatform || saving}
-              className="btn-terminal btn-terminal-primary w-full justify-center"
+              className="w-full font-mono text-[13px] font-semibold text-white bg-vi-500 hover:bg-vi-400 disabled:opacity-40 disabled:cursor-not-allowed px-6 py-3 transition-all duration-150 uppercase tracking-[0.1em]"
             >
-              {saving ? "SAVING..." : "CONTINUE >>"}
+              {saving ? "Saving..." : "Continue"}
             </button>
           </div>
-          <div className="crt-monitor-footer">
-            <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-tx-4">PLATFORM</span>
-            <span className="font-mono text-[9px] text-center text-tx-4">[step 2/3]</span>
-            <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-tx-4">{selectedPlatform ? "SET" : "PENDING"}</span>
-          </div>
-        </div>
         )}
 
         {currentStep === 4 && (
-          <div className="crt-monitor crt-brackets p-0">
-            <div className="crt-scanlines !opacity-[0.04]" />
-            <div className="crt-grain" />
-            <div className="crt-vignette !bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(5,5,10,0.5)_100%)]" />
-            <div className="crt-monitor-header">
-              <span className="font-mono text-[9px] tracking-[0.24em] uppercase text-tx-4">STEP</span>
-              <span className="font-mono text-[9px] text-tx-4">|</span>
-              <span className="font-mono text-[9px] tracking-[0.24em] uppercase text-te-400/70">COMPLETE</span>
-              <div className="flex-1" />
-              <span className="font-mono text-[9px] tracking-[0.1em] text-tx-4">{"\u2022\u2022\u2022\u2022\u2022\u2022"}</span>
-            </div>
-            <div className="crt-monitor-content p-6 space-y-5 text-center">
+          <div className="p-6 space-y-5 border border-white/[0.06] bg-white/[0.02] text-center">
             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-vi-500 to-te-400 flex items-center justify-center mx-auto shadow-[0_0_30px_rgba(139,92,246,0.25)]">
               <span className="text-2xl">✦</span>
             </div>
 
             <div>
-              <h2 className="font-display text-[18px] font-semibold text-tx-1 tracking-tight">You&apos;re all set!</h2>
+              <h2 className="font-display text-[20px] font-semibold text-tx-1 tracking-tight">You&apos;re all set!</h2>
               <p className="font-mono text-[13px] text-tx-3 mt-2 leading-relaxed">
                 Your brand kit is ready. Now let&apos;s write your first script — it only takes 60 seconds.
               </p>
-              <p className="font-mono text-[12px] text-tx-3/60 mt-2">
+              <p className="font-mono text-[12px] text-tx-4 mt-2">
                 Pick a topic, choose a platform, and let AI handle the rest.
               </p>
             </div>
 
-            <div className="bg-black/30 rounded-r6 p-4 text-left space-y-2 border border-white/[0.04]">
+            <div className="p-4 text-left space-y-2 border border-white/[0.04] bg-white/[0.02]">
               <div className="flex items-center gap-2 font-mono text-[13px] text-te-300">
-                <span>✓</span> Brand kit saved
+                <span className="text-te-400">✓</span> Brand kit saved
               </div>
               <div className="flex items-center gap-2 font-mono text-[13px] text-te-300">
-                <span>✓</span> Platform configured
+                <span className="text-te-400">✓</span> Platform configured
               </div>
               <div className="flex items-center gap-2 font-mono text-[13px] text-tx-3">
-                <span>→</span> Ready for your first script
+                <span className="text-tx-3">→</span> Ready for your first script
               </div>
             </div>
 
             <button
               onClick={handleFinish}
               disabled={saving}
-              className="btn-terminal btn-terminal-primary w-full justify-center"
-              style={{
-                background: "linear-gradient(135deg, rgba(139,92,246,0.12), rgba(34,211,238,0.08))",
-                borderColor: "rgba(139,92,246,0.25)",
-              }}
+              className="w-full font-mono text-[13px] font-semibold text-white bg-gradient-to-r from-vi-500 to-te-500 hover:from-vi-400 hover:to-te-400 disabled:opacity-40 disabled:cursor-not-allowed px-6 py-3 transition-all duration-150 uppercase tracking-[0.1em]"
             >
-              {saving ? "ACTIVATING..." : "WRITE FIRST SCRIPT >>"}
+              {saving ? "Setting up..." : "Write your first script"}
             </button>
           </div>
-          <div className="crt-monitor-footer">
-            <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-tx-4">READY</span>
-            <span className="font-mono text-[9px] text-center text-tx-4">[setup complete]</span>
-            <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-ok">DONE</span>
-          </div>
-        </div>
         )}
       </div>
     </div>

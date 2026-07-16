@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
-import { PLATFORMS, APP_PLATFORM_MAP } from "@/lib/constants";
+import { APP_PLATFORM_MAP } from "@/lib/constants";
 import { generateThumbnails, generateCanvaThumbnailPrompts, generateABTestPlan, saveThumbnailBrief } from "@/lib/actions-thumbnail";
 import { getContentDefaults, getBrandKit, getBBStatus } from "@/lib/actions";
 import { useAuthGate } from "@/lib/use-auth-gate";
@@ -111,12 +112,37 @@ function ColorSwatch({ hex }: { hex: string }) {
   );
 }
 
-export default function ThumbnailMakerPage() {
+function ThumbnailFallback() {
+  return (
+    <div className="font-mono text-[11px] text-tx-4 p-6 flex items-center gap-2">
+      <span className="w-1.5 h-1.5 rounded-full bg-vi-400 animate-pulse" />
+      loading session...
+    </div>
+  );
+}
+
+export default function ThumbnailMakerPage({ appId: _appId }: any = {}) {
+  return (
+    <Suspense fallback={<ThumbnailFallback />}>
+      <ThumbnailMakerContent appId={_appId} />
+    </Suspense>
+  );
+}
+
+function ThumbnailMakerContent({ appId: propAppId }: { appId?: string | null }) {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const appId = propAppId ?? searchParams?.get("app") ?? null;
+
   const [step, setStep] = useState<Step>("input");
   const [loading, setLoading] = useState(false);
   const [topic, setTopic] = useState("");
   const [audience, setAudience] = useState("");
-  const [platform, setPlatform] = useState("");
+  const [platform, setPlatform] = useState(() => {
+    if (!appId) return "";
+    const platforms = APP_PLATFORM_MAP[appId as keyof typeof APP_PLATFORM_MAP];
+    return platforms?.[0] ?? "";
+  });
   const [concepts, setConcepts] = useState<ThumbnailConcept[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [canvaPrompts, setCanvaPrompts] = useState<{ concept: string; canva_prompt: string; template_type: string }[]>([]);
@@ -141,14 +167,10 @@ export default function ThumbnailMakerPage() {
   }, []);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const appId = params.get("app");
-    if (appId && APP_PLATFORM_MAP[appId as keyof typeof APP_PLATFORM_MAP]) {
-      const platforms = APP_PLATFORM_MAP[appId as keyof typeof APP_PLATFORM_MAP];
-      if (platforms.length > 0 && !platform) setPlatform(platforms[0]);
+    if (!appId) {
+      router.push('/dashboard');
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [appId, router]);
 
   useEffect(() => {
     if (!isSignedIn) return;
@@ -359,29 +381,7 @@ export default function ThumbnailMakerPage() {
                 />
               </div>
 
-              <div className="reveal d3">
-                <label className="term-label text-[13px] mb-2">PLATFORM</label>
-                <div className="space-y-1">
-                  {PLATFORMS.map((p, i) => (
-                    <button
-                      key={p}
-                      onClick={() => setPlatform(p === platform ? "" : p)}
-                      className={`boot-option ${p === platform ? "active" : ""}`}
-                      style={{ animationDelay: `${0.3 + i * 0.08}s` }}
-                    >
-                      <span className="boot-option-arrow">
-                        {p === platform ? "\u25B6" : ">>"}
-                      </span>
-                      <span className="boot-option-label">{p}</span>
-                      <span className={`diag-badge ${p === platform ? "diag-ok" : "diag-idle"}`}>
-                        {p === platform ? "[SELECTED]" : "[IDLE]"}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="reveal d4 flex items-center gap-3 pt-2 border-t border-white/[0.04]">
+              <div className="reveal d3 flex items-center gap-3 pt-2 border-t border-white/[0.04]">
                 <button
                   onClick={handleGenerate}
                   disabled={!valid}

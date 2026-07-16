@@ -10,6 +10,7 @@ import { Icons } from "@/components/icons";
 import { APPS, MODULES, APP_MODULES } from "@/lib/constants";
 import { getProfile } from "@/lib/actions";
 import { useKeyboardShortcuts } from "@/lib/use-keyboard-shortcuts";
+import { List, CaretLeft } from "@phosphor-icons/react";
 
 function kebabToLabel(id: string): string {
   return id
@@ -90,9 +91,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     const rest = pathname.replace(`/dashboard/app/${appId}`, "").replace(/^\//, "");
     const appName = appNames[appId] || kebabToLabel(appId);
     if (rest && moduleNames[rest]) {
-      breadcrumb = `${appName} :: ${moduleNames[rest]}`;
+      breadcrumb = `${appName} / ${moduleNames[rest]}`;
     } else if (rest) {
-      breadcrumb = `${appName} :: ${kebabToLabel(rest)}`;
+      breadcrumb = `${appName} / ${kebabToLabel(rest)}`;
     } else {
       breadcrumb = appName;
     }
@@ -111,9 +112,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-dvh overflow-hidden bg-bg-void">
       {/* Animated backgrounds */}
       <div className="cyber-grid">
-        <div className="cyber-grid-inner opacity-50" />
+        <div className="cyber-grid-inner opacity-30" />
       </div>
-      <div className="gradient-mesh opacity-60" />
+      <div className="gradient-mesh opacity-40" />
 
       {/* Mobile overlay */}
       <div
@@ -137,7 +138,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             <div className="w-7 h-7 rounded-[7px] bg-gradient-to-br from-vi-500 to-te-400 flex items-center justify-center font-display text-[13px] font-bold text-white shadow-[0_0_16px_rgba(139,92,246,0.3)] group-hover:shadow-[0_0_24px_rgba(139,92,246,0.5)] transition-shadow duration-200">
               C
             </div>
-            <span className="font-display text-[15px] font-bold text-tx-1 tracking-tight group-hover:text-te-400 transition-colors duration-200">ContentOS</span>
+            <span className="font-mono text-[14px] font-bold text-tx-1 tracking-[0.05em] group-hover:text-te-400 transition-colors duration-200">ContentOS</span>
           </Link>
         </div>
 
@@ -150,30 +151,30 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 <UserButton />
               </div>
               <div className="min-w-0 flex-1">
-                <div className="font-mono text-[12px] text-tx-1 truncate leading-tight">
+                <div className="font-mono text-[12px] font-medium text-tx-1 truncate leading-tight tracking-[0.03em]">
                   {username || user?.firstName || "Creator"}
                 </div>
-                <div className="font-mono text-[9px] text-tx-4 tracking-[0.12em] uppercase truncate">
-                  {user?.emailAddresses[0]?.emailAddress || "creator"}
+                <div className="font-mono text-[10px] text-tx-4 truncate">
+                  {user?.emailAddresses[0]?.emailAddress || ""}
                 </div>
               </div>
               <Link
                 href="/dashboard/settings"
-                className="font-mono text-[9px] text-vi-400/60 hover:text-vi-400 tracking-[0.1em] uppercase flex-shrink-0 transition-colors"
+                className="font-mono text-[10px] text-tx-4 hover:text-vi-400 transition-colors flex-shrink-0 uppercase tracking-[0.08em]"
               >
-                [settings]
+                Settings
               </Link>
             </>
           ) : (
             <div className="space-y-2 w-full">
-              <div className="font-mono text-[10px] text-tx-3 tracking-[0.12em] uppercase text-center py-1 border border-white/[0.06] rounded-[2px]">
-                STATUS: PREVIEW — <Link href="/sign-in" className="text-vi-400/80 hover:text-vi-300 underline">[sign in]</Link>
+              <div className="font-mono text-[11px] text-tx-4 text-center py-1.5 border border-white/[0.06] uppercase tracking-[0.08em]">
+                Preview mode
               </div>
               <Link
                 href="/sign-in"
-                className="block font-mono text-[11px] text-vi-400 tracking-[0.12em] uppercase border border-vi-500/20 px-3 py-1.5 rounded-[2px] hover:bg-vi-500/10 transition-colors duration-150 w-full text-center"
+                className="block font-mono text-[12px] font-medium text-vi-400 border border-vi-500/20 px-3 py-1.5 hover:bg-vi-500/10 transition-colors duration-150 w-full text-center uppercase tracking-[0.08em]"
               >
-                {">>"} sign in
+                Sign in
               </Link>
             </div>
           )}
@@ -189,21 +190,20 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               className="w-8 h-8 flex items-center justify-center rounded-r3 text-tx-2 hover:bg-white/[0.04] hover:text-tx-1 transition-all md:hidden flex-shrink-0"
               onClick={() => setSidebarOpen(true)}
             >
-              <Icons.menu className="w-[18px] h-[18px]" />
+              <List className="w-[18px] h-[18px]" />
             </button>
-            <span className="font-mono text-[11px] text-tx-3 uppercase tracking-[0.15em] truncate flex items-center gap-2">
-              <span className="text-te-400">[</span>
+            <span className="font-mono text-[13px] font-medium text-tx-2 truncate flex items-center gap-2">
+              <CaretLeft className="w-3.5 h-3.5 text-tx-4 hidden md:block flex-shrink-0" />
               <span>{breadcrumb}</span>
-              <span className="text-te-400">]</span>
             </span>
           </div>
           <div className="flex items-center gap-3 flex-shrink-0">
             <Link href="/dashboard" className="hidden md:flex items-center gap-1.5 group cursor-pointer">
-              <span className="font-display text-[13px] font-bold text-tx-3 tracking-tight group-hover:text-te-400 transition-colors duration-200">ContentOS</span>
-              <span className="font-mono text-[9px] text-tx-4 tracking-[0.15em] uppercase">[home]</span>
+              <span className="font-mono text-[12px] font-medium text-tx-3 group-hover:text-te-400 transition-colors duration-200 tracking-[0.05em]">ContentOS</span>
+              <span className="font-mono text-[10px] text-tx-4 uppercase tracking-[0.08em]">Home</span>
             </Link>
-            <span className="flex items-center gap-1.5 font-mono text-[11px] text-vi-400 tracking-[0.15em] uppercase border border-vi-500/15 bg-vi-500/10 px-2.5 h-[22px] rounded-[2px]">
-              <span className="w-1.5 h-1.5 rounded-full bg-vi-400 animate-beat-pulse" />
+            <span className="flex items-center gap-1.5 font-mono text-[11px] text-te-400 border border-te-400/15 bg-te-400/10 px-2.5 h-[22px] rounded-r3">
+              <span className="w-1.5 h-1.5 rounded-full bg-te-400 animate-beat-pulse" />
               AI Ready
             </span>
           </div>

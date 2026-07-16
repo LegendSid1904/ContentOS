@@ -2,9 +2,9 @@
 
 import { useState, useRef, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
-import { PLATFORMS, TONES, LANGUAGES } from "@/lib/constants";
+import { TONES, LANGUAGES } from "@/lib/constants";
 import { SERIES_FORMATS } from "@/lib/series-formats";
 import { generateHooks, generateScript, generateSeriesScript, saveScript, getScriptVersions, getScriptVersionByOutputId } from "@/lib/actions-script";
 import { getContentDefaults } from "@/lib/actions";
@@ -53,6 +53,7 @@ export default function ScriptWriterPage({ appId: _appId }: any = {}) {
 
 function ScriptWriterContent({ appId: propAppId }: { appId?: string | null }) {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const appId = propAppId ?? searchParams?.get("app") ?? null;
 
   const [step, setStep] = useState<Step>("input");
@@ -95,6 +96,12 @@ function ScriptWriterContent({ appId: propAppId }: { appId?: string | null }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!appId) {
+      router.push('/dashboard');
+    }
+  }, [appId, router]);
 
   useEffect(() => {
     if (!isSignedIn) return;
@@ -399,38 +406,7 @@ ${script.sections.map((s) => `<div class="section"><div class="timestamp">[${s.t
                 />
               </div>
 
-              {appId ? (
-                <div className="reveal d3">
-                  <label className="term-label mb-2">PLATFORM</label>
-                  <div className="font-mono text-[11px] text-vi-400/70 border border-vi-500/15 bg-vi-500/5 rounded-r3 p-2 text-center tracking-wider">
-                    [LOCKED] {platform || "auto-detected from app"}
-                  </div>
-                </div>
-              ) : (
-                <div className="reveal d3">
-                  <label className="term-label mb-2">PLATFORM</label>
-                  <div className="space-y-1">
-                    {PLATFORMS.map((p, i) => (
-                      <button
-                        key={p}
-                        onClick={() => setPlatform(p === platform ? "" : p)}
-                        className={`boot-option ${p === platform ? "active" : ""}`}
-                        style={{ animationDelay: `${0.3 + i * 0.08}s` }}
-                      >
-                        <span className="boot-option-arrow">
-                          {p === platform ? "\u25B6" : ">>"}
-                        </span>
-                        <span className="boot-option-label">{p}</span>
-                        <span className={`diag-badge ${p === platform ? "diag-ok" : "diag-idle"}`}>
-                          {p === platform ? "[SELECTED]" : "[IDLE]"}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="reveal d4">
+              <div className="reveal d3">
                 <label className="term-label mb-2">VOICE_TONE</label>
                 <div className="space-y-1">
                   {TONES.map((t, i) => (

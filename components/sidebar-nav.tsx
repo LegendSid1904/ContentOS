@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { APPS, MODULES, APP_MODULES } from "@/lib/constants";
 import { Icons } from "@/components/icons";
+import { ArrowLeft } from "@phosphor-icons/react";
 
 const modIconMap: Record<string, string> = {
   "script-writer": "script",
@@ -17,7 +18,7 @@ const modIconMap: Record<string, string> = {
   "growth-strategy": "growth",
 };
 
-const appIcons: Record<string, string> = {
+const appIconComponents: Record<string, string> = {
   youtube: "▶",
   instagram: "◎",
   tiktok: "◈",
@@ -71,12 +72,12 @@ export function SidebarNav({
           onClick={onNav}
           className="sidebar-link text-te-400/80 hover:text-te-400 mb-2"
         >
-          <span className="text-[13px] mr-1">↤</span>
-          <span className="truncate">platforms</span>
+          <ArrowLeft className="w-[14px] h-[14px]" weight="bold" />
+          <span className="truncate">All platforms</span>
         </Link>
 
         <div className={sectionClass}>
-          [{app?.name.toLowerCase()}]
+          {app?.name.toLowerCase()}
         </div>
 
         {appModules?.map((mod) => {
@@ -111,12 +112,12 @@ export function SidebarNav({
           onClick={onNav}
           className="sidebar-link text-te-400/80 hover:text-te-400 mb-2"
         >
-          <span className="text-[13px] mr-1">↤</span>
-          <span className="truncate">platforms</span>
+          <ArrowLeft className="w-[14px] h-[14px]" weight="bold" />
+          <span className="truncate">All platforms</span>
         </Link>
 
         <div className={sectionClass}>
-          [System]
+          System
         </div>
 
         {utilityLinks.map((link) => {
@@ -145,7 +146,7 @@ export function SidebarNav({
   return (
     <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
       <div className={sectionClass}>
-        [Apps]
+        Platforms
       </div>
 
       {APPS.map((app) => {
@@ -161,7 +162,9 @@ export function SidebarNav({
               pathname === `/dashboard/app/${app.id}` && "active",
             )}
           >
-            <span className="font-mono text-[13px] flex-shrink-0">{appIcons[app.id] || "□"}</span>
+            <span className="flex-shrink-0 text-tx-2 font-mono text-[13px]">
+              {appIconComponents[app.id] || "□"}
+            </span>
             <span className="truncate">{app.name}</span>
             <span className="font-mono text-[9px] text-tx-4 tracking-[0.1em] ml-auto">
               {appModuleCount}
@@ -173,7 +176,7 @@ export function SidebarNav({
       <div className="h-px bg-white/[0.04] my-3" />
 
       <div className={sectionClass}>
-        [System]
+        System
       </div>
 
       {utilityLinks.map((link) => {

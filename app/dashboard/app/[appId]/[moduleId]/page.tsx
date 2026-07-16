@@ -6,6 +6,8 @@ import CompetitorIntelPage from "@/app/dashboard/competitor-intel/page";
 import VideoBriefPage from "@/app/dashboard/video-brief/page";
 import PageSetupPage from "@/app/dashboard/page-setup/page";
 import GrowthStrategyPage from "@/app/dashboard/growth-strategy/page";
+import CarouselMakerPage from "@/app/dashboard/carousel-maker/page";
+import ThumbnailMakerPage from "@/app/dashboard/thumbnail-maker/page";
 
 const modulePages: Record<string, React.FC<{ appId: string }>> = {
   "script-writer": ScriptWriterPage,
@@ -14,6 +16,8 @@ const modulePages: Record<string, React.FC<{ appId: string }>> = {
   "video-brief": VideoBriefPage,
   "page-setup": PageSetupPage,
   "growth-strategy": GrowthStrategyPage,
+  "carousel-maker": CarouselMakerPage,
+  "thumbnail-maker": ThumbnailMakerPage,
 };
 
 export default async function AppModulePage({

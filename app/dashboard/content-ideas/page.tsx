@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { APP_MODULES } from "@/lib/constants";
 import { generateIdeas, generateAngles, generateCalendar, generateRepurposingMap, saveIdeas, type Idea } from "@/lib/actions-content-ideas";
@@ -176,6 +176,7 @@ export default function ContentIdeasPage({ appId: _appId }: any = {}) {
 
 function ContentIdeasContent({ appId: propAppId }: { appId?: string | null }) {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const appId = propAppId ?? searchParams?.get("app") ?? null;
 
   const [step, setStep] = useState<Step>("input");
@@ -211,6 +212,12 @@ function ContentIdeasContent({ appId: propAppId }: { appId?: string | null }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!appId) {
+      router.push('/dashboard');
+    }
+  }, [appId, router]);
 
   useEffect(() => {
     if (!isSignedIn) return;
@@ -343,7 +350,7 @@ function ContentIdeasContent({ appId: propAppId }: { appId?: string | null }) {
           Module :: Ideas
         </p>
         <h1 className="sec-title !text-[28px] font-display">Content Ideas</h1>
-        <p className="sec-desc !text-[13px] font-display">
+        <p className="sec-desc !text-[13px] font-mono">
           30 niche ideas with viral angles and full calendar
         </p>
       </div>

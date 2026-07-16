@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { APP_MODULES } from "@/lib/constants";
 import { analyzeTranscript, saveEditingBrief } from "@/lib/actions-video-brief";
@@ -66,6 +66,7 @@ export default function VideoBriefPage({ appId: _appId }: any = {}) {
 
 function VideoBriefContent({ appId: propAppId }: { appId?: string | null }) {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const appId = propAppId ?? searchParams?.get("app") ?? null;
 
   const [step, setStep] = useState<Step>("input");
@@ -96,6 +97,12 @@ function VideoBriefContent({ appId: propAppId }: { appId?: string | null }) {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSignedIn]);
+
+  useEffect(() => {
+    if (!appId) {
+      router.push('/dashboard');
+    }
+  }, [appId, router]);
 
   const valid = transcript.trim().length > 20;
 

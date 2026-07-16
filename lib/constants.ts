@@ -129,11 +129,13 @@ export const APP_MODULES: Record<string, AppModuleDef[]> = {
     { id: "competitor-intel", name: "Competitor Intel",  icon: "◎",  desc: "Deep scan of top YouTubers in your niche" },
     { id: "video-brief",      name: "Edit Blueprint",    icon: "▷",  desc: "Transcript → editing brief + full B-roll list" },
     { id: "page-setup",       name: "Channel Setup",     icon: "⌘",  desc: "Bio, keywords, SEO — fully AI-optimized for YouTube" },
+    { id: "thumbnail-maker",  name: "Thumbnail Lab",     icon: "▤",  desc: "5 CTR-optimized thumbnail concepts per video" },
     { id: "growth-strategy",  name: "Growth Engine",     icon: "↗",  desc: "90-day growth plan + monetization roadmap" },
   ],
   instagram: [
     { id: "script-writer",    name: "Reel Scripts",      icon: "⌨",  desc: "Short-form hook-driven scripts optimized for Reels" },
     { id: "content-ideas",    name: "Moodboard",         icon: "◈",  desc: "Visual inspiration & aesthetic content planning" },
+    { id: "carousel-maker",   name: "Carousel Studio",   icon: "▣",  desc: "AI-written slides → Canva export in 2 minutes" },
     { id: "competitor-intel", name: "Competitor Intel",  icon: "◎",  desc: "Deep scan of top creators in your niche" },
     { id: "page-setup",       name: "Bio Optimizer",     icon: "⌘",  desc: "Bio, highlights, link-in-bio — fully optimized" },
     { id: "growth-strategy",  name: "Growth Engine",     icon: "↗",  desc: "90-day growth plan + monetization roadmap" },
@@ -148,6 +150,7 @@ export const APP_MODULES: Record<string, AppModuleDef[]> = {
   linkedin: [
     { id: "script-writer",    name: "Post Studio",       icon: "⌨",  desc: "Thought-leadership posts from idea to publish" },
     { id: "content-ideas",    name: "Authority Ideas",   icon: "◈",  desc: "30 thought-leadership angles & content themes" },
+    { id: "carousel-maker",   name: "Carousel Studio",   icon: "▣",  desc: "AI-written slides → Canva export in 2 minutes" },
     { id: "competitor-intel", name: "Competitor Intel",  icon: "◎",  desc: "Deep scan of top voices in your niche" },
     { id: "page-setup",       name: "Profile Setup",     icon: "⌘",  desc: "Headline, about, featured — AI-optimized for LinkedIn" },
     { id: "growth-strategy",  name: "Growth Engine",     icon: "↗",  desc: "90-day growth plan + authority building" },
