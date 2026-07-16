@@ -57,6 +57,12 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
 }
 
+function formatTime(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
 export default function VideoEditorPage() {
   return (
     <ErrorBoundary>
@@ -77,6 +83,10 @@ function VideoEditorContent() {
   const [currentPipelineIndex, setCurrentPipelineIndex] = useState(-1);
   const [error, setError] = useState("");
   const [dragOver, setDragOver] = useState(false);
+  const [trimStart, setTrimStart] = useState(0);
+  const [trimEnd, setTrimEnd] = useState(0);
+  const [videoDuration, setVideoDuration] = useState(0);
+  const [processedVideo, setProcessedVideo] = useState<Blob | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { isSignedIn } = useAuth();
   const { showModal, gate, closeModal, triggerModal, freeActionsLeft } = useAuthGate("run video editor");
@@ -100,7 +110,75 @@ function VideoEditorContent() {
     setSelectedFile(file);
     const url = URL.createObjectURL(file);
     setFilePreview(url);
+    setProcessedVideo(null);
   }, []);
+
+  useEffect(() => {
+    if (filePreview) {
+      const vid = document.createElement("video");
+      vid.preload = "metadata";
+      vid.src = filePreview;
+      vid.onloadedmetadata = () => {
+        setVideoDuration(vid.duration);
+        setTrimEnd(vid.duration);
+        setTrimStart(0);
+      };
+    }
+  }, [filePreview]);
+
+  async function processVideoTrim(file: File, start: number, end: number): Promise<Blob> {
+    return new Promise((resolve, reject) => {
+      const vid = document.createElement("video");
+      vid.preload = "auto";
+      vid.muted = true;
+      vid.playsInline = true;
+      const objUrl = URL.createObjectURL(file);
+      vid.src = objUrl;
+
+      vid.onloadedmetadata = () => {
+        const w = vid.videoWidth;
+        const h = vid.videoHeight;
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) { URL.revokeObjectURL(objUrl); reject(new Error("Cannot create canvas context")); return; }
+
+        const fps = 30;
+        const stream = canvas.captureStream(fps);
+        const mimeType = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
+          ? "video/webm;codecs=vp9"
+          : "video/webm";
+        const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 5_000_000 });
+        const chunks: BlobPart[] = [];
+
+        recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+        recorder.onstop = () => {
+          URL.revokeObjectURL(objUrl);
+          resolve(new Blob(chunks, { type: mimeType }));
+        };
+        recorder.onerror = (e) => { URL.revokeObjectURL(objUrl); reject(e); };
+
+        vid.currentTime = start;
+        vid.onseeked = () => {
+          recorder.start();
+          vid.play().catch(reject);
+
+          const draw = () => {
+            if (vid.currentTime >= end || vid.ended) {
+              vid.pause();
+              recorder.stop();
+              return;
+            }
+            ctx.drawImage(vid, 0, 0, w, h);
+            requestAnimationFrame(draw);
+          };
+          requestAnimationFrame(draw);
+        };
+      };
+      vid.onerror = () => { URL.revokeObjectURL(objUrl); reject(new Error("Failed to load video")); };
+    });
+  }
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -124,7 +202,7 @@ function VideoEditorContent() {
   }
 
   function handleStartPipeline() {
-    if (!selectedFormat) return;
+    if (!selectedFormat || !selectedFile) return;
     gate(async () => {
       setLoading(true);
       setError("");
@@ -132,20 +210,49 @@ function VideoEditorContent() {
       setPipelineSteps(PIPELINE_STEPS.map((s) => ({ ...s, status: "pending" })));
       setCurrentPipelineIndex(-1);
 
-      for (let i = 0; i < PIPELINE_STEPS.length; i++) {
-        setCurrentPipelineIndex(i);
-        setPipelineSteps((prev) =>
-          prev.map((s, idx) => ({
-            ...s,
-            status: idx === i ? "active" : idx < i ? "done" : "pending",
-          }))
-        );
-        await new Promise((r) => setTimeout(r, 1200 + Math.random() * 800));
-      }
+      try {
+        // Step 1: Intake — validate
+        setCurrentPipelineIndex(0);
+        setPipelineSteps((prev) => prev.map((s, idx) => ({ ...s, status: idx === 0 ? "active" : "pending" })));
+        await new Promise((r) => setTimeout(r, 600));
 
-      setPipelineSteps((prev) => prev.map((s) => ({ ...s, status: "done" })));
-      setLoading(false);
-      setStep("export");
+        // Step 2: Rough Cut — actual trim
+        setCurrentPipelineIndex(1);
+        setPipelineSteps((prev) => prev.map((s, idx) => ({
+          ...s,
+          status: idx === 1 ? "active" : idx < 1 ? "done" : "pending",
+        })));
+        const trimmed = await processVideoTrim(selectedFile, trimStart, trimEnd);
+        setProcessedVideo(trimmed);
+
+        // Step 3-6: Graphics, QA, Captions, Music — pass through
+        for (let i = 2; i < 6; i++) {
+          setCurrentPipelineIndex(i);
+          setPipelineSteps((prev) =>
+            prev.map((s, idx) => ({
+              ...s,
+              status: idx === i ? "active" : idx < i ? "done" : "pending",
+            }))
+          );
+          await new Promise((r) => setTimeout(r, 400 + Math.random() * 300));
+        }
+
+        // Step 7: Export — finalize
+        setCurrentPipelineIndex(6);
+        setPipelineSteps((prev) => prev.map((s, idx) => ({
+          ...s,
+          status: idx === 6 ? "active" : idx < 6 ? "done" : "pending",
+        })));
+        await new Promise((r) => setTimeout(r, 500));
+
+        setPipelineSteps((prev) => prev.map((s) => ({ ...s, status: "done" })));
+        setLoading(false);
+        setStep("export");
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Pipeline failed");
+        setLoading(false);
+        setStep("format");
+      }
     });
   }
 
@@ -159,15 +266,23 @@ function VideoEditorContent() {
     setPipelineSteps(PIPELINE_STEPS.map((s) => ({ ...s, status: "pending" })));
     setCurrentPipelineIndex(-1);
     setError("");
+    setTrimStart(0);
+    setTrimEnd(0);
+    setVideoDuration(0);
+    setProcessedVideo(null);
   }
 
   function handleSimulateDownload() {
-    const blob = new Blob(["ContentOS Video Export — simulated output"], { type: "text/plain" });
+    const blob = processedVideo ?? (selectedFile ? new Blob([selectedFile], { type: selectedFile.type }) : null);
+    if (!blob) return;
+    const ext = processedVideo ? "webm" : (selectedFile?.name.split(".").pop() ?? "mp4");
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `contentos-export-${selectedFormat}-${Date.now()}.mp4`;
+    a.download = `contentos-export-${selectedFormat}-${Date.now()}.${ext}`;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }
 
@@ -300,6 +415,59 @@ function VideoEditorContent() {
                         controls
                         className="w-full max-h-[300px] object-contain"
                       />
+                    </div>
+                  </div>
+                )}
+
+                {filePreview && videoDuration > 0 && (
+                  <div className="reveal d2">
+                    <label className="term-label mb-2">TRIM_RANGE</label>
+                    <div className="p-3 rounded-r3 border border-white/[0.06] bg-white/[0.02] space-y-3">
+                      <div className="flex items-center gap-4">
+                        <div className="flex-1">
+                          <label className="font-mono text-[10px] text-tx-4 tracking-wider block mb-1">START</label>
+                          <input
+                            type="range"
+                            min={0}
+                            max={videoDuration}
+                            step={0.1}
+                            value={trimStart}
+                            onChange={(e) => {
+                              const v = parseFloat(e.target.value);
+                              setTrimStart(Math.min(v, trimEnd - 0.5));
+                            }}
+                            className="w-full accent-te-400"
+                          />
+                          <span className="font-mono text-[11px] text-tx-2">{formatTime(trimStart)}</span>
+                        </div>
+                        <div className="flex-1">
+                          <label className="font-mono text-[10px] text-tx-4 tracking-wider block mb-1">END</label>
+                          <input
+                            type="range"
+                            min={0}
+                            max={videoDuration}
+                            step={0.1}
+                            value={trimEnd}
+                            onChange={(e) => {
+                              const v = parseFloat(e.target.value);
+                              setTrimEnd(Math.max(v, trimStart + 0.5));
+                            }}
+                            className="w-full accent-fu-400"
+                          />
+                          <span className="font-mono text-[11px] text-tx-2">{formatTime(trimEnd)}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono text-[10px] text-tx-4 tracking-wider">
+                          DURATION: {formatTime(trimEnd - trimStart)} / {formatTime(videoDuration)}
+                        </span>
+                        <button
+                          onClick={() => { setTrimStart(0); setTrimEnd(videoDuration); }}
+                          className="btn-terminal text-[10px]"
+                        >
+                          {"[RESET]"}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -443,7 +611,11 @@ function VideoEditorContent() {
 
                 <div className="flex items-center gap-3 pt-2 border-t border-white/[0.04]">
                   <span className="font-mono text-[10px] text-tx-4 tracking-wider animate-pulse">
-                    {loading ? "Pipeline running..." : "Initializing..."}
+                    {loading ? (
+                      currentPipelineIndex === 1 ? "Trimming video..." :
+                      currentPipelineIndex === 0 ? "Validating file..." :
+                      "Processing..."
+                    ) : "Initializing..."}
                   </span>
                 </div>
               </>
@@ -485,12 +657,12 @@ function VideoEditorContent() {
                       <div className="font-mono text-[12px] text-tx-1">{FORMAT_OPTIONS.find((f) => f.id === selectedFormat)?.name ?? selectedFormat}</div>
                     </div>
                     <div className="p-3 rounded-r3 border border-white/[0.04] bg-white/[0.02]">
-                      <div className="font-mono text-[10px] text-tx-4 tracking-wider uppercase mb-1">Steps</div>
-                      <div className="font-mono text-[12px] text-ok">7/7 complete</div>
+                      <div className="font-mono text-[10px] text-tx-4 tracking-wider uppercase mb-1">Trim</div>
+                      <div className="font-mono text-[12px] text-tx-1">{formatTime(trimStart)} → {formatTime(trimEnd)}</div>
                     </div>
                     <div className="p-3 rounded-r3 border border-white/[0.04] bg-white/[0.02]">
-                      <div className="font-mono text-[10px] text-tx-4 tracking-wider uppercase mb-1">Status</div>
-                      <div className="font-mono text-[12px] text-ok">Ready</div>
+                      <div className="font-mono text-[10px] text-tx-4 tracking-wider uppercase mb-1">Output Size</div>
+                      <div className="font-mono text-[12px] text-ok">{processedVideo ? formatFileSize(processedVideo.size) : "N/A"}</div>
                     </div>
                   </div>
                 </div>
